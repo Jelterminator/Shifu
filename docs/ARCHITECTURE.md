@@ -1,4 +1,4 @@
-# 🌟 Harmonious Day: Architecture
+# 🌟 Shifu : Architecture
 
 Thisdocument serves as the single source of truth for the **HarmoniousDay** project, defining a definitive architecture that meets the core mandate: **100% On-Device Functionality with Zero Company-Run Servers**.
 
@@ -452,8 +452,8 @@ We enforce strict policies to minimize CPU, memory, and battery usage:
 * **Crash Resilience:** We wrap model loads and inferences in try/catch. If an on-device training run fails or OOM occurs, we roll back to the last working model. Users are notified only if a failure persists across multiple nights.
 
 * **User Control:** In Settings, users can disable AI features (Coach, scheduling optimization) and background sync. This ensures the app can run in a minimal “offline” mode if desired, preserving strict privacy and low resource use.
-
-
+  
+  
 
 ---
 
@@ -500,5 +500,3 @@ On-device training in TensorFlow Lite — The TensorFlow Blog
 Optimizing FlatList Configuration · React Native
 
 [12] https://reactnative.dev/docs/optimizing-flatlist-configuration
-
-
