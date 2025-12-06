@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "start": "react-native start",
+    "start:dev": "APP_ENV=development react-native start",
+    "start:staging": "APP_ENV=staging react-native start",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "test": "jest",
@@ -17,15 +19,21 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "validate": "npm run type-check && npm run lint:check && npm run format:check && npm run test:ci",
-    "ci": "npm run validate"
+    "ci": "npm run validate",
+    "env:check": "node scripts/check-env.js",
+    "build:dev": "npm run env:check && APP_ENV=development expo build:web",
+    "build:staging": "npm run env:check && APP_ENV=staging expo build:web",
+    "build:prod": "npm run env:check && APP_ENV=production expo build:web"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
     "@babel/plugin-transform-modules-commonjs": "^7.27.1",
+    "@react-native-community/cli": "^14.0.0",
     "@testing-library/jest-native": "5.4.3",
     "@testing-library/react-native": "12.9.0",
     "@testing-library/user-event": "14.6.1",
     "@types/jest": "29.5.12",
+    "@types/node": "^20.10.0",
     "@types/react": "19.2.1",
     "@types/react-native": "0.73.0",
     "@typescript-eslint/eslint-plugin": "7.18.0",

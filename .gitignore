@@ -1,4 +1,10 @@
-﻿
+﻿# Environment & Secrets (NEVER commit these)
+.env
+.env.local
+.env.*.local
+.env.production.local
+.env.staging.local
+
 # Jest test artifacts
 .jest/
 coverage/
@@ -27,7 +33,6 @@ web-build/
 *.p12
 *.key
 *.mobileprovision
-*.orig.*
 *.ipa
 *.apk
 
@@ -43,19 +48,8 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# Local env files
-.env
-.env*.local
-
 # Typescript
 *.tsbuildinfo
-
-# Testing
-coverage/
-.jest/
-*.lcov
-junit.xml
-test-results/
 
 # IDE
 .vscode/

@@ -7,6 +7,9 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+env:
+  NODE_VERSION: "20"
+
 jobs:
   lint-and-type-check:
     name: Lint & Type Check
@@ -18,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install dependencies
@@ -43,7 +46,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install dependencies
@@ -51,6 +54,53 @@ jobs:
 
       - name: Run Jest tests
         run: npm run test:ci
+        env:
+          CI: true
+
+  build-test:
+    name: Build Configuration Test
+    runs-on: ubuntu-latest
+    # Only run on main branches to save CI minutes
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      # Create .env.local with secrets injected from GitHub
+      - name: Create .env.local (with secrets)
+        run: |
+          cat > .env.local << EOF
+          APP_ENV=staging
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          API_BASE_URL=${{ secrets.API_BASE_URL }}
+          APP_VERSION=${{ github.ref_name }}-${{ github.run_number }}
+          BUILD_NUMBER=${{ github.run_number }}
+          EOF
+        # Note: GOOGLE_CLIENT_SECRET intentionally not included in client builds
+
+      # Validate environment before proceeding
+      - name: Validate environment configuration
+        run: node scripts/check-env.js
+
+      - name: Type check configuration imports
+        run: npm run type-check
+
+      # Clean up secrets after use
+      - name: Clean up secrets
+        if: always()
+        run: rm -f .env.local
+
+      - name: ✅ Build validation passed
+        run: echo "Environment and configuration are valid"
 
   final-validation:
     name: Final Validation
@@ -62,10 +112,9 @@ jobs:
         run: |
           if [[ "${{ needs.lint-and-type-check.result }}" == "success" && \
                 "${{ needs.unit-tests.result }}" == "success" ]]; then
-            echo "✅ All checks passed!"
+            echo "✅ All CI checks passed!"
             exit 0
           else
             echo "❌ Some checks failed"
             exit 1
           fi
-
