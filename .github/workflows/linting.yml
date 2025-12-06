@@ -2,9 +2,9 @@
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
   schedule:
     - cron: "0 0 * * 0"
 
@@ -24,7 +24,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: TypeScript strict type checking
         run: npm run type-check
@@ -52,3 +52,4 @@ jobs:
           else
             echo "✅ No TypeScript 'any' types found"
           fi
+

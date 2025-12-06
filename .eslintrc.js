@@ -25,6 +25,7 @@
     },
   },
   env: {
+    'jest/globals': true,
     node: true,
     es2022: true,
     browser: true,

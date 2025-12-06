@@ -1,6 +1,5 @@
 ﻿{
   "compilerOptions": {
-    /* STRICT TYPE-CHECKING */
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -10,26 +9,18 @@
     "noImplicitThis": true,
     "useUnknownInCatchVariables": true,
     "alwaysStrict": true,
-
-    /* ADDITIONAL CHECKS */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
-
-    /* MODULE RESOLUTION */
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-
-    /* SOURCE MAPS & DEBUGGING */
     "sourceMap": true,
     "inlineSources": true,
-
-    /* PROJECT STRUCTURE */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -39,8 +30,6 @@
       "@models/*": ["src/models/*"],
       "@assets/*": ["assets/*"]
     },
-
-    /* OUTPUT */
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM"],
     "target": "ES2020",
@@ -50,6 +39,6 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["src/**/*", "declarations.d.ts"],
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "build", "dist"]
+  "include": ["src/**/*", "tests/**/*", "declarations.d.ts"],
+  "exclude": ["node_modules", "build", "dist"]
 }
