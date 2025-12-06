@@ -1,0 +1,9 @@
+﻿
+# Jest test artifacts
+.jest/
+coverage/
+*.lcov
+junit.xml
+
+# Test results
+test-results/

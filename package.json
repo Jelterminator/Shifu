@@ -1,0 +1,33 @@
+﻿{
+    "name":  "harmonious-day",
+    "version":  "0.1.0",
+    "private":  true,
+    "scripts":  {
+                    "start":  "react-native start",
+                    "ios":  "react-native run-ios",
+                    "ci":  "npm run validate",
+                    "validate":  "npm run type-check \u0026\u0026 npm run lint:check \u0026\u0026 npm run format:check \u0026\u0026 npm run test:ci",
+                    "test:watch":  "jest --watch",
+                    "type-check:watch":  "tsc --noEmit --watch",
+                    "android":  "react-native run-android",
+                    "format":  "prettier --write \u0027**/*.{js,jsx,ts,tsx,json,md}\u0027",
+                    "lint:check":  "eslint . --ext .js,.jsx,.ts,.tsx",
+                    "format:check":  "prettier --check \u0027**/*.{js,jsx,ts,tsx,json,md}\u0027",
+                    "test:ci":  "jest --ci --coverage --maxWorkers=2",
+                    "type-check":  "tsc --noEmit",
+                    "test:coverage":  "jest --coverage",
+                    "test":  "jest",
+                    "lint":  "eslint . --ext .js,.jsx,.ts,.tsx --fix"
+                },
+    "devDependencies":  {
+                            "typescript":  "^5.0.0",
+                            "eslint":  "^9.0.0",
+                            "@typescript-eslint/eslint-plugin":  "^6.0.0",
+                            "@typescript-eslint/parser":  "^6.0.0",
+                            "eslint-plugin-react":  "^7.0.0",
+                            "eslint-plugin-react-hooks":  "^4.0.0",
+                            "prettier":  "^3.0.0",
+                            "eslint-config-prettier":  "^9.0.0",
+                            "eslint-plugin-prettier":  "^5.0.0"
+                        }
+}

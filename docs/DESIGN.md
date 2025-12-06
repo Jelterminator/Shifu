@@ -41,7 +41,8 @@
 
 ### Color Palette: Wu Xing Elements
 
-The app uses five primary colors derived from Wu Xing philosophy, each representing a phase of the day:
+The app uses five primary colors derived from Wu Xing philosophy, each representing a phase of the
+day:
 
 ```
 🌳 WOOD (Dawn/Morning)
@@ -162,7 +163,9 @@ Circle:  50%  (avatars, phase indicators)
 
 ### Concept
 
-Every screen in the app features the same **persistent background element**: a circular clock divided into five segments representing the Wu Xing phases. This provides constant spatial and temporal awareness.
+Every screen in the app features the same **persistent background element**: a circular clock
+divided into five segments representing the Wu Xing phases. This provides constant spatial and
+temporal awareness.
 
 ### Visual Specifications
 
@@ -362,8 +365,6 @@ Welcome → Location → Sleep Hours → Work Hours → Spiritual Practices → 
 └────────────────────────┘
 ```
 
-
-
 **Screen 5: Spiritual Practices**
 
 ```
@@ -432,7 +433,8 @@ Welcome → Location → Sleep Hours → Work Hours → Spiritual Practices → 
 
 ### 2. Agenda Screen (Default Screen)
 
-**Purpose:** Central calendar view showing all events, tasks, and habits scheduled for today and tomorrow.
+**Purpose:** Central calendar view showing all events, tasks, and habits scheduled for today and
+tomorrow.
 
 **Layout:**
 
@@ -464,13 +466,11 @@ Welcome → Location → Sleep Hours → Work Hours → Spiritual Practices → 
 **Key Features:**
 
 1. **Phase Sections**
-   
    - Collapsible headers with phase icon and time range
    - Background tint matching phase color (10% opacity)
    - Current phase has bold header
 
 2. **Event Cards**
-   
    - 8px left border in phase color
    - Checkmark for AI-generated tasks/habits
    - [FIXED] tag for calendar events
@@ -479,7 +479,7 @@ Welcome → Location → Sleep Hours → Work Hours → Spiritual Practices → 
    - Long press for drag-and-drop rescheduling
 
 3. **Event Types Visual Distinction:**
-   
+
    ```
    ☐ Task/Habit     → Checkbox, phase color border
    [FIXED] Event    → Gray background, no checkbox
@@ -488,13 +488,12 @@ Welcome → Location → Sleep Hours → Work Hours → Spiritual Practices → 
    ```
 
 4. **Time Display:**
-   
    - 24-hour format by default
    - Duration in parentheses if < 3 hours
    - "All day" for full-day events
 
 5. **Empty State:**
-   
+
    ```
    ┌─────────────────────────────────────┐
    │                                     │
@@ -507,15 +506,11 @@ Welcome → Location → Sleep Hours → Work Hours → Spiritual Practices → 
    ```
 
 6. **Floating Action Button:**
-   
    - Position: Bottom right (16px margins)
-   
    - Icon: Plus sign
-   
    - Color: Current phase color
-   
    - Opens quick add menu:
-     
+
      ```
      ┌─────────────────────┐
      │ + Add Task          │
@@ -729,7 +724,7 @@ Welcome → Location → Sleep Hours → Work Hours → Spiritual Practices → 
 - 5 stars (tap to select)
 
 - Colors:
-  
+
   ```
   1 star:  #F44336 (Red - Depressed)
   2 stars: #FF9800 (Orange - Low)
@@ -1031,21 +1026,18 @@ T6 (CHORES):    Gray banner    · No deadline
 **Message Types:**
 
 1. **AI Messages (Left-aligned):**
-   
    - Background: Light gray card (#F5F5F5)
    - Avatar: 🤖 emoji (24px)
    - Timestamp below message
    - Max width: 80% of screen
 
 2. **User Messages (Right-aligned):**
-   
    - Background: Current phase color (20% opacity)
    - No avatar
    - Timestamp below message
    - Max width: 80% of screen
 
 3. **System Messages (Centered):**
-   
    - Plain text, gray color
    - Timestamps, action confirmations
    - Example: "✓ Task added to Work list"
@@ -1073,34 +1065,29 @@ T6 (CHORES):    Gray banner    · No deadline
 **Conversation Capabilities:**
 
 1. **Task Management:**
-   
    - "Add 'Buy groceries' to my personal list, due tomorrow, 30 minutes"
    - "Show me all urgent tasks"
    - "Move the code review to Thursday"
    - "Mark morning meditation as complete"
 
 2. **Habit Management:**
-   
    - "Add a reading habit for 30 minutes in the WATER phase"
    - "How's my meditation streak?"
    - "Suggest habits for better sleep"
 
 3. **Schedule Optimization:**
-   
    - "Regenerate today's schedule"
    - "Find time for a 2-hour deep work session"
    - "When's my next free slot?"
    - "Clear tomorrow afternoon"
 
 4. **Analysis & Advice:**
-   
    - "What are my productivity patterns?"
    - "Why am I feeling stressed?"
    - "Tips for staying focused during FIRE phase"
    - "How can I improve my evening routine?"
 
 5. **Batch Operations:**
-   
    - "Add these tasks: [list]"
    - "Create a new list called 'Side Project' with tasks..."
    - "Import habits from my notes"
@@ -1108,29 +1095,29 @@ T6 (CHORES):    Gray banner    · No deadline
 **AI Response Types:**
 
 1. **Confirmation:**
-   
+
    ```
-   ✓ Done! I've added "Buy groceries" to 
+   ✓ Done! I've added "Buy groceries" to
    your Personal list for tomorrow.
-   
+
    [View in Tasks →]
    ```
 
 2. **Clarification:**
-   
+
    ```
    I can add that task. Just to clarify:
-   
+
    • Which list? [Work] [Personal] [Other]
    • How long will it take? [30m] [1h] [2h]
    • Any deadline?
    ```
 
 3. **Information:**
-   
+
    ```
    📊 Your productivity patterns:
-   
+
    • Most productive: 9-11 AM (FIRE phase)
    • Best for deep work: Mornings
    • Energy dip: 2-3 PM (EARTH phase)
@@ -1138,14 +1125,14 @@ T6 (CHORES):    Gray banner    · No deadline
    ```
 
 4. **Suggestions:**
-   
+
    ```
    💡 Based on your schedule:
-   
-   You have a free 2-hour block from 
-   9-11 AM tomorrow. Perfect for that 
+
+   You have a free 2-hour block from
+   9-11 AM tomorrow. Perfect for that
    urgent code review!
-   
+
    [Schedule it] [Not now]
    ```
 
@@ -1165,9 +1152,9 @@ T6 (CHORES):    Gray banner    · No deadline
 ```
 ❌ I couldn't complete that action.
 
-The task "Team Meeting" is a fixed 
-calendar event and can't be moved 
-through chat. You can edit it in your 
+The task "Team Meeting" is a fixed
+calendar event and can't be moved
+through chat. You can edit it in your
 calendar app.
 ```
 
@@ -1433,31 +1420,30 @@ This might take a few seconds.
 **Swipe Actions:**
 
 1. **Agenda/List Items (Swipe Left):**
-   
+
    ```
    ┌─────────────────────────────────────┐
    │ Morning Meditation      [✏️] [🗑️]  │
    └─────────────────────────────────────┘
    ```
-   
+
    - Reveal: Edit (blue) | Delete (red)
    - Threshold: 60px
    - Haptic feedback on reveal
 
 2. **Swipe Right (on tasks):**
-   
+
    ```
    ┌─────────────────────────────────────┐
    │ [✓] Morning Meditation              │
    └─────────────────────────────────────┘
    ```
-   
+
    - Quick complete action
    - Animates checkmark
    - Success haptic
 
 3. **Date Navigation (Agenda):**
-   
    - Swipe left: Next day
    - Swipe right: Previous day
    - Smooth scroll with momentum
