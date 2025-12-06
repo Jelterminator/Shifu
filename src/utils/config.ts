@@ -30,6 +30,8 @@ interface AppConfig {
  * 1. process.env (from babel/webpack during build)
  * 2. Constants.expoConfig.extra (from app.json)
  */
+function getEnvVar(key: string): string | undefined;
+function getEnvVar(key: string, defaultValue: string): string;
 function getEnvVar(key: string, defaultValue?: string): string | undefined {
   // Try process.env first (from build-time injection)
   if (typeof process !== 'undefined' && process.env) {
