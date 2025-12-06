@@ -1,4 +1,4 @@
-﻿# Harmonious Day
+﻿# Shifu
 
 ## AI-Powered Productivity Assistant
 
