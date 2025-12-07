@@ -11,7 +11,7 @@ export const WorkHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [workEnd, setWorkEnd] = useState('17:00');
 
   const handleContinue = () => {
-    navigation.navigate('SpiritualPracticesSetup');
+    navigation.navigate('SleepHoursSetup');
   };
 
   return (

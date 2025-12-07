@@ -6,7 +6,7 @@ Company-Run Servers**.
 
 ## I. System Overview and Mandate
 
-Harmonious Day is a React Native application (Android + iOS) designed from the ground up
+Shifu is a React Native application (Android + iOS) designed from the ground up
 for **offline-first** operation with sophisticated AI capabilities, rooted in the Wu Xing (Five
 Elements) philosophy. It functions as a fully self-contained, intelligent life manager that operates
 without compromise to user privacy or data sovereignty.
@@ -138,7 +138,7 @@ graph TB
 
 ### 2.1 Technical Stack
 
-Harmonious Day can run 100% offline using a React Native foundation enhanced with lightweight
+Shifu can run 100% offline using a React Native foundation enhanced with lightweight
 transformer models and a local-first storage system. Its technical stack blends AI runtimes,
 background automation, and encrypted persistence to deliver a fast, private, and offline-ready
 personal planning experience.

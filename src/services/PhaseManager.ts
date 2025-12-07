@@ -19,13 +19,13 @@ export interface WuXingPhase {
 const PHASE_MAP = {
   WOOD: {
     color: '#4A7C59',
-    romanHours: [21, 22, 23, 0, 1, 2],
+    romanHours: [21, 22, 23, 0, 1],
     qualities: 'Growth, Planning, Vitality. Spiritual centering & movement.',
     idealTasks: ['spiritual', 'planning', 'movement'],
   },
   FIRE: {
     color: '#E63946',
-    romanHours: [3, 4, 5, 6],
+    romanHours: [2, 3, 4, 5, 6],
     qualities: 'Peak energy, expression. Deep work & execution.',
     idealTasks: ['deep_work', 'creative', 'pomodoro'],
   },

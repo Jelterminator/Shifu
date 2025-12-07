@@ -39,7 +39,7 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation }) => {
         timezone,
       });
 
-      navigation.navigate('SleepHoursSetup');
+      navigation.navigate('WorkHoursSetup');
     } catch (error) {
       console.error('Location detection failed:', error);
       Alert.alert('Error', 'Failed to detect location. Please enter manually below.');
@@ -77,7 +77,7 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation }) => {
       timezone,
     });
 
-    navigation.navigate('SleepHoursSetup');
+    navigation.navigate('WorkHoursSetup');
   };
 
   return (
