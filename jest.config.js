@@ -1,11 +1,8 @@
 ﻿module.exports = {
-  preset: 'react-native',
+  preset: 'jest-expo',
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  transform: {
-    '^.+\\.[jt]sx?$': 'babel-jest',
-  },
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|react-native-vector-icons|expo|@expo)/)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg))',
   ],
   testMatch: ['<rootDir>/src/**/*.test.{ts,tsx}', '<rootDir>/tests/**/*.test.{ts,tsx}'],
   moduleNameMapper: {
@@ -15,9 +12,6 @@
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@models/(.*)$': '<rootDir>/src/models/$1',
     '^@assets/(.*)$': '<rootDir>/assets/$1',
-    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
-      '<rootDir>/tests/__mocks__/fileMock.js',
-    '\\.(css|less)$': '<rootDir>/tests/__mocks__/styleMock.js',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -28,6 +22,5 @@
     '!src/**/types.ts',
   ],
   coverageReporters: ['text', 'lcov', 'html'],
-  testEnvironment: 'node',
   clearMocks: true,
 };

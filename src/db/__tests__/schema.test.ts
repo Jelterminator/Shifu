@@ -1,16 +1,8 @@
-﻿import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-
-// Mock the database module
-jest.mock('@/db/database');
+﻿import { describe, expect, it } from '@jest/globals';
 
 describe('Database Schema', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('should define correct habit schema', () => {
     // This is a placeholder test for schema validation
-    // In real implementation, you would import and test the schema
     expect(true).toBe(true);
   });
 

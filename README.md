@@ -2,36 +2,35 @@
 
 ## AI-Powered Productivity Assistant
 
-A React Native application with offline AI capabilities and intelligent scheduling, rooted in the Wu
-Xing (Five Elements) philosophy.
+A React Native application with offline AI capabilities and intelligent scheduling, rooted in the Wu Xing (Five Elements) philosophy.
 
-**Status:** 🚧 Phase 1 Complete - Infrastructure & Security Setup
+**Status:** 🚧 Phase 2 In Progress - Onboarding & Wu Xing Integration
 
 ---
 
 ## Overview
 
-**Shifu** is a fully offline-first, privacy-by-design productivity assistant that runs 100% on your
-device. No company servers. No data collection. Just you, your habits, and an intelligent AI coach.
+**Shifu** is a fully offline-first, privacy-by-design productivity assistant that runs 100% on your device. No company servers. No data collection. Just you, your habits, and an intelligent AI coach.
 
-### Core Features (Planned)
+### Current Features
 
-- 📅 **Intelligent Scheduler** - Adaptive scheduling with on-device ML that learns your rhythms
-- 🌱 **Habit Tracker** - Build consistent habits aligned with natural cycles
-- 📔 **Journaling** - Daily reflections with mood tracking and AI insights
-- ✓ **Task Management** - Urgency-based prioritization with phase-aware scheduling
-- 💬 **AI Coach** - On-device RAG-powered assistant with hierarchical memory
-- 🔐 **100% Private** - AES-256 encrypted, zero external servers for core features
+- 🎨 **Dynamic Wu Xing Theming** - Phase-aware color schemes that adapt to solar time
+- 📍 **Location-Based Solar Calculus** - Accurate Roman hour calculations using sunrise/sunset
+- 🙏 **Spiritual Practice Integration** - Multi-tradition daily practice scheduler
+- 🌓 **Onboarding Flow** - Comprehensive setup for location, practices, and preferences
+- 📅 **Agenda Landing** - Quick access to your daily schedule
 
 ### Philosophy
 
-Built on Wu Xing (Five Elements) principles:
+Built on Wu Xing (Five Elements) principles with precise solar time calculations:
 
-- 🌳 **Wood** (Dawn) - Growth, planning, creativity
-- 🔥 **Fire** (Late Morning) - Peak energy, action, deep work
-- 🌍 **Earth** (Midday) - Balance, integration, grounding
-- 🔧 **Metal** (Afternoon) - Organization, refinement, completion
-- 💧 **Water** (Evening) - Rest, reflection, renewal
+- 🌳 **Wood** (Hours 21-3) - Growth, planning, vitality. Spiritual centering & movement
+- 🔥 **Fire** (Hours 4-6) - Peak energy, expression. Deep work & execution
+- 🌍 **Earth** (Hours 7-8) - Stability, nourishment. Lunch & restoration
+- 🔧 **Metal** (Hours 9-11) - Precision, organization. Admin & review
+- 💧 **Water** (Hours 12-20) - Rest, consolidation. Wind-down & recovery
+
+Each hour is calculated using **unequal day and night Roman hours** based on your location's actual sunrise and sunset times.
 
 ---
 
@@ -41,24 +40,17 @@ Built on Wu Xing (Five Elements) principles:
 
 - Node.js 20+
 - npm 10+
-- Expo CLI (installed globally recommended)
+- Expo CLI (optional, but recommended)
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/harmonious-day.git
+git clone https://github.com/yourusername/shifu.git
 cd shifu
 
 # Install dependencies
 npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your Google OAuth credentials
-
-# Validate environment
-npm run env:check
 ```
 
 ### Development
@@ -66,6 +58,9 @@ npm run env:check
 ```bash
 # Start the development server
 npm start
+
+# Run on web (fastest for development)
+npm run web
 
 # Run on Android
 npm run android
@@ -90,82 +85,78 @@ npm run format
 
 ```
 shifu/
-├── .github/workflows/          # CI/CD pipeline
-│   ├── ci.yml                  # Linting, type-check, tests
-│   └── linting.yml             # Code quality checks
-├── docs/                       # Documentation
-│   ├── ARCHITECTURE.md         # System design & tech stack
-│   ├── DESIGN.md               # UI/UX specifications
-│   └── ROADMAP.md              # Development roadmap
-├── scripts/
-│   └── check-env.js            # Environment validation
 ├── src/
 │   ├── navigation/             # React Navigation setup
-│   ├── screens/                # UI screens (Agenda, Habits, Journal, etc.)
+│   │   └── RootNavigator.tsx   # Main app navigation with onboarding flow
+│   ├── screens/                # UI screens
+│   │   ├── onboarding/         # Multi-step onboarding flow
+│   │   │   ├── WelcomeScreen.tsx
+│   │   │   ├── LocationSetupScreen.tsx
+│   │   │   ├── SleepHoursSetupScreen.tsx
+│   │   │   ├── WorkHoursSetupScreen.tsx
+│   │   │   ├── SpiritualPracticesSetupScreen.tsx
+│   │   │   └── LoadingSetupScreen.tsx
+│   │   ├── AgendaScreen.tsx    # Main landing screen
+│   │   ├── HabitsScreen.tsx
+│   │   ├── JournalScreen.tsx
+│   │   ├── TasksScreen.tsx
+│   │   └── ChatScreen.tsx
 │   ├── services/
-│   │   ├── data/               # Data processing (Habits, Tasks, Summarizer)
-│   │   ├── ai/                 # AI services (RAG, Scheduler, Training)
-│   │   ├── performance/        # Device tier, memory, battery optimization
-│   │   └── sync/               # Google Calendar/Tasks sync
-│   ├── db/                     # SQLite database & schema
-│   ├── models/                 # TypeScript types & interfaces
-│   ├── components/             # Reusable UI components
-│   └── utils/
-│       ├── config.ts           # Environment & secrets loader
-│       ├── encryption.ts       # AES-256 encryption
-│       ├── telemetry.ts        # Performance monitoring
-│       └── offline.ts          # Offline utilities
-├── assets/
-│   ├── fonts/                  # Custom fonts
-│   └── images/                 # Optimized images
-├── models/                     # Quantized AI models (downloaded at runtime)
+│   │   ├── PhaseManager.ts     # Wu Xing phase calculations with SunCalc
+│   │   └── ThemeManager.ts     # Dynamic theming system
+│   ├── stores/                 # Zustand state management
+│   │   ├── userStore.ts        # User preferences & onboarding data
+│   │   ├── themeStore.ts       # Theme state (phase-aware)
+│   │   └── uiStore.ts          # UI state management
+│   ├── data/
+│   │   └── practices.ts        # Religious & secular practice database
+│   ├── components/
+│   │   └── BaseScreen.tsx      # Reusable themed screen wrapper
+│   ├── utils/
+│   │   └── storage.ts          # Platform-aware storage (MMKV/localStorage)
+│   ├── db/                     # Database schema (future)
+│   └── types/
+│       └── navigation.ts       # TypeScript navigation types
 ├── tests/                      # Test suite
-├── .env.example                # Environment template (safe to commit)
-├── .env.local                  # Secrets (git-ignored, DO NOT COMMIT)
-├── .eslintrc.js                # ESLint configuration
-├── .prettierrc.js              # Prettier configuration
-├── tsconfig.json               # TypeScript strict mode enabled
+├── babel.config.js             # Babel configuration for Expo
 ├── jest.config.js              # Jest test configuration
-├── package.json                # Dependencies & scripts
+├── tsconfig.json               # TypeScript strict mode enabled
 └── README.md                   # This file
 ```
 
 ---
 
-## Environment Setup
+## Key Features
 
-### Local Development
+### 🌞 Solar-Based Phase System
 
-1. **Create `.env.local`:**
+The app uses **SunCalc** to calculate precise sunrise and sunset times for your location, then divides:
+- **Day** (sunrise to sunset) into 12 unequal "Roman hours" (0-11)
+- **Night** (sunset to next sunrise) into 12 unequal hours (12-23)
 
-   ```bash
-   cp .env.example .env.local
-   ```
+Each hour is automatically mapped to a Wu Xing phase, creating a natural rhythm that adapts to your latitude and season.
 
-2. **Add your Google OAuth credentials** (get from
-   [Google Cloud Console](https://console.cloud.google.com/)):
+### 🙏 Multi-Tradition Practice Support
 
-   ```bash
-   GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-   GOOGLE_CLIENT_SECRET=your-secret
-   API_BASE_URL=http://localhost:3000
-   ```
+Built-in practice database includes:
+- **Christianity** - Lauds, Vespers, Compline, Liturgy of the Hours
+- **Islam** - Five daily prayers (Fajr, Dhuhr, Asr, Maghrib, Isha) + Tahajjud
+- **Judaism** - Shacharit, Mincha, Ma'ariv, blessings
+- **Hinduism** - Sandhyavandanam, Brahma Muhurta, Puja
+- **Buddhism** - Meditation practices, Kyoto Zen, Shaolin Kung Fu
+- **Shinto** - Daily rituals, cleansing practices
+- **Sikhism** - Nitnem (Jap Ji Sahib, Rehraas Sahib, Kirtan Sohila)
+- **Wicca** - Daily devotions, protection rituals, Esbat practices
+- **Secular** - Meal times, wake-up routines, sunset winddown
 
-3. **Validate:**
-   ```bash
-   npm run env:check
-   ```
+Each practice is mapped to specific Roman hours for intelligent scheduling.
 
-### GitHub Secrets (CI/CD)
+### 🎨 Phase-Aware Theming
 
-Set these in **Repository Settings → Secrets and variables → Actions:**
-
-- `GOOGLE_CLIENT_ID` - Your Google OAuth Client ID
-- `API_BASE_URL` - Your API endpoint (staging/production)
-
-⚠️ **Never** add `GOOGLE_CLIENT_SECRET` to client builds. Secrets are server-side only.
-
-See [docs/ENVIRONMENT_SETUP.md](docs/ENVIRONMENT_SETUP.md) for details.
+The UI dynamically updates its color scheme based on the current Wu Xing phase:
+- **Dark mode** automatically enabled during Water phase (evening/night)
+- **Primary color** shifts to match the current phase
+- **Smooth transitions** between phases throughout the day
 
 ---
 
@@ -180,11 +171,10 @@ npm run validate
 ```
 
 This runs:
-
 - ✅ TypeScript strict type checking
 - ✅ ESLint linting
 - ✅ Prettier formatting
-- ✅ Jest unit tests
+- ✅ Jest unit tests (12 tests passing)
 
 ### Testing
 
@@ -193,91 +183,73 @@ This runs:
 npm test
 
 # Watch mode
-npm test:watch
+npm run test:watch
 
 # Coverage report
-npm test:coverage
+npm run test:coverage
 ```
 
-### CI/CD Pipeline
-
-Every push to `master` or `develop` triggers:
-
-1. Linting & Type Checking
-2. Unit Tests
-3. Environment Validation
-4. Build Configuration Test
-
-See `.github/workflows/ci.yml` for details.
+Current test coverage:
+- ✅ Simple utility tests
+- ✅ Jest configuration tests
+- ✅ Database schema tests
+- ✅ CI integration tests
 
 ---
 
 ## Architecture Highlights
 
-### 🔐 Security & Privacy
+### 🔐 Privacy-First Design
 
-- **100% Local-First** - All data stored encrypted on-device (AES-256)
-- **No Backend Servers** - Core features run entirely offline
-- **Optional Cloud Sync** - Google Calendar/Tasks sync is opt-in via OAuth 2.0
-- **Data Sovereignty** - User controls all data exports and deletions
-
-### 🧠 AI & Intelligence
-
-- **On-Device Inference** - Quantized ONNX models via Transformers.js
-- **Hierarchical RAG** - Memory organized as daily/weekly/monthly/quarterly summaries
-- **Adaptive Scheduler** - Hybrid rule-based + ML decision trees that improve nightly
-- **Local Training** - Fine-tune models on-device when charging/idle
+- **Platform-Aware Storage** - MMKV on native, localStorage on web
+- **Local-First State** - Zustand stores with persistence
+- **No External APIs** - Core features run entirely offline
+- **Optional Location** - Manual entry fallback if permissions denied
 
 ### ⚡ Performance
 
-- **Hermes Engine** - JavaScript compiled to bytecode for faster startup
-- **MMKV Storage** - ~30× faster KV storage than AsyncStorage
-- **List Virtualization** - Smooth scrolling with large datasets
-- **Lazy Loading** - Models and heavy screens loaded on-demand
-- **Device Tier Detection** - Scales AI features based on device capability
+- **Hermes Engine** - JavaScript compiled to bytecode (React Native)
+- **MMKV Storage** - ~30× faster than AsyncStorage
+- **Lazy Loading** - Screens and data loaded on-demand
+- **Minimal Bundle** - Core app < 5MB
 
 ### 🎨 UX/Design
 
 - **Wu Xing Color Scheme** - Phase-aware theming throughout
-- **Phase Clock** - Persistent background showing current energy phase
-- **Smooth Animations** - Reanimated 2 for 60fps interactions
-- **Accessibility-First** - WCAG AA contrast, screen reader support, reduced motion
-
-For detailed architecture, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+- **Responsive Navigation** - Bottom tabs with Agenda as default
+- **Onboarding Reset** - Easy testing with reset button
+- **Accessibility** - Semantic components with proper labels
 
 ---
 
 ## Development Roadmap
 
-### Phase 1: Genesis & Infrastructure ✅ **COMPLETE**
-
+### ✅ Phase 1: Infrastructure (Complete)
 - Repository & DevOps setup
 - ESLint, Prettier, TypeScript strict mode
 - GitHub Actions CI/CD
-- Environment variable security & secrets management
+- Basic navigation structure
 
-### Phase 2: Data Layer (Next)
+### 🚧 Phase 2: Onboarding & Wu Xing (In Progress)
+- ✅ Multi-step onboarding flow
+- ✅ Location detection with manual fallback
+- ✅ Wu Xing phase calculations (SunCalc integration)
+- ✅ Dynamic theming system
+- ✅ Spiritual practices database
+- 🔄 Sleep/work hours integration
+- 🔄 Phase-aware scheduling
 
-- SQLite database with migrations
-- MMKV key-value storage
-- AES-256 encryption at rest
-- Data repositories (Habits, Tasks, Journal)
+### 📅 Phase 3: Core Features (Planned)
+- Habit tracking with phase alignment
+- Journal with mood tracking
+- Task management with urgency scoring
+- AI insights and suggestions
 
-### Phase 3: UI & Wu Xing Visuals
-
-- Design system implementation
-- Phase Clock SVG animation
-- Core screens (Agenda, Habits, Journal, Tasks)
-- Gesture interactions
-
-### Phase 4-7: Features & AI
-
-- External sync (Google Calendar/Tasks)
-- On-device inference (Transformers.js)
-- RAG with hierarchical summarization
-- Adaptive scheduler with nightly training
-
-For full roadmap, see [docs/ROADMAP.md](docs/ROADMAP.md).
+### 🧠 Phase 4: Intelligence (Planned)
+- On-device AI models (Transformers.js)
+- RAG-powered chat assistant
+- Adaptive scheduling
+- Hierarchical memory system
 
 ---
 
@@ -285,19 +257,15 @@ For full roadmap, see [docs/ROADMAP.md](docs/ROADMAP.md).
 
 | Layer             | Technology                    | Why                               |
 | ----------------- | ----------------------------- | --------------------------------- |
-| **App Framework** | React Native 0.72 + Expo      | Cross-platform, managed workflow  |
-| **Language**      | TypeScript (strict mode)      | Type safety, better DX            |
-| **State**         | Zustand                       | Lightweight (~2KB), simple API    |
-| **Database**      | SQLite + MMKV                 | Serverless, fast, on-device       |
-| **Encryption**    | AES-256 (PBKDF2)              | Enterprise security               |
-| **UI Components** | NativeBase + React Native SVG | Accessible, themeable             |
-| **Navigation**    | React Navigation 6            | Industry standard                 |
-| **AI Runtime**    | Transformers.js (ONNX)        | Quantized models, no external API |
-| **Testing**       | Jest + React Testing Library  | Fast, comprehensive               |
-| **CI/CD**         | GitHub Actions                | Free, integrated                  |
-
-For detailed tech decisions, see
-[docs/ARCHITECTURE.md#21-technical-stack](docs/ARCHITECTURE.md#21-technical-stack).
+| **App Framework** | React Native 0.82 + Expo 54   | Cross-platform, managed workflow  |
+| **Language**      | TypeScript 5.3 (strict mode)  | Type safety, better DX            |
+| **State**         | Zustand 5.0                   | Lightweight (~2KB), reactive      |
+| **Storage**       | MMKV + localStorage           | Fast, platform-aware              |
+| **Solar Calc**    | SunCalc 1.9                   | Precise sunrise/sunset            |
+| **Location**      | expo-location                 | Permission handling, coords       |
+| **Navigation**    | React Navigation 7            | Industry standard                 |
+| **Testing**       | Jest 29 + jest-expo           | Fast, comprehensive               |
+| **CI/CD**         | GitHub Actions                | Automated quality checks          |
 
 ---
 
@@ -330,15 +298,14 @@ MIT License - see LICENSE file for details
 ## Acknowledgments
 
 - **Wu Xing Philosophy** - Ancient wisdom for modern productivity
+- **SunCalc** - Accurate solar calculations
 - **React Native Community** - Excellent ecosystem
 - **Expo** - Simplified React Native development
-- **Hugging Face** - Open-source AI models
 
 ---
 
 ## Support & Feedback
 
-- 📖 See [docs/](docs/) for detailed documentation
 - 🐛 [Report issues](https://github.com/yourusername/shifu/issues)
 - 💬 Discussions welcome!
 
