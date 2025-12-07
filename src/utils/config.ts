@@ -11,14 +11,14 @@ interface AppConfig {
   env: Environment;
   isDevelopment: boolean;
   isProduction: boolean;
-  
+
   // Google OAuth (for calendar sync)
   googleClientId: string | undefined;
   googleClientSecret: string | undefined;
-  
+
   // API Configuration
   apiBaseUrl: string;
-  
+
   // App versioning
   appVersion: string;
   buildNumber: string;
@@ -62,9 +62,7 @@ function buildConfig(): AppConfig {
     // API endpoints
     apiBaseUrl: getEnvVar(
       'API_BASE_URL',
-      env === 'production'
-        ? 'https://api.example.com'
-        : 'http://localhost:3000'
+      env === 'production' ? 'https://api.example.com' : 'http://localhost:3000'
     ),
 
     // App versioning (from package.json or build system)

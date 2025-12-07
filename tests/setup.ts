@@ -1,14 +1,14 @@
 ﻿// Setup for Jest tests
 
 // Mock React Native Animated
-jest.mock("react-native/Libraries/Animated/NativeAnimatedHelper");
+jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 
 // Mock AsyncStorage
-jest.mock("@react-native-async-storage/async-storage", () => ({
+jest.mock('@react-native-async-storage/async-storage', () => ({
   setItem: jest.fn(),
   getItem: jest.fn(),
   removeItem: jest.fn(),
-  clear: jest.fn()
+  clear: jest.fn(),
 }));
 
 // Mock timers

@@ -2,7 +2,8 @@
 
 ## AI-Powered Productivity Assistant
 
-A React Native application with offline AI capabilities and intelligent scheduling, rooted in the Wu Xing (Five Elements) philosophy.
+A React Native application with offline AI capabilities and intelligent scheduling, rooted in the Wu
+Xing (Five Elements) philosophy.
 
 **Status:** 🚧 Phase 1 Complete - Infrastructure & Security Setup
 
@@ -10,7 +11,8 @@ A React Native application with offline AI capabilities and intelligent scheduli
 
 ## Overview
 
-**Shifu** is a fully offline-first, privacy-by-design productivity assistant that runs 100% on your device. No company servers. No data collection. Just you, your habits, and an intelligent AI coach.
+**Shifu** is a fully offline-first, privacy-by-design productivity assistant that runs 100% on your
+device. No company servers. No data collection. Just you, your habits, and an intelligent AI coach.
 
 ### Core Features (Planned)
 
@@ -24,6 +26,7 @@ A React Native application with offline AI capabilities and intelligent scheduli
 ### Philosophy
 
 Built on Wu Xing (Five Elements) principles:
+
 - 🌳 **Wood** (Dawn) - Growth, planning, creativity
 - 🔥 **Fire** (Late Morning) - Peak energy, action, deep work
 - 🌍 **Earth** (Midday) - Balance, integration, grounding
@@ -134,11 +137,14 @@ shifu/
 ### Local Development
 
 1. **Create `.env.local`:**
+
    ```bash
    cp .env.example .env.local
    ```
 
-2. **Add your Google OAuth credentials** (get from [Google Cloud Console](https://console.cloud.google.com/)):
+2. **Add your Google OAuth credentials** (get from
+   [Google Cloud Console](https://console.cloud.google.com/)):
+
    ```bash
    GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
    GOOGLE_CLIENT_SECRET=your-secret
@@ -174,6 +180,7 @@ npm run validate
 ```
 
 This runs:
+
 - ✅ TypeScript strict type checking
 - ✅ ESLint linting
 - ✅ Prettier formatting
@@ -195,6 +202,7 @@ npm test:coverage
 ### CI/CD Pipeline
 
 Every push to `master` or `develop` triggers:
+
 1. Linting & Type Checking
 2. Unit Tests
 3. Environment Validation
@@ -242,24 +250,28 @@ For detailed architecture, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Development Roadmap
 
 ### Phase 1: Genesis & Infrastructure ✅ **COMPLETE**
+
 - Repository & DevOps setup
 - ESLint, Prettier, TypeScript strict mode
 - GitHub Actions CI/CD
 - Environment variable security & secrets management
 
 ### Phase 2: Data Layer (Next)
+
 - SQLite database with migrations
 - MMKV key-value storage
 - AES-256 encryption at rest
 - Data repositories (Habits, Tasks, Journal)
 
 ### Phase 3: UI & Wu Xing Visuals
+
 - Design system implementation
 - Phase Clock SVG animation
 - Core screens (Agenda, Habits, Journal, Tasks)
 - Gesture interactions
 
 ### Phase 4-7: Features & AI
+
 - External sync (Google Calendar/Tasks)
 - On-device inference (Transformers.js)
 - RAG with hierarchical summarization
@@ -271,20 +283,21 @@ For full roadmap, see [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Tech Stack
 
-| Layer | Technology | Why |
-|-------|-----------|-----|
-| **App Framework** | React Native 0.72 + Expo | Cross-platform, managed workflow |
-| **Language** | TypeScript (strict mode) | Type safety, better DX |
-| **State** | Zustand | Lightweight (~2KB), simple API |
-| **Database** | SQLite + MMKV | Serverless, fast, on-device |
-| **Encryption** | AES-256 (PBKDF2) | Enterprise security |
-| **UI Components** | NativeBase + React Native SVG | Accessible, themeable |
-| **Navigation** | React Navigation 6 | Industry standard |
-| **AI Runtime** | Transformers.js (ONNX) | Quantized models, no external API |
-| **Testing** | Jest + React Testing Library | Fast, comprehensive |
-| **CI/CD** | GitHub Actions | Free, integrated |
+| Layer             | Technology                    | Why                               |
+| ----------------- | ----------------------------- | --------------------------------- |
+| **App Framework** | React Native 0.72 + Expo      | Cross-platform, managed workflow  |
+| **Language**      | TypeScript (strict mode)      | Type safety, better DX            |
+| **State**         | Zustand                       | Lightweight (~2KB), simple API    |
+| **Database**      | SQLite + MMKV                 | Serverless, fast, on-device       |
+| **Encryption**    | AES-256 (PBKDF2)              | Enterprise security               |
+| **UI Components** | NativeBase + React Native SVG | Accessible, themeable             |
+| **Navigation**    | React Navigation 6            | Industry standard                 |
+| **AI Runtime**    | Transformers.js (ONNX)        | Quantized models, no external API |
+| **Testing**       | Jest + React Testing Library  | Fast, comprehensive               |
+| **CI/CD**         | GitHub Actions                | Free, integrated                  |
 
-For detailed tech decisions, see [docs/ARCHITECTURE.md#21-technical-stack](docs/ARCHITECTURE.md#21-technical-stack).
+For detailed tech decisions, see
+[docs/ARCHITECTURE.md#21-technical-stack](docs/ARCHITECTURE.md#21-technical-stack).
 
 ---
 
