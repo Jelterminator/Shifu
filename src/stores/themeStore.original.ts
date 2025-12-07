@@ -1,6 +1,6 @@
+import { create } from 'zustand';
 import type { WuXingPhase } from '../services/PhaseManager';
 import { storage } from '../utils/storage';
-import { createStore } from '../utils/store';
 
 type ThemeMode = 'light' | 'dark' | 'system' | 'phase-aware';
 
@@ -52,7 +52,7 @@ const calculateIsDark = (mode: ThemeMode, phase: WuXingPhase | null): boolean =>
   }
 };
 
-export const useThemeStore = createStore<ThemeState>((set, get) => ({
+export const useThemeStore = create<ThemeState>((set, get) => ({
   mode: (storage.get('theme_mode') as ThemeMode) || 'phase-aware',
   isDark: false,
   currentPhase: null,

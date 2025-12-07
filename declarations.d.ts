@@ -39,8 +39,5 @@ declare module '*.onnx' {
 }
 
 // Path aliases
-declare module '@/services/*';
-declare module '@components/*';
-declare module '@utils/*';
-declare module '@models/*';
-declare module '@assets/*';
+// These invoke the typescript compiler to look up paths in tsconfig.json
+// DO NOT ADD: declare module '@/services/*' etc. as it hides all type errors!

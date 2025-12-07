@@ -1,6 +1,5 @@
 {
   "expo": {
-    "entryPoint": "./index.js",
     "name": "Shifu",
     "slug": "shifu",
     "version": "0.1.0",
@@ -26,9 +25,8 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
+      "output": "single",
       "bundler": "metro"
-    },
-    "jsEngine": "hermes",
-    "newArchEnabled": true
+    }
   }
 }

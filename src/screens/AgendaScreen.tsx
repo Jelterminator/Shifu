@@ -164,12 +164,16 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
 
   const handleReset = (): void => {
     storage.delete('onboarding_complete');
+    // For web compatibility with minimal navigator, checking if reset exists
     const parent = navigation.getParent();
-    if (parent) {
+    if (parent && parent.reset) {
+       // @ts-ignore - navigation types might tricky with partial navigator
       parent.reset({
         index: 0,
         routes: [{ name: 'Welcome' }],
       });
+    } else {
+        navigation.navigate('Welcome' as any);
     }
   };
 
@@ -278,11 +282,9 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
         )}
 
         <View style={{ height: 80 }} />
-        {Platform.OS === 'web' && (
-          <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
+        <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
             <Text style={styles.resetButtonText}>Reset Onboarding</Text>
-          </TouchableOpacity>
-        )}
+        </TouchableOpacity>
       </ScrollView>
 
       <TouchableOpacity
