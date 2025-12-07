@@ -1,4 +1,4 @@
-import SunCalc from 'suncalc';
+import { calculateRomanHours as calculateRomanHoursUtil } from '../utils/sunTimeUtils';
 
 export interface RomanHour {
   hour: number;
@@ -49,11 +49,57 @@ const PHASE_MAP = {
   },
 };
 
+// Default location (Amsterdam) for fallback
+const DEFAULT_LOCATION = {
+  latitude: 52.3676,
+  longitude: 4.9041,
+  timezone: 'Europe/Amsterdam',
+};
+
 class PhaseManager {
   private userLocation: { latitude: number; longitude: number; timezone: string } | null = null;
+  private isInitialized = false;
 
-  async initialize(latitude: number, longitude: number, timezone: string) {
-    this.userLocation = { latitude, longitude, timezone };
+  /**
+   * Initialize PhaseManager with user location
+   */
+  async initialize(latitude: number, longitude: number, timezone: string): Promise<void> {
+    try {
+      this.userLocation = { latitude, longitude, timezone };
+      this.isInitialized = true;
+      console.log(
+        `✅ PhaseManager initialized: ${latitude.toFixed(2)}, ${longitude.toFixed(2)}, ${timezone}`
+      );
+    } catch (error) {
+      console.error('❌ PhaseManager initialization failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if PhaseManager is initialized
+   */
+  getInitializationStatus(): {
+    isInitialized: boolean;
+    location: { latitude: number; longitude: number; timezone: string } | null;
+  } {
+    return {
+      isInitialized: this.isInitialized,
+      location: this.userLocation,
+    };
+  }
+
+  /**
+   * Ensure location is set, use defaults if needed
+   */
+  private ensureLocation(): { latitude: number; longitude: number; timezone: string } {
+    if (!this.userLocation) {
+      console.warn(
+        `⚠️  PhaseManager not initialized. Using default location (${DEFAULT_LOCATION.latitude}, ${DEFAULT_LOCATION.longitude})`
+      );
+      return DEFAULT_LOCATION;
+    }
+    return this.userLocation;
   }
 
   /**
@@ -62,44 +108,9 @@ class PhaseManager {
    * 12-23: Night hours (sunset to next sunrise divided by 12)
    */
   private async calculateRomanHours(date: Date): Promise<RomanHour[]> {
-    if (!this.userLocation) throw new Error('Location not initialized');
-
-    const { latitude, longitude } = this.userLocation;
-
-    // Get accurate sun times using suncalc
-    const sunData = SunCalc.getTimes(date, latitude, longitude);
-    const { sunrise, sunset } = sunData;
-
-    const romanHours: RomanHour[] = [];
-
-    // Daylight hours: 0-11
-    const dayDuration = (sunset.getTime() - sunrise.getTime()) / 12;
-    for (let h = 0; h < 12; h++) {
-      romanHours.push({
-        hour: h,
-        startTime: new Date(sunrise.getTime() + h * dayDuration),
-        endTime: new Date(sunrise.getTime() + (h + 1) * dayDuration),
-      });
-    }
-
-    // Night hours: 12-23
-    // Calculate next day's sunrise for accurate night duration
-    const nextDay = new Date(date);
-    nextDay.setDate(date.getDate() + 1);
-    const nextSunData = SunCalc.getTimes(nextDay, latitude, longitude);
-    const nextSunrise = nextSunData.sunrise;
-
-    const nightDuration = (nextSunrise.getTime() - sunset.getTime()) / 12;
-    for (let h = 12; h < 24; h++) {
-      const nightIdx = h - 12;
-      romanHours.push({
-        hour: h,
-        startTime: new Date(sunset.getTime() + nightIdx * nightDuration),
-        endTime: new Date(sunset.getTime() + (nightIdx + 1) * nightDuration),
-      });
-    }
-
-    return romanHours;
+    const location = this.ensureLocation();
+    const { latitude, longitude } = location;
+    return calculateRomanHoursUtil(date, latitude, longitude);
   }
 
   /**
@@ -109,7 +120,7 @@ class PhaseManager {
     const phases: WuXingPhase[] = [];
 
     for (const [phaseName, config] of Object.entries(PHASE_MAP)) {
-      const phaseHours = romanHours.filter(rh => config.romanHours.includes(rh.hour));
+      const phaseHours = romanHours.filter((rh) => config.romanHours.includes(rh.hour));
 
       if (phaseHours.length === 0) continue;
 
@@ -125,12 +136,12 @@ class PhaseManager {
       // Special handling for WOOD wraparound (21-23 then 0-2)
       if (
         phaseName === 'WOOD' &&
-        config.romanHours.some(h => h >= 21) &&
-        config.romanHours.some(h => h <= 2)
+        config.romanHours.some((h) => h >= 21) &&
+        config.romanHours.some((h) => h <= 2)
       ) {
-        const nightHours = phaseHours.filter(rh => rh.hour >= 21);
-        const dayHours = phaseHours.filter(rh => rh.hour <= 2);
-        
+        const nightHours = phaseHours.filter((rh) => rh.hour >= 21);
+        const dayHours = phaseHours.filter((rh) => rh.hour <= 2);
+
         const firstNight = nightHours[0];
         const lastDay = dayHours[dayHours.length - 1];
 
@@ -158,8 +169,13 @@ class PhaseManager {
    * Calculate Wu Xing phases for a given date.
    */
   async calculatePhasesForDate(date: Date): Promise<WuXingPhase[]> {
-    const romanHours = await this.calculateRomanHours(date);
-    return this.mapHoursToPhases(romanHours);
+    try {
+      const romanHours = await this.calculateRomanHours(date);
+      return this.mapHoursToPhases(romanHours);
+    } catch (error) {
+      console.error('❌ Error calculating phases for date:', error);
+      throw error;
+    }
   }
 
   /**
@@ -173,19 +189,28 @@ class PhaseManager {
    * Get current phase based on current time.
    */
   async getCurrentPhase(): Promise<WuXingPhase> {
-    const phases = await this.calculateTodayPhases();
-    const now = new Date();
+    try {
+      const phases = await this.calculateTodayPhases();
+      const now = new Date();
 
-    const currentPhase = phases.find(p => now >= p.startTime && now < p.endTime);
-    
-    if (currentPhase) return currentPhase;
-    
-    // Fallback to last phase if nothing found (shouldn't happen with correct coverage)
-    const lastPhase = phases[phases.length - 1];
-    if (lastPhase) return lastPhase;
-    
-    // Absolute fallback if phases are somehow empty (e.g. location not init)
-    throw new Error('Could not calculate current phase');
+      const currentPhase = phases.find((p) => now >= p.startTime && now < p.endTime);
+
+      if (currentPhase) return currentPhase;
+
+      // Fallback to last phase if nothing found
+      const lastPhase = phases[phases.length - 1];
+      if (lastPhase) {
+        console.warn(
+          `⚠️  Current time not in any phase range. Using last phase: ${lastPhase.name}`
+        );
+        return lastPhase;
+      }
+
+      throw new Error('No phases calculated');
+    } catch (error) {
+      console.error('❌ Error getting current phase:', error);
+      throw error;
+    }
   }
 }
 

@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { storage } from '../utils/storage';
 
 export interface User {
   id: string | null;
@@ -24,13 +26,25 @@ export interface UserStoreActions {
   clearUser: () => void;
 }
 
-export const useUserStore = create<UserStoreState & UserStoreActions>((set) => ({
-  user: { id: null, name: null, email: null, timezone: 'UTC' },
-  isAuthenticated: false,
-  setUser: (user) => set({ user, isAuthenticated: true }),
-  clearUser: () =>
-    set({
+export const useUserStore = create<UserStoreState & UserStoreActions>()(
+  persist(
+    (set) => ({
       user: { id: null, name: null, email: null, timezone: 'UTC' },
       isAuthenticated: false,
+      setUser: (user) => set({ user, isAuthenticated: true }),
+      clearUser: () =>
+        set({
+          user: { id: null, name: null, email: null, timezone: 'UTC' },
+          isAuthenticated: false,
+        }),
     }),
-}));
+    {
+      name: 'user-storage',
+      storage: createJSONStorage(() => ({
+        getItem: (name) => storage.get(name),
+        setItem: (name, value) => storage.set(name, value),
+        removeItem: (name) => storage.delete(name),
+      })),
+    }
+  )
+);
