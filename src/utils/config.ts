@@ -35,7 +35,7 @@ function getEnvVar(key: string, defaultValue: string): string;
 function getEnvVar(key: string, defaultValue?: string): string | undefined {
   // Try process.env first (from build-time injection)
   if (typeof process !== 'undefined' && process.env) {
-    const value = process.env[key];
+    const value = process.env[key] as string | undefined;
     if (value !== undefined) return value;
   }
 
@@ -89,7 +89,7 @@ export function validateConfig(): void {
     throw new Error(`Configuration validation failed:\n${errors.join('\n')}`);
   }
 
-  __DEV__ && console.log('✅ Configuration validated');
+  // __DEV__ && console.log('✅ Configuration validated');
 }
 
 /**

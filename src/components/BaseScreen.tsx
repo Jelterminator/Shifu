@@ -32,21 +32,21 @@ export function BaseScreen({
   showSettings = true,
   onSettingsPress,
 }: BaseScreenProps): React.JSX.Element {
-  const colors = useThemeStore((state) => state.colors);
-  
+  const colors = useThemeStore(state => state.colors);
+
   const handleSettingsPress = (): void => {
     if (onSettingsPress) {
       onSettingsPress();
     } else {
-      console.log(`Settings pressed on ${title} screen`);
+      // console.log(`Settings pressed on ${title} screen`);
     }
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar 
-        barStyle={colors.text === '#FFFFFF' ? "light-content" : "dark-content"} 
-        backgroundColor={colors.background} 
+      <StatusBar
+        barStyle={colors.text === '#FFFFFF' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
       />
       <View style={[styles.header, { borderBottomColor: colors.surface }]}>
         <Text style={[styles.title, { color: colors.text }]}>{title}</Text>

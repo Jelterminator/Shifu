@@ -23,42 +23,19 @@
     "inlineSources": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@components/*": [
-        "src/components/*"
-      ],
-      "@screens/*": [
-        "src/screens/*"
-      ],
-      "@navigation/*": [
-        "src/navigation/*"
-      ],
-      "@services/*": [
-        "src/services/*"
-      ],
-      "@utils/*": [
-        "src/utils/*"
-      ],
-      "@models/*": [
-        "src/models/*"
-      ],
-      "@types/*": [
-        "src/types/*"
-      ],
-      "@assets/*": [
-        "assets/*"
-      ],
-      "react/jsx-runtime": [
-        "./node_modules/@types/react/jsx-runtime"
-      ]
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@screens/*": ["src/screens/*"],
+      "@navigation/*": ["src/navigation/*"],
+      "@services/*": ["src/services/*"],
+      "@utils/*": ["src/utils/*"],
+      "@models/*": ["src/models/*"],
+      "@types/*": ["src/types/*"],
+      "@assets/*": ["assets/*"],
+      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"]
     },
     "jsx": "react-jsx",
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
+    "lib": ["ESNext", "DOM"],
     "target": "ES2020",
     "module": "ESNext",
     "skipLibCheck": true,
@@ -66,15 +43,7 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": [
-    "src/**/*",
-    "tests/**/*",
-    "declarations.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist"
-  ],
+  "include": ["src/**/*", "tests/**/*", "declarations.d.ts"],
+  "exclude": ["node_modules", "build", "dist"],
   "extends": "expo/tsconfig.base"
 }

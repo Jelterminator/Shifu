@@ -32,7 +32,12 @@ export const RELIGIOUS_PRACTICES: Tradition[] = [
       {
         name: 'Office of Readings',
         practices: [
-          { id: 'c_vigils', name: 'Vigils - Office of Readings', romanHour: 21, durationMinutes: 60 },
+          {
+            id: 'c_vigils',
+            name: 'Vigils - Office of Readings',
+            romanHour: 21,
+            durationMinutes: 60,
+          },
         ],
       },
       {
@@ -156,7 +161,12 @@ export const RELIGIOUS_PRACTICES: Tradition[] = [
       {
         name: 'Daily Rituals',
         practices: [
-          { id: 's_greeting', name: 'Greeting the Sun/Purification', romanHour: 0, durationMinutes: 10 },
+          {
+            id: 's_greeting',
+            name: 'Greeting the Sun/Purification',
+            romanHour: 0,
+            durationMinutes: 10,
+          },
           { id: 's_offering', name: 'Offering to Kami', romanHour: 6, durationMinutes: 10 },
           { id: 's_appreciation', name: 'Appreciation Ritual', romanHour: 12, durationMinutes: 15 },
         ],
@@ -192,7 +202,12 @@ export const RELIGIOUS_PRACTICES: Tradition[] = [
       {
         name: 'Amrit Vela',
         practices: [
-          { id: 'sk_amritvela', name: 'Amrit Vela - Early Meditation', romanHour: 21, durationMinutes: 60 },
+          {
+            id: 'sk_amritvela',
+            name: 'Amrit Vela - Early Meditation',
+            romanHour: 21,
+            durationMinutes: 60,
+          },
         ],
       },
       {
@@ -212,7 +227,12 @@ export const RELIGIOUS_PRACTICES: Tradition[] = [
       {
         name: 'Daily Devotions',
         practices: [
-          { id: 'w_gratitude', name: 'Morning Gratitude Prayer', romanHour: 0, durationMinutes: 10 },
+          {
+            id: 'w_gratitude',
+            name: 'Morning Gratitude Prayer',
+            romanHour: 0,
+            durationMinutes: 10,
+          },
           { id: 'w_midday', name: 'Midday Meditation', romanHour: 6, durationMinutes: 15 },
           { id: 'w_evening', name: 'Evening Ritual', romanHour: 12, durationMinutes: 20 },
         ],
@@ -247,15 +267,11 @@ export const RELIGIOUS_PRACTICES: Tradition[] = [
       },
       {
         name: 'Wake up',
-        practices: [
-          { id: 'sec_wakeup', name: 'Wake up', romanHour: 23, durationMinutes: 60 },
-        ],
+        practices: [{ id: 'sec_wakeup', name: 'Wake up', romanHour: 23, durationMinutes: 60 }],
       },
       {
         name: 'Sunset winddown',
-        practices: [
-          { id: 'sec_winddown', name: 'Winddown', romanHour: 12, durationMinutes: 90 },
-        ],
+        practices: [{ id: 'sec_winddown', name: 'Winddown', romanHour: 12, durationMinutes: 90 }],
       },
     ],
   },

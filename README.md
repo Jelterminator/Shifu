@@ -2,7 +2,8 @@
 
 ## AI-Powered Productivity Assistant
 
-A React Native application with offline AI capabilities and intelligent scheduling, rooted in the Wu Xing (Five Elements) philosophy.
+A React Native application with offline AI capabilities and intelligent scheduling, rooted in the Wu
+Xing (Five Elements) philosophy.
 
 **Status:** 🚧 Phase 2 In Progress - Onboarding & Wu Xing Integration
 
@@ -10,7 +11,8 @@ A React Native application with offline AI capabilities and intelligent scheduli
 
 ## Overview
 
-**Shifu** is a fully offline-first, privacy-by-design productivity assistant that runs 100% on your device. No company servers. No data collection. Just you, your habits, and an intelligent AI coach.
+**Shifu** is a fully offline-first, privacy-by-design productivity assistant that runs 100% on your
+device. No company servers. No data collection. Just you, your habits, and an intelligent AI coach.
 
 ### Current Features
 
@@ -30,7 +32,8 @@ Built on Wu Xing (Five Elements) principles with precise solar time calculations
 - 🔧 **Metal** (Hours 9-11) - Precision, organization. Admin & review
 - 💧 **Water** (Hours 12-20) - Rest, consolidation. Wind-down & recovery
 
-Each hour is calculated using **unequal day and night Roman hours** based on your location's actual sunrise and sunset times.
+Each hour is calculated using **unequal day and night Roman hours** based on your location's actual
+sunrise and sunset times.
 
 ---
 
@@ -130,15 +133,19 @@ shifu/
 
 ### 🌞 Solar-Based Phase System
 
-The app uses **SunCalc** to calculate precise sunrise and sunset times for your location, then divides:
+The app uses **SunCalc** to calculate precise sunrise and sunset times for your location, then
+divides:
+
 - **Day** (sunrise to sunset) into 12 unequal "Roman hours" (0-11)
 - **Night** (sunset to next sunrise) into 12 unequal hours (12-23)
 
-Each hour is automatically mapped to a Wu Xing phase, creating a natural rhythm that adapts to your latitude and season.
+Each hour is automatically mapped to a Wu Xing phase, creating a natural rhythm that adapts to your
+latitude and season.
 
 ### 🙏 Multi-Tradition Practice Support
 
 Built-in practice database includes:
+
 - **Christianity** - Lauds, Vespers, Compline, Liturgy of the Hours
 - **Islam** - Five daily prayers (Fajr, Dhuhr, Asr, Maghrib, Isha) + Tahajjud
 - **Judaism** - Shacharit, Mincha, Ma'ariv, blessings
@@ -154,6 +161,7 @@ Each practice is mapped to specific Roman hours for intelligent scheduling.
 ### 🎨 Phase-Aware Theming
 
 The UI dynamically updates its color scheme based on the current Wu Xing phase:
+
 - **Dark mode** automatically enabled during Water phase (evening/night)
 - **Primary color** shifts to match the current phase
 - **Smooth transitions** between phases throughout the day
@@ -171,6 +179,7 @@ npm run validate
 ```
 
 This runs:
+
 - ✅ TypeScript strict type checking
 - ✅ ESLint linting
 - ✅ Prettier formatting
@@ -190,6 +199,7 @@ npm run test:coverage
 ```
 
 Current test coverage:
+
 - ✅ Simple utility tests
 - ✅ Jest configuration tests
 - ✅ Database schema tests
@@ -225,12 +235,14 @@ Current test coverage:
 ## Development Roadmap
 
 ### ✅ Phase 1: Infrastructure (Complete)
+
 - Repository & DevOps setup
 - ESLint, Prettier, TypeScript strict mode
 - GitHub Actions CI/CD
 - Basic navigation structure
 
 ### 🚧 Phase 2: Onboarding & Wu Xing (In Progress)
+
 - ✅ Multi-step onboarding flow
 - ✅ Location detection with manual fallback
 - ✅ Wu Xing phase calculations (SunCalc integration)
@@ -240,12 +252,14 @@ Current test coverage:
 - 🔄 Phase-aware scheduling
 
 ### 📅 Phase 3: Core Features (Planned)
+
 - Habit tracking with phase alignment
 - Journal with mood tracking
 - Task management with urgency scoring
 - AI insights and suggestions
 
 ### 🧠 Phase 4: Intelligence (Planned)
+
 - On-device AI models (Transformers.js)
 - RAG-powered chat assistant
 - Adaptive scheduling
@@ -255,17 +269,17 @@ Current test coverage:
 
 ## Tech Stack
 
-| Layer             | Technology                    | Why                               |
-| ----------------- | ----------------------------- | --------------------------------- |
-| **App Framework** | React Native 0.82 + Expo 54   | Cross-platform, managed workflow  |
-| **Language**      | TypeScript 5.3 (strict mode)  | Type safety, better DX            |
-| **State**         | Zustand 5.0                   | Lightweight (~2KB), reactive      |
-| **Storage**       | MMKV + localStorage           | Fast, platform-aware              |
-| **Solar Calc**    | SunCalc 1.9                   | Precise sunrise/sunset            |
-| **Location**      | expo-location                 | Permission handling, coords       |
-| **Navigation**    | React Navigation 7            | Industry standard                 |
-| **Testing**       | Jest 29 + jest-expo           | Fast, comprehensive               |
-| **CI/CD**         | GitHub Actions                | Automated quality checks          |
+| Layer             | Technology                   | Why                              |
+| ----------------- | ---------------------------- | -------------------------------- |
+| **App Framework** | React Native 0.82 + Expo 54  | Cross-platform, managed workflow |
+| **Language**      | TypeScript 5.3 (strict mode) | Type safety, better DX           |
+| **State**         | Zustand 5.0                  | Lightweight (~2KB), reactive     |
+| **Storage**       | MMKV + localStorage          | Fast, platform-aware             |
+| **Solar Calc**    | SunCalc 1.9                  | Precise sunrise/sunset           |
+| **Location**      | expo-location                | Permission handling, coords      |
+| **Navigation**    | React Navigation 7           | Industry standard                |
+| **Testing**       | Jest 29 + jest-expo          | Fast, comprehensive              |
+| **CI/CD**         | GitHub Actions               | Automated quality checks         |
 
 ---
 

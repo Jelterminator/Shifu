@@ -14,7 +14,7 @@ export class ThemeManager {
   private mode: ThemeMode = 'phase-aware';
   private isDark: boolean = false;
   private currentPhase: WuXingPhase | null = null;
-  private phaseColor: string = WuXingPhase.color; // Default WOOD color
+  private phaseColor: string = ''; // Default color will be set when phase is assigned
 
   constructor() {
     this.loadTheme();
@@ -58,7 +58,13 @@ export class ThemeManager {
   /**
    * Get colors based on current theme and phase.
    */
-  getColors() {
+  getColors(): {
+    primary: string;
+    background: string;
+    surface: string;
+    text: string;
+    textSecondary: string;
+  } {
     return {
       primary: this.phaseColor,
       background: this.isDark ? '#1A1A1A' : '#F8F9FA',
@@ -75,10 +81,10 @@ export class ThemeManager {
         // Simple logic: Water (night hours) => Dark mode, others => Light mode
         // Or strictly check Roman Hours for night time (12-23 is night in our logic)
         if (this.currentPhase) {
-            const isNight = this.currentPhase.romanHours.some(h => h >= 12); 
-            this.isDark = isNight;
+          const isNight = this.currentPhase.romanHours.some(h => h >= 12);
+          this.isDark = isNight;
         } else {
-             this.isDark = false;
+          this.isDark = false;
         }
         break;
       case 'dark':

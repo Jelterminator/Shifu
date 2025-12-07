@@ -13,7 +13,7 @@ export type JournalScreenProps = MainTabScreenProps<'Journal'>;
  */
 export function JournalScreen(_props: JournalScreenProps): React.JSX.Element {
   const handleSettingsPress = (): void => {
-    console.log('JournalScreen: Settings pressed');
+    // console.log('JournalScreen: Settings pressed');
   };
 
   return (

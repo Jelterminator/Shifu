@@ -9,17 +9,17 @@ import type { RootStackParamList } from '../../types/navigation';
 type Props = NativeStackScreenProps<RootStackParamList, 'SpiritualPracticesSetup'>;
 
 export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation }) => {
-  const user = useUserStore((state) => state.user);
-  const setUser = useUserStore((state) => state.setUser);
-  const [selectedPractices, setSelectedPractices] = useState<string[]>(user.spiritualPractices || []);
+  const user = useUserStore(state => state.user);
+  const setUser = useUserStore(state => state.setUser);
+  const [selectedPractices, setSelectedPractices] = useState<string[]>(
+    user.spiritualPractices || []
+  );
 
-  const handleTogglePractice = (id: string) => {
-    setSelectedPractices((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
+  const handleTogglePractice = (id: string): void => {
+    setSelectedPractices(prev => (prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]));
   };
 
-  const handleContinue = () => {
+  const handleContinue = (): void => {
     setUser({
       ...user,
       spiritualPractices: selectedPractices,
@@ -27,7 +27,12 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation }) =
     navigation.navigate('LoadingSetup');
   };
 
-  const renderPracticeItem = (practice: { id: string; name: string; romanHour: number; durationMinutes: number }) => {
+  const renderPracticeItem = (practice: {
+    id: string;
+    name: string;
+    romanHour: number;
+    durationMinutes: number;
+  }): React.JSX.Element => {
     const isSelected = selectedPractices.includes(practice.id);
     return (
       <TouchableOpacity
@@ -39,21 +44,25 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation }) =
           {isSelected && <Text style={styles.checkmark}>✓</Text>}
         </View>
         <View style={styles.practiceInfo}>
-           <Text style={[styles.practiceName, isSelected && styles.practiceNameSelected]}>{practice.name}</Text>
-           <Text style={styles.practiceDetail}>Hour {practice.romanHour} • {practice.durationMinutes}m</Text>
+          <Text style={[styles.practiceName, isSelected && styles.practiceNameSelected]}>
+            {practice.name}
+          </Text>
+          <Text style={styles.practiceDetail}>
+            Hour {practice.romanHour} • {practice.durationMinutes}m
+          </Text>
         </View>
       </TouchableOpacity>
     );
   };
 
-  const renderCategory = ({ item }: { item: PracticeCategory }) => (
+  const renderCategory = ({ item }: { item: PracticeCategory }): React.JSX.Element => (
     <View style={styles.categoryContainer}>
       <Text style={styles.categoryTitle}>{item.name}</Text>
       {item.practices.map(renderPracticeItem)}
     </View>
   );
 
-  const sections = RELIGIOUS_PRACTICES.map((tradition) => ({
+  const sections = RELIGIOUS_PRACTICES.map(tradition => ({
     title: tradition.name,
     data: tradition.categories,
   }));
@@ -173,7 +182,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   practiceInfo: {
-      flex: 1,
+    flex: 1,
   },
   practiceName: {
     fontSize: 16,
@@ -181,13 +190,13 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
   practiceNameSelected: {
-      fontWeight: '700',
-      color: '#1A1A1A',
+    fontWeight: '700',
+    color: '#1A1A1A',
   },
   practiceDetail: {
-      fontSize: 13,
-      color: '#888888',
-      marginTop: 2,
+    fontSize: 13,
+    color: '#888888',
+    marginTop: 2,
   },
   footer: {
     padding: 16,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { phaseManager } from '../services/PhaseManager';
 import { anchorsService } from '../services/data/Anchors';
 import { useUserStore } from '../stores/userStore';
@@ -9,46 +9,71 @@ interface Props {
   children: React.ReactNode;
 }
 
-export const AppInitializer: React.FC<Props> = ({ children }) => {
+export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElement => {
   const [isReady, setIsReady] = useState(false);
-  const user = useUserStore((state) => state.user);
+  const [initError, setInitError] = useState<string | null>(null);
+  const user = useUserStore(state => state.user);
 
   useEffect(() => {
-    const initialize = async () => {
+    const initialize = (): void => {
       try {
+        // console.log('🚀 AppInitializer: Starting initialization...');
+
         const onboardingComplete = storage.get('onboarding_complete') === 'true';
+        // console.log(`📋 Onboarding complete: ${onboardingComplete}`);
 
         if (onboardingComplete) {
-            if (user.latitude && user.longitude) {
-                await phaseManager.initialize(
-                    user.latitude,
-                    user.longitude,
-                    user.timezone || 'Europe/Amsterdam'
-                );
-                await anchorsService.initialize(user.latitude, user.longitude);
+          // Use user location or fall back to Amsterdam defaults
+          const latitude = user.latitude ?? 52.3676;
+          const longitude = user.longitude ?? 4.9041;
+          const timezone = user.timezone || 'Europe/Amsterdam';
+
+          // console.log(`📍 Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}, ${timezone}`);
+
+          try {
+            // Initialize PhaseManager
+            phaseManager.initialize(latitude, longitude, timezone);
+            // console.log('✅ PhaseManager initialized');
+
+            // Only initialize anchorsService on native platforms or if explicitly supported
+            if (Platform.OS !== 'web') {
+              anchorsService.initialize(latitude, longitude); // initialization
+              // console.log('✅ AnchorsService initialized');
             } else {
-                console.warn('AppInitializer: Onboarding complete but user location missing. Using defaults.');
-                await phaseManager.initialize(52.3676, 4.9041, 'Europe/Amsterdam');
-                await anchorsService.initialize(52.3676, 4.9041);
+              // console.log('⚠️ AnchorsService skipped on web platform');
             }
+          } catch (serviceError) {
+            console.error('⚠️ Service initialization error:', serviceError);
+            // Continue anyway - services can fail gracefully
+          }
+        } else {
+          // console.log('⏭️ Onboarding not complete, skipping service initialization');
         }
-      } catch (e) {
-        console.error('AppInitializer: Failed to initialize', e);
-      } finally {
+
+        setIsReady(true);
+        // console.log('✅ AppInitializer: Initialization complete');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('❌ AppInitializer: Fatal initialization error:', errorMessage);
+        setInitError(errorMessage);
+        // Still set ready to true to allow app to render with degraded functionality
         setIsReady(true);
       }
     };
 
-    initialize();
-  }, [user]); 
+    void initialize();
+  }, [user]);
 
-  // While initializing, use a safe render to prove we are alive
   if (!isReady) {
-      return (
-          <View style={styles.container}>
-              <ActivityIndicator size="large" color="#4A7C59" />
-          </View>
-      );
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#4A7C59" />
+      </View>
+    );
+  }
+
+  if (initError) {
+    console.warn('⚠️ App running with initialization errors:', initError);
   }
 
   return <>{children}</>;

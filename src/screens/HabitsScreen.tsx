@@ -13,7 +13,7 @@ export type HabitsScreenProps = MainTabScreenProps<'Habits'>;
  */
 export function HabitsScreen(_props: HabitsScreenProps): React.JSX.Element {
   const handleSettingsPress = (): void => {
-    console.log('HabitsScreen: Settings pressed');
+    // console.log('HabitsScreen: Settings pressed');
   };
 
   return (

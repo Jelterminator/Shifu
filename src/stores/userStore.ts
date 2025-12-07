@@ -28,10 +28,10 @@ export interface UserStoreActions {
 
 export const useUserStore = create<UserStoreState & UserStoreActions>()(
   persist(
-    (set) => ({
+    set => ({
       user: { id: null, name: null, email: null, timezone: 'UTC' },
       isAuthenticated: false,
-      setUser: (user) => set({ user, isAuthenticated: true }),
+      setUser: user => set({ user, isAuthenticated: true }),
       clearUser: () =>
         set({
           user: { id: null, name: null, email: null, timezone: 'UTC' },
@@ -41,9 +41,9 @@ export const useUserStore = create<UserStoreState & UserStoreActions>()(
     {
       name: 'user-storage',
       storage: createJSONStorage(() => ({
-        getItem: (name) => storage.get(name),
+        getItem: name => storage.get(name),
         setItem: (name, value) => storage.set(name, value),
-        removeItem: (name) => storage.delete(name),
+        removeItem: name => storage.delete(name),
       })),
     }
   )

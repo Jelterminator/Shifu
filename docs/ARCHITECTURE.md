@@ -138,10 +138,10 @@ graph TB
 
 ### 2.1 Technical Stack
 
-Shifu can run 100% offline using a React Native foundation enhanced with lightweight
-transformer models and a local-first storage system. Its technical stack blends AI runtimes,
-background automation, and encrypted persistence to deliver a fast, private, and offline-ready
-personal planning experience.
+Shifu can run 100% offline using a React Native foundation enhanced with lightweight transformer
+models and a local-first storage system. Its technical stack blends AI runtimes, background
+automation, and encrypted persistence to deliver a fast, private, and offline-ready personal
+planning experience.
 
 | Layer                        | Technology                                        | Rationale & Mandate Alignment                                                                                                                                                                               |
 | ---------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

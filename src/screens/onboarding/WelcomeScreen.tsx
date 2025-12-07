@@ -7,7 +7,7 @@ import type { RootStackParamList } from '../../types/navigation';
 type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 
 export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
-  const handleGetStarted = () => {
+  const handleGetStarted = (): void => {
     navigation.navigate('LocationSetup');
   };
 

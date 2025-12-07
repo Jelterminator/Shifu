@@ -13,7 +13,7 @@ export type ChatScreenProps = MainTabScreenProps<'Chat'>;
  */
 export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
   const handleSettingsPress = (): void => {
-    console.log('ChatScreen: Settings pressed');
+    //console.log('ChatScreen: Settings pressed');
   };
 
   return (

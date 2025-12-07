@@ -13,7 +13,7 @@ export type TasksScreenProps = MainTabScreenProps<'Tasks'>;
  */
 export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
   const handleSettingsPress = (): void => {
-    console.log('TasksScreen: Settings pressed');
+    //console.log('TasksScreen: Settings pressed');
   };
 
   return (

@@ -16,14 +16,14 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation }) => {
     Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Amsterdam'
   );
   const [loading, setLoading] = useState(false);
-  const setUser = useUserStore((state) => state.setUser);
-  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore(state => state.setUser);
+  const user = useUserStore(state => state.user);
 
-  const handleDetectLocation = async () => {
+  const handleDetectLocation = async (): Promise<void> => {
     setLoading(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      if (status !== Location.PermissionStatus.GRANTED) {
         Alert.alert('Permission Denied', 'Permission to access location was denied');
         return;
       }
@@ -48,7 +48,7 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = (): void => {
     if (!timezone) {
       Alert.alert('Validation', 'Please enter a timezone');
       return;
@@ -69,7 +69,7 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation }) => {
 
     // Default to defaults if still missing (last resort, though we ideally want user input)
     // We won't block if they are missing, but LoadingSetupScreen will use defaults.
-    
+
     setUser({
       ...user,
       latitude,
@@ -89,7 +89,7 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation }) => {
       </Text>
 
       <TouchableOpacity
-        onPress={handleDetectLocation}
+        onPress={() => void handleDetectLocation()}
         disabled={loading}
         style={{
           backgroundColor: '#457B9D',
@@ -104,7 +104,7 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation }) => {
       </TouchableOpacity>
 
       <Text style={{ marginBottom: 8, fontWeight: '600' }}>Or enter manually:</Text>
-      
+
       <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
         <View style={{ flex: 1 }}>
           <Text style={{ marginBottom: 4, fontSize: 12, color: '#666' }}>Latitude</Text>

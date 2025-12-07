@@ -10,9 +10,9 @@ export interface UIStoreActions {
   setError: (error: string | null) => void;
 }
 
-export const useUIStore = create<UIStoreState & UIStoreActions>((set) => ({
+export const useUIStore = create<UIStoreState & UIStoreActions>(set => ({
   isLoading: false,
   error: null,
-  setLoading: (isLoading) => set({ isLoading }),
-  setError: (error) => set({ error }),
+  setLoading: isLoading => set({ isLoading }),
+  setError: error => set({ error }),
 }));

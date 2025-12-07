@@ -18,7 +18,7 @@ interface ThemeState {
   currentPhase: WuXingPhase | null;
   phaseColor: string;
   colors: ThemeColors;
-  
+
   setTheme: (mode: ThemeMode) => void;
   setCurrentPhase: (phase: WuXingPhase) => void;
 }
@@ -38,7 +38,7 @@ const calculateIsDark = (mode: ThemeMode, phase: WuXingPhase | null): boolean =>
     case 'phase-aware':
       if (phase) {
         // Water (night hours 12-23) => Dark mode
-        return phase.romanHours.some((h) => h >= 12);
+        return phase.romanHours.some(h => h >= 12);
       }
       return false;
     case 'dark':
@@ -59,13 +59,13 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   phaseColor: DEFAULT_COLOR,
   colors: getColors(false, DEFAULT_COLOR),
 
-  setTheme: (mode) => {
+  setTheme: mode => {
     const { currentPhase } = get();
     const isDark = calculateIsDark(mode, currentPhase);
     const phaseColor = currentPhase ? currentPhase.color : DEFAULT_COLOR;
-    
+
     storage.set('theme_mode', mode);
-    
+
     set({
       mode,
       isDark,
@@ -73,7 +73,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     });
   },
 
-  setCurrentPhase: (phase) => {
+  setCurrentPhase: phase => {
     const { mode } = get();
     const isDark = calculateIsDark(mode, phase);
     const phaseColor = phase.color;

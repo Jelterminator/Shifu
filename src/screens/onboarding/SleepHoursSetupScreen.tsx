@@ -13,7 +13,7 @@ export const SleepHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
   // const setUser = useUserStore((state) => state.setUser);
   // const user = useUserStore((state) => state.user);
 
-  const handleContinue = () => {
+  const handleContinue = (): void => {
     // setUser({ ...user }); // Would save sleep hours here if stored in UserStore
     // For now we navigate
     navigation.navigate('SpiritualPracticesSetup');

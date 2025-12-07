@@ -17,14 +17,14 @@ export function CalendarView({
   onSelectDate,
   onMonthChange,
 }: CalendarViewProps): React.JSX.Element {
-  const colors = useThemeStore((state) => state.colors);
-  const phaseColor = useThemeStore((state) => state.phaseColor);
+  const colors = useThemeStore(state => state.colors);
+  const phaseColor = useThemeStore(state => state.phaseColor);
 
   // Memoize calendar logic
   const { monthLabel, days } = useMemo(() => {
     const year = selectedDate.getFullYear();
     const month = selectedDate.getMonth();
-    
+
     // Month Label
     const date = new Date(year, month);
     const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -34,12 +34,12 @@ export function CalendarView({
     const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
 
     const calendarDays = [];
-    
+
     // Empty slots for previous month
     for (let i = 0; i < firstDay; i++) {
       calendarDays.push(null);
     }
-    
+
     // Days of current month
     for (let i = 1; i <= daysInMonth; i++) {
       calendarDays.push(new Date(year, month, i));
@@ -48,31 +48,31 @@ export function CalendarView({
     return { monthLabel: label, days: calendarDays };
   }, [selectedDate]);
 
-  const handlePrevMonth = () => {
+  const handlePrevMonth = (): void => {
     const newDate = new Date(selectedDate);
     newDate.setMonth(newDate.getMonth() - 1);
     // Be careful with day overflow (e.g. Mar 31 -> Feb 28/29)
     // Actually for month nav, we usually just want to go to *some* day in that month.
     // Ideally user might want to stay on "Same Day" or go to "1st".
     // Let's go to the same day if possible, or last day of month.
-    
+
     if (selectedDate.getDate() > 28) {
-       // Check if we skipped a month (e.g. going Jan 31 -> Feb -> Mar) because Feb doesn't have 31.
-       // The setMonth behavior handles this by overflowing.
-       // e.g. Jan 31 -> setMonth(Feb) -> Mar 3 (or 2).
-       // We want Feb 28.
-       // Actually, simplified approach: pass the 1st of the new month to parent?
-       // But parent expects a "Select Date".
-       // Let's just update the view but keep selection? 
-       // No, simpler to just select the 1st of the new month for navigation purposes
+      // Check if we skipped a month (e.g. going Jan 31 -> Feb -> Mar) because Feb doesn't have 31.
+      // The setMonth behavior handles this by overflowing.
+      // e.g. Jan 31 -> setMonth(Feb) -> Mar 3 (or 2).
+      // We want Feb 28.
+      // Actually, simplified approach: pass the 1st of the new month to parent?
+      // But parent expects a "Select Date".
+      // Let's just update the view but keep selection?
+      // No, simpler to just select the 1st of the new month for navigation purposes
     }
     // Simplest: select the 1st of the previous month
-    newDate.setDate(1); 
+    newDate.setDate(1);
     onSelectDate(newDate);
     onMonthChange?.(newDate);
   };
 
-  const handleNextMonth = () => {
+  const handleNextMonth = (): void => {
     const newDate = new Date(selectedDate);
     newDate.setMonth(newDate.getMonth() + 1);
     newDate.setDate(1);
@@ -80,7 +80,7 @@ export function CalendarView({
     onMonthChange?.(newDate);
   };
 
-  const isSameDay = (d1: Date, d2: Date) => {
+  const isSameDay = (d1: Date, d2: Date): boolean => {
     return (
       d1.getDate() === d2.getDate() &&
       d1.getMonth() === d2.getMonth() &&
@@ -88,11 +88,11 @@ export function CalendarView({
     );
   };
 
-  const isToday = (d: Date) => {
+  const isToday = (d: Date): boolean => {
     return isSameDay(d, new Date());
   };
 
-  const renderDay = (date: Date | null, index: number) => {
+  const renderDay = (date: Date | null, index: number): React.JSX.Element | null => {
     if (!date) {
       return <View key={`empty-${index}`} style={styles.dayCell} />;
     }
@@ -106,7 +106,8 @@ export function CalendarView({
         style={[
           styles.dayCell,
           isSelected && { backgroundColor: phaseColor, borderRadius: 20 },
-          !isSelected && checkToday && { borderWidth: 1, borderColor: phaseColor, borderRadius: 20 },
+          !isSelected &&
+            checkToday && { borderWidth: 1, borderColor: phaseColor, borderRadius: 20 },
         ]}
         onPress={() => onSelectDate(date)}
       >
@@ -133,24 +134,22 @@ export function CalendarView({
             <Text style={[styles.navButtonText, { color: colors.text }]}>←</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
-             <Text style={[styles.navButtonText, { color: colors.text }]}>→</Text>
+            <Text style={[styles.navButtonText, { color: colors.text }]}>→</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Weekday Labels */}
       <View style={styles.weekRow}>
-        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
+        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
           <View key={day} style={styles.dayCell}>
-             <Text style={[styles.weekDayText, { color: colors.textSecondary }]}>{day}</Text>
+            <Text style={[styles.weekDayText, { color: colors.textSecondary }]}>{day}</Text>
           </View>
         ))}
       </View>
 
       {/* Days Grid */}
-      <View style={styles.daysGrid}>
-        {days.map((day, index) => renderDay(day, index))}
-      </View>
+      <View style={styles.daysGrid}>{days.map((day, index) => renderDay(day, index))}</View>
     </View>
   );
 }
@@ -192,7 +191,7 @@ const styles = StyleSheet.create({
   daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    // justifyContent: 'space-between', // Can cause gaps, better to use fixed widths or percentages if possible? 
+    // justifyContent: 'space-between', // Can cause gaps, better to use fixed widths or percentages if possible?
     // Flex wrap with specific widths is safer.
   },
   dayCell: {
