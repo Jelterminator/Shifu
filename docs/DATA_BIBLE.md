@@ -1,6 +1,32 @@
-# Shifu Dai Lee's Dataclass Ching
+# Shifu Dai Lee's Datatypes Ching
 
-Shifu Dai Lee has seen through meditative insight (and me through struggling with a MVP in Python) that there is an exact number of dataclasses required for this project.
+Shifu Dai Lee has seen through meditative insight (and me through struggling with a MVP in Python) that there is an exact number of dataclasses required for this project. They are:
+
+- date
+
+- phase
+
+- agenda entry
+  
+  - appointment
+  
+  - plan
+  
+  - anchor
+
+- planning request entry
+  
+  - habit
+  
+  - task
+
+- note
+  
+  - journal entry
+  
+  - chatbot note
+  
+  - daily, weekly, monthly and quarterly insight
 
 ### Date
 
@@ -45,7 +71,7 @@ WOOD: {
     color: '#E63946',
     romanHours: [2, 3, 4, 5, 6],
     qualities: 'Peak energy, expression. Deep work & execution.',
-    idealTasks: ['deep_work', 'creative', 'pomodoro'],
+    idealTasks: ['deep_work', 'creative', 'difficult'],
   },
   EARTH: {
     color: '#C49551',
@@ -110,7 +136,7 @@ Anchor= (name: string;
 
   endTime: Date;
 
- description: string
+  description: string
 
 )
 
@@ -304,11 +330,11 @@ Habit = (id: string;
 
     title: string;
 
-    minimum_duration: int;    *in minutes*
+    minimum_duration: int;                            *The minimum number of minutes for a session, in minutes.*
 
-    frequency: 'DAY'| 'WEEK' | 'MONTH';
+    selected_days: Dict{ day: Boolean for day in week};
 
-    effort_goal: int;    *in minutes*
+    effort_goal: int;                                           *The amount of time user wants to spend on habit per week, in minutes.*
 
     ideal_phase: Phase;
 
@@ -322,48 +348,82 @@ for key in keywords:
 
 *Tasks are done once and they're finished. They come from in-app entries or APIs from task management services. They have a deadline unless they do not in which case they are chores. Dai Lee should get maximally 10 tasks of urgence and 5 chores per day, more than can be planned but not all of them. Tasks can be standalone or be a subtask in a project, in which case they recieve their deadline from the project. Tasks in projects typically need to be done in sequence so grouped subtasks have a position in this order.*
 
-Task = (id: str;
+Task = (id: string;
 
-    title: str;
+    title: string;
 
     effort_min: int;
 
-    deadline: Optional[datetime] = None;
+    deadline: Optional[Date] = None;
 
-    parent_id: Optional[str] = None;
+    project_id: Optional[string] = None;
 
-    parent_title: Optional[str] = None;
+    project_title: Optional[string] = None;
 
-    notes: Optional[str] = None;
+    notes: Optional[string] = None;
 
-    position: str = "0"
+    position_in_project: Optional[int];
 
-)
+*Because tasks have expected effort minutes the time required per day can be computed which is a good indicator to sort their urgence by. At withdrawal from the database the following are computed and added as extra variables, where the minimum and maximum are only employed if the task is a project member:*
 
-*Because tasks have expected effort minutes the time required per day can be computed which is a good indicator to sort their urgence by. At withdrawal from the database the following are computed and added as extra variables:* 
+    t_until_deadline := min( deadline, project.deadline) - today;                                                                         *In days*
 
-    days_until_deadline: float
-
-    total_remaining_effort: float
-
-    hours_per_day_needed: float
+    t_per_day := max( effort_min / t_until_deadline, project.total_effort / project.deadline);                         *Minutes per day needed*
 
     urgency_level: T1 | T2 | T3 | T4 | T5 | T6 | Chore
 
+)
+
 *From a certain point of urgence onwards multiple tasks of one project may be need to be part of one day's prompt. There is an enumeration of urgency levels to help with this:*
 
-Chore
+| level | t_per_day    | Max. per prompt |
+| ----- | ------------ | --------------- |
+| T6    | <30min/day   | 1               |
+| T5    | 30-60min/day | 1               |
+| T4    | 1-2h/day     | 2               |
+| T3    | 2-4h/day     | 3               |
+| T2    | 4-6h/day     | 4               |
+| T1    | 6h+          | 5               |
+| Chore | -            | 5               |
 
-T6: -30min/day,           max. 1 tasks per project per day
+*Projects are groupings of tasks that overrule the urgency calculation of their subtasks IF their result is larger: the* t_per_day *and* urgency_level *are computed from project total. A 5 min task with deadline in two months is still urgent if the project has 7000 elements. A task from a project can have an earlier deadline and therefore also have higher urgency that its project still.*
 
-T5: 30-60min/day,        max 1
+Project = (id: string;
 
-T4: 1-2h/day,                 max 2
+    title: string;
 
-T3: 2-4h/day,                 max 3
+    deadline: Optional[Date] = None;
 
-T2: 4-6h/day,                 max 4
+    elements: Task[]
 
-T1: 6h+,                          max 5
+    total_effort := sum( elements.effort_min)
 
-### Projects
+*Again, some of the data required can't be stored because it changes by the moment and needs to be computed on call.*
+
+    t_until_deadline := deadline - today;
+
+    t_per_day := total_effort / t_until_deadline;
+
+    urgency_level: T1 | T2 | T3 | T4 | T5 | T6 | Chore
+
+)
+
+
+
+[ ABOVE IS WHAT I NEEDED TO RUN IT UP IN PYTHON, WHAT FOLLOWS IS MUSING ABOUT WHAT COULD BE ON THE PHONE APP ]
+
+## Notes
+
+*Shifu needs to know his disciple: a database of notes needs to be maintained. They are the registry the LLM looks for when trying to find answers.* 
+
+*The principle notes come from journal entries, and from the AI if it wants to write something down after something was said in chat.* 
+
+*Then, every day, Shifu is prompted with all data of the day and tries to distill this into a daily insight note.*
+
+*Once a week, Shifu is prompted with core data from that week to generate a weekly insights note.*
+
+*Monthly, Shifu is prompted with summarised data from that month to generate a monthly insights note.*
+
+*Quarterly, Shifu is prompted with essential data from the quarter to generate a quarterly insights note.*
+
+
