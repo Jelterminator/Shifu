@@ -1,4 +1,4 @@
-import { calculateRomanHours, RomanHour } from '../../src/utils/sunTimeUtils';
+import { calculateRomanHours } from '../../src/utils/sunTimeUtils';
 
 describe('sunTimeUtils', () => {
   const TEST_DATE = new Date('2023-01-01T12:00:00Z');
@@ -6,13 +6,16 @@ describe('sunTimeUtils', () => {
 
   describe('calculateRomanHours', () => {
     it('should return 24 roman hours and handle invalid date', () => {
-      const validHours = calculateRomanHours(TEST_DATE, AMSTERDAM_COORDS.latitude, AMSTERDAM_COORDS.longitude);
+      const validHours = calculateRomanHours(
+        TEST_DATE,
+        AMSTERDAM_COORDS.latitude,
+        AMSTERDAM_COORDS.longitude
+      );
       expect(validHours).toHaveLength(24);
       expect(validHours.map(h => h.hour)).toEqual(expect.arrayContaining([...Array(24).keys()]));
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      // @ts-ignore
-      const invalidHours = calculateRomanHours('invalid-date' as any, 0, 0);
+      const invalidHours = calculateRomanHours('invalid-date' as any, 0, 0); // eslint-disable-line @typescript-eslint/no-unsafe-argument
       expect(invalidHours).toHaveLength(24);
       consoleSpy.mockRestore();
     });
@@ -23,10 +26,17 @@ describe('sunTimeUtils', () => {
     });
 
     it('should have continuous time ranges', () => {
-      const hours = calculateRomanHours(TEST_DATE, AMSTERDAM_COORDS.latitude, AMSTERDAM_COORDS.longitude);
+      const hours = calculateRomanHours(
+        TEST_DATE,
+        AMSTERDAM_COORDS.latitude,
+        AMSTERDAM_COORDS.longitude
+      );
       for (let i = 0; i < hours.length - 1; i++) {
-        const current = hours[i] as RomanHour;
-        const next = hours[i + 1] as RomanHour;
+        const current = hours[i];
+        const next = hours[i + 1];
+
+        if (!current || !next) throw new Error('Invalid hours array');
+
         const currentEnd = current.endTime.getTime();
         const nextStart = next.startTime.getTime();
         expect(Math.abs(currentEnd - nextStart)).toBeLessThan(1000);

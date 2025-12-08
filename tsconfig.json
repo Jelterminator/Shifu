@@ -43,7 +43,16 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["src/**/*", "tests/**/*", "declarations.d.ts"],
+  "include": [
+    "App.tsx",
+    "src/**/*",
+    "tests/**/*",
+    "declarations.d.ts",
+    ".eslintrc.js",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js"
+  ],
   "exclude": ["node_modules", "build", "dist"],
   "extends": "expo/tsconfig.base"
 }

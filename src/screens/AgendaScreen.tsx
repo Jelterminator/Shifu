@@ -167,13 +167,12 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
     // For web compatibility with minimal navigator, checking if reset exists
     const parent = navigation.getParent();
     if (parent && parent.reset) {
-       // @ts-ignore - navigation types might tricky with partial navigator
       parent.reset({
         index: 0,
         routes: [{ name: 'Welcome' }],
       });
     } else {
-        navigation.navigate('Welcome' as any);
+      navigation.navigate('Welcome');
     }
   };
 
@@ -194,7 +193,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
             borderLeftColor: event.phaseColor || phaseColor,
             opacity: event.completed ? 0.6 : 1,
             borderBottomWidth: 1,
-            borderBottomColor: '#eee',
+            borderBottomColor: colors.textSecondary,
           },
         ]}
       >
@@ -215,14 +214,18 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
               />
             )}
             {typeLabel && (
-              <Text style={[styles.inlineBadge, { color: event.phaseColor || '#999' }]}>
+              <Text
+                style={[styles.inlineBadge, { color: event.phaseColor || colors.textSecondary }]}
+              >
                 [{typeLabel}]
               </Text>
             )}
             <Text style={[styles.eventTitle, { color: colors.text }]}>{event.title}</Text>
           </View>
           {event.durationMinutes > 0 && (
-            <Text style={styles.durationText}>({formatDuration(event.durationMinutes)})</Text>
+            <Text style={[styles.durationText, { color: colors.textSecondary }]}>
+              ({formatDuration(event.durationMinutes)})
+            </Text>
           )}
         </View>
       </TouchableOpacity>
@@ -283,7 +286,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
 
         <View style={{ height: 80 }} />
         <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
-            <Text style={styles.resetButtonText}>Reset Onboarding</Text>
+          <Text style={styles.resetButtonText}>Reset Onboarding</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -328,7 +331,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: '#4A7C59',
+    backgroundColor: '#4A7C59', // This should technically be dynamic but retry is often green/safe
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -366,7 +369,7 @@ const styles = StyleSheet.create({
   },
   inlineBadge: { fontSize: 11, fontWeight: '700', marginRight: 6 },
   eventTitle: { fontSize: 14 },
-  durationText: { fontSize: 12, color: '#888', marginLeft: 6 },
+  durationText: { fontSize: 12, marginLeft: 6 },
   fab: {
     position: 'absolute',
     bottom: 24,

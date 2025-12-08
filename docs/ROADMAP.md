@@ -111,29 +111,35 @@ whole project.
 on low-tier hardware.
 
 1. **Model selection & runtime**
+   
    - Use compact architectures: Distil/DistilGPT-style for chat, MiniLM / MiniLM-L6 for embeddings,
      small decision-tree ensembles for scheduling. Prefer ONNX + Transformers.js (WASM) for
      cross-platform inferencing.
 
 2. **Compression & Quantization**
+   
    - Quantize models to 8-bit, 4-bit (and explore newer schemes). Limit installed model set by
      device tier (low/med/high). Keep a model registry with versioning in SQLite.
 
 3. **RAG & Hierarchical Memory**
+   
    - Multi-resolution embeddings: raw (entry-level) + daily/weekly/monthly summary vectors.
      Retrieval first checks summary cache (fast), then falls back to raw ANN search. Use a custom
      ANN index (k-means clustering on SQLite) tuned for small memory & fast CPU.
 
 4. **On-device Training & MLOps**
+   
    - Lightweight incremental training (decision trees / small ensembles) scheduled nightly under
      strict device constraints (charging, battery > threshold, idle). Validate via local A/B tests;
      rollback on regressions. Track model metadata and version in the Model Registry.
 
 5. **Performance & Safety Strategies**
+   
    - Lazy model loading/unloading, context window limits (e.g., 2048 tokens), inference throttling
      on thermal/battery events, graceful degrade to simpler models if memory is short.
 
 6. **Roadmap milestones**
+   
    - **MVP:** quantized chat + embeddings + RAG via summaries (local only).
    - **Beta:** improved ANN index, better quantization, device-tier model selection.
    - **v1.5–v2.0:** on-device training improvements, optional hardware acceleration
@@ -170,23 +176,28 @@ on low-tier hardware.
 enables a sync. No company-run servers process core features.
 
 - **Encryption & Keys**
+  
   - AES-256 for SQLite and MMKV storage. Keys derived from a device-unique secret
     (biometric/passcode seed) using PBKDF2; keys never leave the device.
 
 - **Data Residency & Exports**
+  
   - Exports require explicit user action and consent. Optional encrypted backups may be supported
     (user-provided cloud), but core product works without any remote account.
 
 - **Model & Runtime Safety**
+  
   - Model files stored locally; signed metadata for integrity checks. Fail-safe: rollback to prior
     model on repeated inference/training failures. Guardrails to avoid runaway background CPU usage.
 
 - **Permissions & Least Privilege**
+  
   - Ask only for necessary permissions (Location coarse for phase times; notifications) and explain
     purpose in onboarding. OAuth tokens (if used) stored encrypted and scoped; user can revoke sync
     anytime.
 
 - **Privacy-First Telemetry**
+  
   - Only local telemetry by default. If any opt-in analytics are implemented, they will be explicit,
     opt-in, and delivered with clear privacy explanations.
 
@@ -219,20 +230,23 @@ enables a sync. No company-run servers process core features.
 **Technical Focus:** Monorepo setup, CI/CD, Navigation, and Security foundations.
 
 - **Repository & DevOps**
+  
   - [x] Initialize Monorepo structure (client/models/docs).
   - [x] Configure ESLint, Prettier, and TypeScript strict mode.
   - [x] Setup GitHub Actions for automated linting and unit tests (Jest).
   - [x] **Security:** Implement environment variable handling for build secrets.
 
 - **App Scaffolding (React Native + Expo)**
+  
   - [x] Initialize Expo project (Managed Workflow, latest SDK).
-  - [x] Enable **Hermes Engine** and verify compilation.
+  - [ ] Enable **Hermes Engine** and verify compilation.
   - [x] Setup **React Navigation v6** (Bottom Tabs + Stacks).
   - [x] Implement `BaseScreen` component structure per Architecture.
   - [x] Create placeholder screens: Setup, Agenda, Habits, Journal, Chat.
 
 - **State Management & Persistence**
-  - [x] Install and configure **Zustand** stores (UserStore, UIStore).
+  
+  - [ ] Install and configure **Zustand** stores (UserStore, UIStore).
   - [x] Install **MMKV** and wrap in a custom encryption adapter.
   - [x] Implement Theme Manager (Dark/Light/System) skeleton.
 
@@ -244,17 +258,20 @@ enables a sync. No company-run servers process core features.
 Encryption, and Schema Management.
 
 - **Database Engine**
+  
   - [ ] Install `expo-sqlite`.
   - [ ] Implement **AES-256 Encryption** utility (PBKDF2 key derivation).
   - [ ] Create Database Service with migration support.
 
 - **Schema Implementation**
+  
   - [ ] **Habits Table:** ID, name, phase_affinity, streak_count, history_json.
   - [ ] **Tasks Table:** ID, urgency_score, deadline, estimated_duration, project_id.
   - [ ] **Journal Table:** ID, text, mood_score, timestamp.
   - [ ] **Vector Table:** content_id, embedding_blob (binary), type (raw/summary).
 
 - **Data Services**
+  
   - [ ] Build `HabitRepository` (CRUD + stats calculation).
   - [ ] Build `TaskRepository` (CRUD + priority sorting).
   - [ ] Build `JournalRepository`.
@@ -268,15 +285,18 @@ Encryption, and Schema Management.
 Animations, Reanimated 2, Dynamic Styling.
 
 - **Design System**
+  
   - [ ] Implement Typography (Inter) and Color Palettes (Wood, Fire, Earth, Metal, Water).
   - [ ] Create reusable components: `PhaseCard`, `HabitRow`, `TaskChip`.
 
 - **The Phase Clock (Core UI)**
+  
   - [ ] **SVG Implementation:** Draw dynamic arcs based on current time/location.
   - [ ] **Animation:** Implement "Breathing" effect and rotation using `react-native-reanimated`.
   - [ ] **Logic:** Connect to `Anchors.ts` to calculate solar phases based on GPS/Timezone.
 
 - **Core Screens**
+  
   - [ ] **Agenda Screen:** Timeline view, collapsible phase headers.
   - [ ] **Habits Screen:** Interactive checkboxes, streak visualization (🔥).
   - [ ] **Tasks Screen:** Urgency sorting (T1-T6 visual tiers).
@@ -290,15 +310,18 @@ Animations, Reanimated 2, Dynamic Styling.
 API Client, Sync Logic.
 
 - **Auth & Permissions**
+  
   - [ ] Implement Onboarding Flow (Location, Sleep Hours, Spiritual preferences).
   - [ ] Request permissions: Location (Coarse), Notifications.
 
 - **Google Integration (Client-Side)**
+  
   - [ ] Implement Google Sign-In (OAuth2).
   - [ ] **Calendar Sync:** Fetch events, map to `[FIXED]` blocks in local DB.
   - [ ] **Tasks Sync:** Two-way sync with Google Tasks (optional).
 
 - **Conflict Resolution**
+  
   - [ ] Implement "Last Write Wins" logic for simple conflicts.
   - [ ] Build UI for manual conflict resolution (User decides).
 
@@ -310,17 +333,20 @@ API Client, Sync Logic.
 ONNX Runtime, WebAssembly.
 
 - **Inference Engine**
+  
   - [ ] Integrate **Transformers.js (Xenova)**.
   - [ ] Configure **ONNX Runtime** for React Native (Single-threaded WASM execution).
   - [ ] Implement `ModelLoader`: Download/Cache quantized models on first run.
     - _Target Models:_ `DistilGPT-2` (Chat), `MiniLM` (Embeddings).
 
 - **The Coach (Chat UI)**
+  
   - [ ] Build Chat Interface: Message bubbles, typing indicators.
   - [ ] **Prompt Engineering:** Create system prompts injected with current time/phase context.
   - [ ] **Quick Actions:** Implement chip-based prompts ("Optimize Today", "Add Task").
 
 - **Performance Tuning**
+  
   - [ ] Implement model lazy-loading and unloading to manage RAM.
   - [ ] Add "Device Tier" detection to disable AI on low-end phones.
 
@@ -332,15 +358,18 @@ ONNX Runtime, WebAssembly.
 Embeddings, Hierarchical Summarization.
 
 - **Vector Infrastructure**
+  
   - [ ] Implement embedding generation pipeline (Text -> Vector).
   - [ ] Build **Custom ANN Index** (K-Means) on top of SQLite for fast retrieval.
 
 - **Hierarchical Summarization (The "Secret Sauce")**
+  
   - [ ] **Daily Summarizer:** Script to condense journal + tasks into a summary blob.
   - [ ] **Roll-up Logic:** Weekly -> Monthly -> Quarterly aggregation.
   - [ ] **Storage:** Store summary vectors separately for tiered retrieval.
 
 - **RAG Pipeline**
+  
   - [ ] Implement `ContextRetriever`: Query -> Embed -> Search Vector DB.
   - [ ] **Hybrid Search:** Combine semantic search (vectors) with keyword search (SQL).
   - [ ] Connect RAG output to the Chat interface.
@@ -353,14 +382,15 @@ Embeddings, Hierarchical Summarization.
 Tasks, MLOps.
 
 - **Hybrid Planner**
+  
   - [ ] **Rule Engine:** Implement Wu Xing rules (e.g., "Creativity in Fire Phase").
   - [ ] **Constraint Solver:** Fit tasks into free slots around fixed calendar events.
 
 - **On-Device Training (MLOps)**
+  
   - [ ] **Data Collection:** Log task completions/failures with context features.
   - [ ] **Nightly Pipeline:** Configure `expo-task-manager` for background execution.
-  - [ ] **Training:** Implement lightweight Decision Tree training (TensorFlow.js or custom JS
-        implementation).
+  - [ ] **Training:** Implement lightweight Decision Tree training (TensorFlow.js or custom JS implementation).
   - [ ] **A/B Testing:** Compare new model vs. old model locally before swapping.
 
 ---
@@ -371,15 +401,18 @@ Tasks, MLOps.
 Profiling, Battery Optimization, Accessibility.
 
 - **Performance Optimization**
+  
   - [ ] Profile with React DevTools: Fix re-renders.
   - [ ] **List Virtualization:** Tune `FlatList` for Journal and Task history.
   - [ ] **Startup Time:** Verify Hermes bytecode performance.
 
 - **Battery & Resource Management**
+  
   - [ ] Audit background tasks: Ensure they only run when charging.
   - [ ] Implement "Low Power Mode" (Disable animations, pause AI training).
 
 - **Accessibility & UX**
+  
   - [ ] Audit colors for WCAG AA contrast.
   - [ ] Implement Screen Reader labels.
   - [ ] Add "Reduced Motion" support.
@@ -393,10 +426,12 @@ Profiling, Battery Optimization, Accessibility.
 Documentation.
 
 - **Beta Testing**
+  
   - [ ] Distribute via TestFlight (iOS) and Google Play Console (Android).
   - [ ] Collect telemetry (Locally logged, user-submitted bug reports).
 
 - **Launch Prep**
+  
   - [ ] **Legal:** Draft Privacy Policy (emphasizing 100% local data).
   - [ ] **Assets:** Generate App Store screenshots and icons.
   - [ ] **Final Build:** Create production builds with stripped logs.
@@ -452,15 +487,6 @@ Documentation.
 - **Background tasks:** Expo TaskManager / BGTaskScheduler / WorkManager with charging + idle
   constraints.
 - **Frontend:** React Native + Hermes, Reanimated 2, React Native SVG for Phase Clock.
-
----
-
-## Contribution & Ownership
-
-- **Main Dev (Lead):** architecture, DB, scheduler, release builds.
-- **AI Specialist:** model selection, quantization, RAG & on-device training scripts.
-- **Frontend Specialist:** UI components, animations, accessibility.
-- **QA / Beta:** on-device profiling across low/medium/high device tiers (Android + iOS).
 
 ---
 

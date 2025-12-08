@@ -1,429 +1,1077 @@
-# Shifu Dai Lee's Datatypes Ching
+# Shifu Data Bible
 
-Shifu Dai Lee has seen through meditative insight (and me through struggling with a MVP in Python) that there is an exact number of dataclasses required for this project. They are:
+> *"Shifu Dai Lee has seen through meditative insight (and me through struggling with an MVP in Python) that there is an exact number of datatypes required for this project."*
 
-- date
+All structures orbit **time**, and all objects may **cross-reference** each other.
 
-- phase
+---
 
-- agenda entry
-  
-  - appointment
-  
-  - plan
-  
-  - anchor
+## Core Domain Objects
 
-- planning request entry
-  
-  - habit
-  
-  - task
+| Category | Types |
+|----------|-------|
+| **Temporal** | `ShifuDate`, `WuXingPhase` |
+| **Agenda Items** | `Appointment`, `Plan`, `Anchor` |
+| **Planning Requests** | `Habit`, `Task`, `Project` |
+| **Knowledge** | `JournalEntry`, `Note`, `InsightNote` |
+| **AI/ML** | `VectorEmbedding`, `ModelVersion` |
 
-- note
-  
-  - journal entry
-  
-  - chatbot note
-  
-  - daily, weekly, monthly and quarterly insight
+---
 
-### Date
+# Part I: TypeScript Interfaces
 
-*Times are precarious objects, many places use different formats, we will use a vector of time out of 24:00, date in USA format, and timezone in deviation from Greenwhich.*
+All interfaces are designed for React Native + TypeScript with Zustand state management.
 
-Date = (HH:MM;
+---
 
-  YYYY-MM-DD;
+## 1. Temporal Types
 
-  +timezone
+### ShifuDate
 
-)
+Times are precarious objects; many places use different formats. We use a normalized representation.
 
-### Phase
+```typescript
+/**
+ * Normalized date-time representation for Shifu
+ * All times stored in ISO format with explicit timezone offset
+ */
+export interface ShifuDate {
+  /** ISO date string: YYYY-MM-DD */
+  date: string;
+  /** Time of day: HH:MM (24-hour format) */
+  time: string;
+  /** Timezone offset from UTC: +HH:MM or -HH:MM */
+  timezoneOffset: string;
+}
 
-*The Wu Xing phases of the day are zones that typically suit types of acts. The machine will first judge tasks to categorise and then score based on appriopriate scheduling based on appropriateness / proximity. Just as the anchors their dates have to be computed daily for they depend on solar times.*
-
-Phase = (name: 'WOOD' | 'FIRE' | 'EARTH' | 'METAL' | 'WATER';
-
-  startTime: Date;
-
-  endTime: Date;
-
-  color: string[];
-
-  romanHours: number[];
-
-  qualities: string;
-
-  idealTasks: string[]
-
-)
-
-```
-WOOD: {
-    color: '#4A7C59',
-    romanHours: [21, 22, 23, 0, 1],
-    qualities: 'Growth, Planning, Vitality. Spiritual centering & movement.',
-    idealTasks: ['spiritual', 'planning', 'movement'],
-  },
-  FIRE: {
-    color: '#E63946',
-    romanHours: [2, 3, 4, 5, 6],
-    qualities: 'Peak energy, expression. Deep work & execution.',
-    idealTasks: ['deep_work', 'creative', 'difficult'],
-  },
-  EARTH: {
-    color: '#C49551',
-    romanHours: [7, 8],
-    qualities: 'Stability, nourishment. Lunch & restoration.',
-    idealTasks: ['rest', 'integration', 'light_tasks'],
-  },
-  METAL: {
-    color: '#A8AAAD',
-    romanHours: [9, 10, 11, 12],
-    qualities: 'Precision, organization. Admin & review.',
-    idealTasks: ['admin', 'planning', 'study'],
-  },
-  WATER: {
-    color: '#457B9D',
-    romanHours: [13, 14, 15, 16, 17, 18, 19, 20],
-    qualities: 'Rest, consolidation. Wind-down & recovery.',
-    idealTasks: ['rest', 'reflection', 'recovery']
+// Example usage:
+// { date: '2024-12-08', time: '14:30', timezoneOffset: '+01:00' }
 ```
 
-## Parent Class: Predetermined Events
+### WuXingPhase
 
-Two type of objects get in the way of the blocking task of the model calendar events and spiritual disciplines. Because their dates are non-negotiable they are restraints for the model and not puzzle parts.
+The Wu Xing (Five Elements) phases define energy patterns throughout the day based on Roman hours calculated from sunrise/sunset.
 
-### Calendar Items
+```typescript
+/**
+ * Wu Xing phase representing a segment of the day
+ * Times are dynamically calculated based on solar position
+ */
+export interface WuXingPhase {
+  name: 'WOOD' | 'FIRE' | 'EARTH' | 'METAL' | 'WATER';
+  startTime: Date;
+  endTime: Date;
+  color: string;
+  romanHours: number[];
+  qualities: string;
+  idealTasks: TaskKeyword[];
+}
 
-*For the far future not a lot of generated data is needed: habits and tasks may well be planned the night before. However, the fixed events of the future are the immovable mountains that firstly fill the Agenda.  Calendar items are those appointments the user has manually inputted in-app or imported through API integrated calendar services. Because they should not be removed when the Agenda is reset, they require their own database.*
+/**
+ * Keywords for matching habits/tasks to appropriate phases
+ */
+export type TaskKeyword =
+  | 'spiritual'
+  | 'planning'
+  | 'movement'
+  | 'deep_work'
+  | 'creative'
+  | 'pomodoro'
+  | 'rest'
+  | 'integration'
+  | 'light_tasks'
+  | 'admin'
+  | 'study'
+  | 'reflection'
+  | 'recovery';
+```
 
-Appointment = (name: string;
+**Canonical Phase Definitions:**
 
-  startTime: Date;
+| Phase | Color | Roman Hours | Qualities | Ideal Tasks |
+|-------|-------|-------------|-----------|-------------|
+| 🌲 WOOD | `#4A7C59` | 21-23, 0-1 | Growth, Planning, Vitality | `spiritual`, `planning`, `movement` |
+| 🔥 FIRE | `#E63946` | 2-6 | Peak energy, expression | `deep_work`, `creative`, `pomodoro` |
+| 🌍 EARTH | `#C49551` | 7-8 | Stability, nourishment | `rest`, `integration`, `light_tasks` |
+| ⚙️ METAL | `#A8AAAD` | 9-12 | Precision, organization | `admin`, `planning`, `study` |
+| 💧 WATER | `#457B9D` | 13-20 | Rest, consolidation | `rest`, `reflection`, `recovery` |
 
-  endTime: Date;
+---
 
-  description: string
+## 2. Base Types & Linking System
 
-)
+### Universal Linking (Backlinks)
 
-### Scheduled Items
+Every object in the system can reference any other object, inspired by Obsidian-style `[[links]]`.
 
-*At 8PM the scheduler model is activated and turns tasks and habits into scheduled items. They have value even after the fact, because their execution is value data affirming the model. They generate a history which is the second Agenda database.*
-
-Plan = (name: string;
-
-  startTime: Date;
-
-  endTime: Date;
-
+```typescript
+/**
+ * Base interface for all linkable entities
+ */
+export interface Linkable {
   id: string;
+  /** IDs of objects this entity references */
+  linkedObjectIds: string[];
+  /** IDs of objects that reference this entity (computed) */
+  backlinkedBy: string[];
+}
 
-  done?: Boolean
+/**
+ * Type discriminator for polymorphic linking
+ */
+export type LinkableEntityType =
+  | 'appointment'
+  | 'plan'
+  | 'anchor'
+  | 'habit'
+  | 'task'
+  | 'project'
+  | 'journal_entry'
+  | 'note'
+  | 'insight';
+```
 
-)
+---
+
+## 3. Agenda Items (Fixed Events)
+
+These are the immovable constraints in the scheduling optimization problem.
+
+### Appointment
+
+Calendar items manually entered or imported via OAuth integrations.
+
+```typescript
+/**
+ * User-created or API-synced calendar event
+ */
+export interface Appointment extends Linkable {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  startTime: Date;
+  endTime: Date;
+  /** Optional external calendar source ID */
+  externalId?: string;
+  /** Source: 'manual' | 'google' | 'apple' */
+  source: 'manual' | 'google' | 'apple';
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### Plan (Scheduled Item)
+
+AI-generated schedule entries created from habits and tasks. Append-only for training data preservation.
+
+```typescript
+/**
+ * A scheduled block in the agenda, generated by the AI scheduler
+ * This table is APPEND-ONLY to preserve training data
+ */
+export interface Plan extends Linkable {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  startTime: Date;
+  endTime: Date;
+  /** Completion status: null = pending, true = done, false = skipped */
+  done: boolean | null;
+  /** Source habit or task ID if applicable */
+  sourceId?: string;
+  sourceType?: 'habit' | 'task';
+  /** User rating after completion (1-5) for training */
+  rating?: number;
+  createdAt: Date;
+  completedAt?: Date;
+}
+```
+
+### Anchor
+
+Spiritual practices scheduled based on Roman hours. Derived from `AnchorTemplate` definitions.
+
+```typescript
+/**
+ * Scheduled spiritual practice event
+ */
+export interface Anchor extends Linkable {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  startTime: Date;
+  endTime: Date;
+  /** Duration in minutes */
+  durationMinutes: number;
+  /** Date string for quick filtering: YYYY-MM-DD */
+  dateStr: string;
+  /** Reference to practice template */
+  practiceId?: string;
+  createdAt: Date;
+}
+
+/**
+ * Static practice definition from the spiritual traditions database
+ */
+export interface AnchorTemplate {
+  id: string;
+  name: string;
+  /** Roman hour of day (0-23) for scheduling */
+  romanHour: number;
+  durationMinutes: number;
+  description?: string;
+}
+
+/**
+ * Practice category within a tradition
+ */
+export interface PracticeCategory {
+  name: string;
+  practices: AnchorTemplate[];
+}
+
+/**
+ * Spiritual tradition containing practice categories
+ */
+export interface Tradition {
+  id: string;
+  name: string;
+  categories: PracticeCategory[];
+}
+```
+
+> **Roman Hour Conversion:**
+> 1. Get user location coordinates
+> 2. Calculate sunrise and sunset times
+> 3. Divide daylight into 12 equal segments (hours 0-11)
+> 4. Divide nighttime into 12 equal segments (hours 12-23)
+> 5. Map `romanHour` to absolute time based on date
+
+---
+
+## 4. Planning Request Items
+
+Items that form the "hand of cards" the scheduler plays from.
+
+### Habit
+
+Recurring activities with time goals. The template lives in a timeless database; actual executions are tracked as `Plan` entries.
+
+```typescript
+/**
+ * Habit definition (timeless template)
+ * Tracking is inferred from Plan completion history
+ */
+export interface Habit extends Linkable {
+  id: string;
+  userId: string;
+  title: string;
+  /** Minimum session duration in minutes */
+  minimumSessionMinutes: number;
+  /** Weekly time target in minutes */
+  weeklyGoalMinutes: number;
+  /** Days when habit should be scheduled */
+  selectedDays: {
+    monday: boolean;
+    tuesday: boolean;
+    wednesday: boolean;
+    thursday: boolean;
+    friday: boolean;
+    saturday: boolean;
+    sunday: boolean;
+  };
+  /** Keywords for phase matching */
+  selectedKeywords: TaskKeyword[];
+  /** Preferred Wu Xing phase (optional override) */
+  idealPhase?: WuXingPhase['name'];
+  notes?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### Task
+
+One-time items with optional deadlines. Can be standalone or part of a project.
+
+```typescript
+/**
+ * Urgency tier based on time pressure
+ */
+export type UrgencyLevel = 'T1' | 'T2' | 'T3' | 'T4' | 'T5' | 'T6' | 'CHORE';
+
+/**
+ * Task definition with computed urgency
+ */
+export interface Task extends Linkable {
+  id: string;
+  userId: string;
+  title: string;
+  /** Estimated effort in minutes */
+  effortMinutes: number;
+  /** Optional deadline */
+  deadline?: Date;
+  /** Parent project reference */
+  projectId?: string;
+  notes?: string;
+  /** Position within project for sequencing */
+  positionInProject?: number;
+  /** Keywords for phase matching */
+  selectedKeywords: TaskKeyword[];
+  isCompleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt?: Date;
+}
+
+// Computed properties (calculated at query time):
+// - daysUntilDeadline: number | null
+// - minutesPerDay: number | null
+// - urgencyLevel: UrgencyLevel
+```
+
+**Urgency Level Calculation:**
+
+| Level | Minutes/Day | Max in Daily Prompt |
+|-------|-------------|---------------------|
+| T1 | 360+ (6h+) | 5 |
+| T2 | 240-360 (4-6h) | 4 |
+| T3 | 120-240 (2-4h) | 3 |
+| T4 | 60-120 (1-2h) | 2 |
+| T5 | 30-60 | 1 |
+| T6 | <30 | 1 |
+| CHORE | No deadline | 5 |
+
+### Project
+
+A grouping of tasks with a shared deadline. Urgency propagates upward.
+
+```typescript
+/**
+ * Project containing multiple sequential tasks
+ */
+export interface Project extends Linkable {
+  id: string;
+  userId: string;
+  title: string;
+  deadline?: Date;
+  notes?: string;
+  isCompleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt?: Date;
+}
+
+// Computed properties:
+// - totalEffortMinutes: sum of child task efforts
+// - daysUntilDeadline: number | null
+// - minutesPerDay: totalEffort / daysUntil
+// - urgencyLevel: UrgencyLevel (overrides child tasks if higher)
+```
+
+---
+
+## 5. Knowledge & Archive
+
+The archive maintains the user's history for RAG context and AI personalization.
+
+### JournalEntry
+
+Raw user-generated content with optional time-keyed segments.
+
+```typescript
+/**
+ * Journal entry with optional time-segmented content
+ */
+export interface JournalEntry extends Linkable {
+  id: string;
+  userId: string;
+  entryDate: Date;
+  /** Simple text content if no segments */
+  content?: string;
+  /** Time-keyed segments for detailed journaling */
+  segments?: JournalSegment[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface JournalSegment {
+  id: string;
+  /** Time key: HH:MM format */
+  timeKey: string;
+  content: string;
+}
+```
+
+### Note
+
+AI-generated observations from chat interactions.
+
+```typescript
+/**
+ * AI-generated note from chat context
+ */
+export interface Note extends Linkable {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  createdAt: Date;
+}
+```
+
+### InsightNote
+
+Hierarchical AI-generated summaries for efficient RAG retrieval.
+
+```typescript
+/**
+ * Hierarchical insight type
+ */
+export type InsightType = 'daily' | 'weekly' | 'monthly' | 'quarterly';
+
+/**
+ * AI-distilled insight covering a time range
+ */
+export interface InsightNote extends Linkable {
+  id: string;
+  userId: string;
+  type: InsightType;
+  /** Start of the period covered */
+  rangeStart: Date;
+  /** End of the period covered */
+  rangeEnd: Date;
+  content: string;
+  /** IDs of source entities (journals, lower-tier insights) */
+  sourceIds: string[];
+  createdAt: Date;
+}
+```
+
+**Summary Generation Schedule:**
+| Type | Generation Time | Input |
+|------|-----------------|-------|
+| Daily | 23:00 | Day's journals, plans, progress |
+| Weekly | Sunday 23:30 | 7 daily insights |
+| Monthly | Last day 23:45 | 4-5 weekly insights |
+| Quarterly | Quarter end 00:00 | 3 monthly insights |
+
+---
+
+## 6. AI/ML Types
+
+### VectorEmbedding
+
+Semantic embedding for RAG similarity search.
+
+```typescript
+/**
+ * Vector embedding for semantic search
+ */
+export interface VectorEmbedding {
+  id: string;
+  userId: string;
+  /** Type of source entity */
+  entityType: LinkableEntityType | 'summary';
+  /** ID of source entity */
+  entityId: string;
+  /** Embedding vector (stored as Float32Array, persisted as BLOB) */
+  vector: Float32Array;
+  /** Dimensionality of the embedding */
+  dimensions: number;
+  /** Cluster assignment for ANN indexing */
+  clusterId?: number;
+  createdAt: Date;
+}
+```
+
+### ModelVersion
+
+Local model registry for on-device MLOps.
+
+```typescript
+/**
+ * Model registry entry for version control
+ */
+export interface ModelVersion {
+  id: string;
+  modelName: 'scheduler' | 'embedder' | 'summarizer' | 'coach';
+  version: string;
+  /** Path to ONNX model file */
+  filePath: string;
+  /** Model size in bytes */
+  sizeBytes: number;
+  /** Performance metrics from A/B testing */
+  metrics?: {
+    accuracy?: number;
+    latencyMs?: number;
+    improvementPercent?: number;
+  };
+  isActive: boolean;
+  trainedAt?: Date;
+  createdAt: Date;
+}
+```
+
+### ProgressEvent
+
+Append-only log for fractional progress tracking.
+
+```typescript
+/**
+ * Progress tracking event (append-only)
+ */
+export interface ProgressEvent {
+  id: string;
+  userId: string;
+  relatedType: 'task' | 'habit' | 'project';
+  relatedId: string;
+  /** Amount of progress */
+  amount: number;
+  /** Unit of measurement */
+  unit: string;
+  createdAt: Date;
+}
+```
+
+---
+
+## 7. User & Settings
+
+```typescript
+/**
+ * User profile with scheduling preferences
+ */
+export interface User {
+  id: string;
+  name?: string;
+  email?: string;
+  /** IANA timezone identifier */
+  timezone: string;
+  latitude?: number;
+  longitude?: number;
+  /** Sleep schedule: HH:MM format */
+  sleepStart?: string;
+  sleepEnd?: string;
+  /** Work schedule: HH:MM format */
+  workStart?: string;
+  workEnd?: string;
+  /** Selected spiritual practice IDs */
+  spiritualPractices?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+---
+
+# Part II: SQLite Schema
+
+> *"The SQL layer is not the source of truth for meaning, only for persistence. It mirrors the datatypes above in normalized form while preserving free-text semantics and deferring interpretation to agents."*
+
+**Design Principles:**
+1. All tables use TEXT UUIDs as primary keys (portable, debuggable)
+2. Dates stored as ISO-8601 TEXT for human readability
+3. JSON stored as TEXT for flexible structured data
+4. BLOBs only for binary embeddings
+5. Foreign keys enforced with SQLite's FK pragma
+6. Created/updated timestamps on all mutable tables
+
+---
+
+## Core Configuration
+
+```sql
+-- Enable foreign key enforcement
+PRAGMA foreign_keys = ON;
+
+-- Enable WAL mode for better concurrent access
+PRAGMA journal_mode = WAL;
+
+-- Reasonable cache size for mobile (2MB)
+PRAGMA cache_size = -2000;
+```
+
+---
+
+## User Table
+
+```sql
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY NOT NULL,
+  name TEXT,
+  email TEXT,
+  timezone TEXT NOT NULL DEFAULT 'UTC',
+  latitude REAL,
+  longitude REAL,
+  sleep_start TEXT,  -- HH:MM
+  sleep_end TEXT,    -- HH:MM
+  work_start TEXT,   -- HH:MM
+  work_end TEXT,     -- HH:MM
+  spiritual_practices TEXT,  -- JSON array of practice IDs
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_users_email ON users(email);
+```
+
+---
+
+## Agenda Items
+
+### Appointments
+
+```sql
+CREATE TABLE IF NOT EXISTS appointments (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  start_time TEXT NOT NULL,  -- ISO-8601 datetime
+  end_time TEXT NOT NULL,
+  external_id TEXT,
+  source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'google', 'apple')),
+  linked_object_ids TEXT,  -- JSON array
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_appointments_user_date ON appointments(user_id, date(start_time));
+CREATE INDEX idx_appointments_external ON appointments(external_id);
+```
+
+### Plans (Scheduled Items)
+
+```sql
+-- APPEND-ONLY table for ML training data preservation
+CREATE TABLE IF NOT EXISTS plans (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  start_time TEXT NOT NULL,
+  end_time TEXT NOT NULL,
+  done INTEGER,  -- NULL=pending, 1=done, 0=skipped
+  source_id TEXT,
+  source_type TEXT CHECK (source_type IN ('habit', 'task')),
+  rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+  linked_object_ids TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  completed_at TEXT
+);
+
+CREATE INDEX idx_plans_user_date ON plans(user_id, date(start_time));
+CREATE INDEX idx_plans_source ON plans(source_id, source_type);
+CREATE INDEX idx_plans_training ON plans(user_id, done, rating) WHERE done IS NOT NULL;
+```
 
 ### Anchors
 
-*Anchors are certainly to repeat if user settings are not tweaked. They come from the universal database of spiritual disciplines which follows below. In the real world they are just like Appointments:*
-
-Anchor= (name: string;
-
-  startTime: Date;
-
-  endTime: Date;
-
-  description: string
-
-)
-
-*But where they come from they are stored with their Roman starting hour, and a duration. These are converted as follows: 1. Find location. 2. Get times of dawn and dusk. 3. Let light until dark be 12 segments: hours 13-24 from dusk at dawn. (Unequal day and night, Roman clock.) 4. Convert from Roman hour to Date to obtain startTime. 5. startTime + duration = endTime.*
-
-```
-Christianity - Major Prayers
-
-Uur 0, Lauds - Morning Prayer (20min)
-Uur 12, Vespers - Evening Prayer (20min)
-Uur 15, Compline - Night Prayer (10min)
-
-Christianity - Office of Readings  
-
-Uur 21, Vigils - Office of Readings (1h)
-
-Christianity - Minor Prayers 
-
-Uur 3, Terce (10min)
-Uur 6, Sext (10min)
-Uur 9, None (10min)
-
----
-
-Islam - Core Salah (Obligatory)
-
-Uur 0, Fajr (10min)
-Uur 6, Dhuhr (20min)
-Uur 10, Asr (20min)
-Uur 12, Maghrib (15min)
-Uur 14, Isha (20min)
-
-Islam - Complete Salah
-
-Uur 21 Tahajjud (30min)
-Uur 2, Duha (15min)
-Uur 15, Witr (5min)
-
----
-
-Judaism - Core Prayers
-
-Uur 0, Shacharit (45min) 
-Uur 9, Mincha (20min)
-Uur 12, Ma'ariv / Arvit (20min)
-
-Judaism - Blessings
-
-Uur 21, Modeh Ani (5min)
-Uur 6, Birkat Hamazon (10min) 
-Uur 15, Kriat Shema al Hamita (5min)
-
----
-
-Hinduism - Sandhyavandanam
-
-Uur 0, Pratah Sandhya (30min)
-Uur 6, Madhyahna Sandhya (30min)
-Uur 12, Sayam Sandhya (30min)
-
-Hinduism - Brahma Murta
-
-Uur 21, Brahma Muhurta (3h)
-
-Hinduism - Puja
-
-Uur 3, Morning Puja (30min) 
-Uur 9, Midday Aarti (10min) 
-Uur 15, Evening Aarti (10min)
-
----
-
-Buddhism - Layman's Practice
-
-Uur 0, Mindfulness practice (15min)
-Uur 12, 'Just sitting' (30min)
-Uur 15, Metta practice (10min)
-
-Buddhism - Kyoto Zen
-
-Uur 21, Early Meditation (45h)
-Uur 4, Morning Meditation (25min)
-Uur 8, Afternoon Meditation (25min)
-
-Buddhism - Shaolin Kung Fu
-
-Uur 1, Chi Gong practice (1h)
-Uur 5, Kung Fu - conditioning (1h)
-Uur 9, Kung Fu - martial arts (1h)
-
----
-
-Shinto - Daily Rituals
-
-Uur 0, Greeting the Sun/Purification (10min) 
-Uur 6, Offering to Kami (10min) 
-Uur 12, Appreciation Ritual (15min)
-
-Shinto - Cleansing Practices
-
-Uur 21, Salt Cleansing (5min) 
-Uur 3, Ancestor Veneration (10min)
-
-Shinto - Meditation
-
-Uur 9, Speaking to Spirits (10min) 
-Uur 15, Evening Winddown (10min)
-
----
-
-Sikhism - Nitnem (Daily Prayers)
-
-Uur 0, Jap Ji Sahib - Morning Prayer (20min) 
-Uur 12, Rehraas Sahib - Evening Prayer (20min) 
-Uur 15, Kirtan Sohila - Bedtime Prayer (10min)
-
-Sikhism - Amrit Vela
-
-Uur 21, Amrit Vela - Early Morning Meditation (1h)
-
-Sikhism - Additional Banis
-
-Uur 3, Jaap Sahib (15min) 
-Uur 6, Tav-Prasad Savaiye (10min) 
-Uur 9, Chaupai Sahib (10min)
-
----
-
-Wicca - Daily Devotions
-
-Uur 0, Morning Gratitude Prayer (10min) 
-Uur 6, Midday Meditation (15min) 
-Uur 12, Evening Ritual (20min)
-
-Wicca - Protection Rituals
-Uur 21, Bedtime Protection (5min) 
-Uur 3, Elemental Invocation (10min)
-
-Wicca - Esbat Practices
-
-Uur 9, Daily Spellwork (10min) 
-Uur 15, Ancestor Honoring (10min)
-
----
-
-Secular - Three Daily Meals
-
-Uur 1, Breakfast (20min)
-Uur 7, Lunch (20min)
-Uur 11, Dinner (30min)
-
-Secular - Notetaking
-
-Uur 0, Planning (10min)
-Uur 13, Reflection (15min)
-
-Secular - Wake up before dawn
-
-Uur 23, Wake up (30min)
-
-Secular - Sunset winddown
-
-Uur 12, WInddown (90min)
+```sql
+CREATE TABLE IF NOT EXISTS anchors (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  start_time TEXT NOT NULL,
+  end_time TEXT NOT NULL,
+  duration_minutes INTEGER NOT NULL,
+  date_str TEXT NOT NULL,  -- YYYY-MM-DD for fast filtering
+  practice_id TEXT,
+  linked_object_ids TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_anchors_user_date ON anchors(user_id, date_str);
+CREATE INDEX idx_anchors_practice ON anchors(practice_id);
 ```
 
-*Would be cute if all of next weeks anchors where scheduled on Saturday night. I think they should just always be scheduled regardless of conflict with appointments. Those two in union, they make the restraints that create variation in the optimisation problem of task & habit.*
+---
 
-## Parent Class: Dai Lee Scheduled
-
-*Easiest algorithms fill the Agenda in layers:*
-
-- *block out sleep*
-
-- *block out work*
-
-- *block out appointments*
-
-- *block out anchors*
-
-- *fill vacant timeslots with tasks*
-
-- *fit habits in the last nicks of time remaining*
-
-*The algorithm always has a hand of cards it can play in the case of vacant time. It rates its choices based on appropriateness to Wu Xing, finetuned on past success. Appropriateness is defined as probability the plan will be executed once it has been created as a Plan in the Agenda*
+## Planning Items
 
 ### Habits
 
-*Habits are stored in a database that is future oriented. Tracking and statistics are achieved through queries from the historic Agenda and not this timeless database. All habits are user-generated, and Shifu warns them not to enter too many new habits at once, and may perhaps suggest adding more when things are going well. In the Habits menu there should be a feature to toggle keywords to more easily match phases.*
+```sql
+CREATE TABLE IF NOT EXISTS habits (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  minimum_session_minutes INTEGER NOT NULL DEFAULT 15,
+  weekly_goal_minutes INTEGER NOT NULL DEFAULT 60,
+  selected_days TEXT NOT NULL DEFAULT '{"monday":true,"tuesday":true,"wednesday":true,"thursday":true,"friday":true,"saturday":false,"sunday":false}',
+  selected_keywords TEXT NOT NULL DEFAULT '[]',  -- JSON array
+  ideal_phase TEXT CHECK (ideal_phase IN ('WOOD', 'FIRE', 'EARTH', 'METAL', 'WATER')),
+  notes TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  linked_object_ids TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
-Habit = (id: string;
-
-    title: string;
-
-    minimum_duration: int;                            *The minimum number of minutes for a session, in minutes.*
-
-    selected_days: Dict{ day: Boolean for day in week};
-
-    effort_goal: int;                                           *The amount of time user wants to spend on habit per week, in minutes.*
-
-    ideal_phase: Phase;
-
-for key in keywords:
-
-    is_key?: Boolean
-
-)
+CREATE INDEX idx_habits_user_active ON habits(user_id, is_active);
+```
 
 ### Tasks
 
-*Tasks are done once and they're finished. They come from in-app entries or APIs from task management services. They have a deadline unless they do not in which case they are chores. Dai Lee should get maximally 10 tasks of urgence and 5 chores per day, more than can be planned but not all of them. Tasks can be standalone or be a subtask in a project, in which case they recieve their deadline from the project. Tasks in projects typically need to be done in sequence so grouped subtasks have a position in this order.*
+```sql
+CREATE TABLE IF NOT EXISTS tasks (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  effort_minutes INTEGER NOT NULL DEFAULT 30,
+  deadline TEXT,  -- ISO-8601 datetime, NULL for chores
+  project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
+  notes TEXT,
+  position_in_project INTEGER,
+  selected_keywords TEXT NOT NULL DEFAULT '[]',
+  is_completed INTEGER NOT NULL DEFAULT 0,
+  linked_object_ids TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  completed_at TEXT
+);
 
-Task = (id: string;
+CREATE INDEX idx_tasks_user_incomplete ON tasks(user_id, is_completed) WHERE is_completed = 0;
+CREATE INDEX idx_tasks_project ON tasks(project_id);
+CREATE INDEX idx_tasks_deadline ON tasks(deadline) WHERE deadline IS NOT NULL;
+```
 
-    title: string;
+### Projects
 
-    effort_min: int;
+```sql
+CREATE TABLE IF NOT EXISTS projects (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  deadline TEXT,
+  notes TEXT,
+  is_completed INTEGER NOT NULL DEFAULT 0,
+  linked_object_ids TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  completed_at TEXT
+);
 
-    deadline: Optional[Date] = None;
+CREATE INDEX idx_projects_user_active ON projects(user_id, is_completed);
+```
 
-    project_id: Optional[string] = None;
+---
 
-    project_title: Optional[string] = None;
+## Knowledge Storage
 
-    notes: Optional[string] = None;
+### Journal Entries
 
-    position_in_project: Optional[int];
+```sql
+CREATE TABLE IF NOT EXISTS journal_entries (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  entry_date TEXT NOT NULL,  -- YYYY-MM-DD
+  content TEXT,  -- Simple mode: full text here
+  linked_object_ids TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
-*Because tasks have expected effort minutes the time required per day can be computed which is a good indicator to sort their urgence by. At withdrawal from the database the following are computed and added as extra variables, where the minimum and maximum are only employed if the task is a project member:*
+CREATE TABLE IF NOT EXISTS journal_segments (
+  id TEXT PRIMARY KEY NOT NULL,
+  journal_entry_id TEXT NOT NULL REFERENCES journal_entries(id) ON DELETE CASCADE,
+  time_key TEXT NOT NULL,  -- HH:MM
+  content TEXT NOT NULL
+);
 
-    t_until_deadline := min( deadline, project.deadline) - today;                                                                         *In days*
+CREATE INDEX idx_journal_user_date ON journal_entries(user_id, entry_date);
+CREATE INDEX idx_journal_segments_entry ON journal_segments(journal_entry_id);
+```
 
-    t_per_day := max( effort_min / t_until_deadline, project.total_effort / project.deadline);                         *Minutes per day needed*
+### Notes (AI-Generated)
 
-    urgency_level: T1 | T2 | T3 | T4 | T5 | T6 | Chore
+```sql
+CREATE TABLE IF NOT EXISTS notes (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  linked_object_ids TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
-)
+CREATE INDEX idx_notes_user ON notes(user_id);
+```
 
-*From a certain point of urgence onwards multiple tasks of one project may be need to be part of one day's prompt. There is an enumeration of urgency levels to help with this:*
+### Insight Notes (Hierarchical Summaries)
 
-| level | t_per_day    | Max. per prompt |
-| ----- | ------------ | --------------- |
-| T6    | <30min/day   | 1               |
-| T5    | 30-60min/day | 1               |
-| T4    | 1-2h/day     | 2               |
-| T3    | 2-4h/day     | 3               |
-| T2    | 4-6h/day     | 4               |
-| T1    | 6h+          | 5               |
-| Chore | -            | 5               |
+```sql
+CREATE TABLE IF NOT EXISTS insight_notes (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('daily', 'weekly', 'monthly', 'quarterly')),
+  range_start TEXT NOT NULL,
+  range_end TEXT NOT NULL,
+  content TEXT NOT NULL,
+  source_ids TEXT NOT NULL DEFAULT '[]',  -- JSON array of source entity IDs
+  linked_object_ids TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
-*Projects are groupings of tasks that overrule the urgency calculation of their subtasks IF their result is larger: the* t_per_day *and* urgency_level *are computed from project total. A 5 min task with deadline in two months is still urgent if the project has 7000 elements. A task from a project can have an earlier deadline and therefore also have higher urgency that its project still.*
+CREATE INDEX idx_insights_user_type ON insight_notes(user_id, type);
+CREATE INDEX idx_insights_range ON insight_notes(range_start, range_end);
+```
 
-Project = (id: string;
+---
 
-    title: string;
+## Cross-Reference Links
 
-    deadline: Optional[Date] = None;
+```sql
+CREATE TABLE IF NOT EXISTS links (
+  id TEXT PRIMARY KEY NOT NULL,
+  from_type TEXT NOT NULL,
+  from_id TEXT NOT NULL,
+  to_type TEXT NOT NULL,
+  to_id TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(from_type, from_id, to_type, to_id)
+);
 
-    elements: Task[]
+CREATE INDEX idx_links_from ON links(from_type, from_id);
+CREATE INDEX idx_links_to ON links(to_type, to_id);
+```
 
-    total_effort := sum( elements.effort_min)
+**Supported Entity Types:**
+- `appointment`, `plan`, `anchor`
+- `habit`, `task`, `project`
+- `journal_entry`, `note`, `insight`
 
-*Again, some of the data required can't be stored because it changes by the moment and needs to be computed on call.*
+---
 
-    t_until_deadline := deadline - today;
+## Progress Events (Append-Only)
 
-    t_per_day := total_effort / t_until_deadline;
+```sql
+CREATE TABLE IF NOT EXISTS progress_events (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  related_type TEXT NOT NULL CHECK (related_type IN ('task', 'habit', 'project')),
+  related_id TEXT NOT NULL,
+  amount REAL NOT NULL,
+  unit TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
-    urgency_level: T1 | T2 | T3 | T4 | T5 | T6 | Chore
+CREATE INDEX idx_progress_related ON progress_events(related_type, related_id);
+CREATE INDEX idx_progress_user_time ON progress_events(user_id, created_at);
+```
 
-)
+---
 
+## Vector Storage & RAG
 
+### Vector Embeddings
 
-[ ABOVE IS WHAT I NEEDED TO RUN IT UP IN PYTHON, WHAT FOLLOWS IS MUSING ABOUT WHAT COULD BE ON THE PHONE APP ]
+```sql
+CREATE TABLE IF NOT EXISTS vector_embeddings (
+  id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  vector BLOB NOT NULL,  -- Float32Array serialized
+  dimensions INTEGER NOT NULL,
+  cluster_id INTEGER,  -- For ANN k-means index
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(entity_type, entity_id)
+);
 
-## Notes
+CREATE INDEX idx_vectors_entity ON vector_embeddings(entity_type, entity_id);
+CREATE INDEX idx_vectors_cluster ON vector_embeddings(cluster_id);
+CREATE INDEX idx_vectors_user ON vector_embeddings(user_id);
+```
 
-*Shifu needs to know his disciple: a database of notes needs to be maintained. They are the registry the LLM looks for when trying to find answers.* 
+### Vector Clusters (ANN Index)
 
-*The principle notes come from journal entries, and from the AI if it wants to write something down after something was said in chat.* 
+```sql
+CREATE TABLE IF NOT EXISTS vector_clusters (
+  id INTEGER PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  centroid BLOB NOT NULL,  -- Float32Array cluster center
+  dimensions INTEGER NOT NULL,
+  member_count INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
-*Then, every day, Shifu is prompted with all data of the day and tries to distill this into a daily insight note.*
+CREATE INDEX idx_clusters_user ON vector_clusters(user_id);
+```
 
-*Once a week, Shifu is prompted with core data from that week to generate a weekly insights note.*
+**RAG Retrieval Strategy:**
+1. Embed user query using MiniLM model
+2. Find nearest cluster centroids (k-means)
+3. Search within top clusters for nearest vectors
+4. Retrieve source entities by ID
+5. Construct prompt context from summaries + raw data
 
-*Monthly, Shifu is prompted with summarised data from that month to generate a monthly insights note.*
+---
 
-*Quarterly, Shifu is prompted with essential data from the quarter to generate a quarterly insights note.*
+## Model Registry
 
+```sql
+CREATE TABLE IF NOT EXISTS model_versions (
+  id TEXT PRIMARY KEY NOT NULL,
+  model_name TEXT NOT NULL CHECK (model_name IN ('scheduler', 'embedder', 'summarizer', 'coach')),
+  version TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  size_bytes INTEGER NOT NULL,
+  metrics TEXT,  -- JSON: {accuracy, latencyMs, improvementPercent}
+  is_active INTEGER NOT NULL DEFAULT 0,
+  trained_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(model_name, version)
+);
 
+CREATE INDEX idx_models_active ON model_versions(model_name, is_active);
+```
+
+---
+
+## Static Data: Spiritual Practices
+
+```sql
+-- Optional: cache practice templates in SQLite for offline resilience
+CREATE TABLE IF NOT EXISTS practice_templates (
+  id TEXT PRIMARY KEY NOT NULL,
+  tradition_id TEXT NOT NULL,
+  tradition_name TEXT NOT NULL,
+  category_name TEXT NOT NULL,
+  name TEXT NOT NULL,
+  roman_hour INTEGER NOT NULL CHECK (roman_hour BETWEEN 0 AND 23),
+  duration_minutes INTEGER NOT NULL
+);
+
+CREATE INDEX idx_practices_tradition ON practice_templates(tradition_id);
+CREATE INDEX idx_practices_hour ON practice_templates(roman_hour);
+```
+
+---
+
+# Part III: Design Rationale
+
+## Why This Schema Exists
+
+> *"This relational schema is designed to preserve semantic freedom. The database does not decide meaning; it stores structure, relations, and history. All interpretation (priority, sentiment, relevance, abstraction) happens at the agent layer. The SQL layer exists only to guarantee durability, query-ability, and composable context for prompts."*
+
+## Architecture Decisions
+
+### 1. UUID Primary Keys
+- **Why TEXT, not INTEGER:** Portable across systems, enables offline ID generation, human-debuggable
+- **Trade-off:** Slightly larger storage, acceptable for mobile scale
+
+### 2. ISO-8601 Date Strings
+- **Why TEXT, not INTEGER timestamps:** Human-readable in SQLite browser, timezone-aware, simplifies debugging
+- **Format:** `YYYY-MM-DDTHH:MM:SS.sssZ` for full datetime, `YYYY-MM-DD` for date-only
+
+### 3. JSON in TEXT Columns
+- **Why:** Flexible schema evolution, no complex joins for arrays, native JSON functions in SQLite 3.38+
+- **Where:** `selected_days`, `selected_keywords`, `linked_object_ids`, `source_ids`, `metrics`
+
+### 4. Append-Only Tables
+- **Which:** `plans`, `progress_events`
+- **Why:** Preserves training data for on-device ML, enables time-series analysis, immutable audit trail
+
+### 5. Separate Vector Tables
+- **Why not in entity tables:** Large BLOB overhead, different access patterns, enables efficient clustering
+- **Cleanup:** Orphan vectors cleaned during nightly maintenance
+
+### 6. Links Table (Junction)
+- **Why universal linking:** Any-to-any relationships without schema changes, bidirectional traversal
+- **Alternative considered:** Array of IDs in each row (chosen for quick reads, links table for queries needing joins)
+
+---
+
+## Query Patterns
+
+### Get Today's Agenda
+```sql
+SELECT * FROM (
+  SELECT id, 'appointment' as type, name, start_time, end_time FROM appointments WHERE user_id = ? AND date(start_time) = ?
+  UNION ALL
+  SELECT id, 'plan' as type, name, start_time, end_time FROM plans WHERE user_id = ? AND date(start_time) = ?
+  UNION ALL
+  SELECT id, 'anchor' as type, name, start_time, end_time FROM anchors WHERE user_id = ? AND date_str = ?
+) ORDER BY start_time;
+```
+
+### Get Urgent Tasks for Scheduling
+```sql
+SELECT 
+  t.*,
+  julianday(t.deadline) - julianday('now') AS days_until,
+  t.effort_minutes / (julianday(t.deadline) - julianday('now')) AS minutes_per_day
+FROM tasks t
+WHERE t.user_id = ?
+  AND t.is_completed = 0
+  AND t.deadline IS NOT NULL
+ORDER BY minutes_per_day DESC
+LIMIT 15;
+```
+
+### Get Backlinks for Entity
+```sql
+SELECT from_type, from_id 
+FROM links 
+WHERE to_type = ? AND to_id = ?;
+```
+
+### RAG Context Retrieval
+```sql
+-- Step 1: Get recent summaries (always included)
+SELECT content FROM insight_notes 
+WHERE user_id = ? AND type = 'daily'
+ORDER BY range_end DESC LIMIT 3;
+
+-- Step 2: Vector similarity search within cluster
+SELECT e.entity_type, e.entity_id
+FROM vector_embeddings e
+WHERE e.user_id = ? AND e.cluster_id IN (?, ?, ?)
+-- Application layer computes cosine similarity and ranks
+```
+
+---
+
+## Migration Strategy
+
+Schema changes follow a versioned migration pattern:
+
+```typescript
+const MIGRATIONS: Migration[] = [
+  { version: 1, up: `CREATE TABLE users ...` },
+  { version: 2, up: `CREATE TABLE habits ...` },
+  { version: 3, up: `ALTER TABLE habits ADD COLUMN ideal_phase TEXT` },
+  // ...
+];
+
+async function migrate(db: SQLiteDatabase): Promise<void> {
+  const currentVersion = await db.getVersion();
+  for (const migration of MIGRATIONS.filter(m => m.version > currentVersion)) {
+    await db.exec(migration.up);
+    await db.setVersion(migration.version);
+  }
+}
+```
+
+---
+
+## File Cross-Reference
+
+| Domain | TypeScript File | SQLite Table(s) |
+|--------|-----------------|-----------------|
+| User | `stores/userStore.ts` | `users` |
+| Phases | `services/PhaseManager.ts` | (computed) |
+| Anchors | `services/data/Anchors.ts`, `data/practices.ts` | `anchors`, `practice_templates` |
+| Habits | `services/data/Habits.ts` | `habits` |
+| Tasks | `services/data/Tasks.ts` | `tasks`, `projects` |
+| Journal | (TBD) | `journal_entries`, `journal_segments` |
+| RAG | `services/ai/RAGEngine.ts` | `vector_embeddings`, `vector_clusters` |
+| Models | `services/ai/ModelRegistry.ts` | `model_versions` |
+| Summaries | `services/data/Summarizer.ts` | `insight_notes` |

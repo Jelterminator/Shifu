@@ -18,14 +18,13 @@ import {
   WorkHoursSetupScreen,
 } from '../screens';
 import { useThemeStore } from '../stores/themeStore';
+import { type MainTabParamList, type RootStackParamList } from '../types/navigation';
 import { storage } from '../utils/storage';
 
-// -- Icons (Placeholder logic since we don't have the icon library import handy, 
-//    but usually it's Ionicons/MaterialCommunityIcons. Using Text for now or safe lookup)
-function TabIcon({ name, color, focused }: { name: string; color: string; focused: boolean }) {
-  // Simple mapping for visual feedback
+// -- Icons --
+function TabIcon({ name, color }: { name: string; color: string }): React.JSX.Element {
   const icons: Record<string, string> = {
-    Agenda: '📅',
+    Agenda: '📅', // Calendar
     Tasks: '✅',
     Habits: '🔄',
     Journal: '📖',
@@ -35,37 +34,35 @@ function TabIcon({ name, color, focused }: { name: string; color: string; focuse
 }
 
 // -- Main Tab Navigator --
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
-function MainTabNavigator() {
+function MainTabNavigator(): React.JSX.Element {
   const colors = useThemeStore(state => state.colors);
-  
+
   return (
     <Tab.Navigator
-        screenOptions={({ route }) => ({
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-            backgroundColor: colors.surface,
-            borderTopColor: colors.background,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.background,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={route.name} color={color} focused={focused} />
-        ),
-        })}
+        tabBarIcon: ({ color }) => <TabIcon name={route.name} color={color} />,
+      })}
     >
-      <Tab.Screen name="Agenda" component={AgendaScreen} />
-      <Tab.Screen name="Tasks" component={TasksScreen} />
       <Tab.Screen name="Habits" component={HabitsScreen} />
       <Tab.Screen name="Journal" component={JournalScreen} />
+      <Tab.Screen name="Agenda" component={AgendaScreen} />
+      <Tab.Screen name="Tasks" component={TasksScreen} />
       <Tab.Screen name="Chat" component={ChatScreen} />
     </Tab.Navigator>
   );
 }
 
 // -- Root Stack Navigator --
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator(): React.JSX.Element {
   // Check completion status from storage

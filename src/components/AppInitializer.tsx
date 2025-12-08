@@ -9,14 +9,11 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    console.log('🎬 AppInitializer: Starting (simplified for web)');
     // Just set ready immediately - no complex initialization
     setIsReady(true);
-    console.log('✅ AppInitializer: Ready');
   }, []);
 
   if (!isReady) {
-    console.log('⏳ AppInitializer: Loading...');
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#4A7C59" />
@@ -24,7 +21,6 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
     );
   }
 
-  console.log('🎉 AppInitializer: Rendering children');
   return <>{children}</>;
 };
 

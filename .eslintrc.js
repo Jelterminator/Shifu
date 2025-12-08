@@ -16,7 +16,7 @@
     ecmaFeatures: {
       jsx: true,
     },
-    project: './tsconfig.eslint.json',
+    project: './tsconfig.json',
     tsconfigRootDir: __dirname,
   },
   plugins: ['@typescript-eslint', 'react', 'react-hooks', 'jest', 'prettier'],

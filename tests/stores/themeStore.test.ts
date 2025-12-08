@@ -18,16 +18,10 @@ describe('themeStore', () => {
     setTheme('phase-aware'); // Reset to default
   });
 
-  it('should initialize with values from storage', () => {
-      // Note: Zustand store is created at module level, so storage.get mock at top level 
-      // might have already run before this test if not carefully reset.
-      // But we can test actions.
-  });
-
   it('should update mode and persist', () => {
     const { setTheme } = useThemeStore.getState();
     setTheme('dark');
-    
+
     const state = useThemeStore.getState();
     expect(state.mode).toBe('dark');
     expect(state.isDark).toBe(true);
@@ -36,20 +30,20 @@ describe('themeStore', () => {
 
   it('should update phase and adjust isDark', () => {
     const { setCurrentPhase } = useThemeStore.getState();
-     const mockNightPhase = {
-        name: 'WATER',
-        startTime: new Date(),
-        endTime: new Date(),
-        color: '#Blue',
-        romanHours: [13, 14], // Night hours
-        qualities: '',
-        idealTasks: []    
+    const mockNightPhase = {
+      name: 'WATER',
+      startTime: new Date(),
+      endTime: new Date(),
+      color: '#Blue',
+      romanHours: [13, 14], // Night hours
+      qualities: '',
+      idealTasks: [],
     };
-    
-    // @ts-ignore
+
+    // @ts-expect-error - Testing improper input type for resilience
     setCurrentPhase(mockNightPhase);
     const state = useThemeStore.getState();
-    
+
     expect(state.phaseColor).toBe('#Blue');
     expect(state.isDark).toBe(true);
   });

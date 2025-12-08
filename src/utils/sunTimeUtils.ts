@@ -45,13 +45,13 @@ const isValidCoordinates = ({ latitude, longitude }: Coordinates): boolean => {
 const getSunTimes = (date: Date, coordinates: Coordinates): SunTimes => {
   try {
     const { latitude, longitude } = coordinates;
-    
+
     if (!isValidCoordinates(coordinates)) {
       throw new Error('Invalid coordinates provided');
     }
 
     const sunData = SunCalc.getTimes(date, latitude, longitude);
-    
+
     // Handle edge cases for polar regions
     if (sunData.sunrise.getTime() === sunData.sunset.getTime()) {
       // At poles during equinoxes, use civil twilight as fallback
@@ -68,19 +68,22 @@ const getSunTimes = (date: Date, coordinates: Coordinates): SunTimes => {
     };
   } catch (error) {
     console.warn('SunCalc failed, using default times:', error);
-    
+
     // Return reasonable defaults based on date and latitude
     const defaultSunrise = new Date(date);
     const defaultSunset = new Date(date);
-    
+
     // Adjust based on latitude - longer days in summer, shorter in winter
-    const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
+    const dayOfYear = Math.floor(
+      (date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000
+    );
     const latitudeFactor = Math.cos((coordinates.latitude * Math.PI) / 180);
-    const dayLengthVariation = 4 * latitudeFactor * Math.sin((2 * Math.PI * (dayOfYear - 80)) / 365);
-    
+    const dayLengthVariation =
+      4 * latitudeFactor * Math.sin((2 * Math.PI * (dayOfYear - 80)) / 365);
+
     defaultSunrise.setHours(6 - dayLengthVariation / 2, 0, 0, 0);
     defaultSunset.setHours(18 + dayLengthVariation / 2, 0, 0, 0);
-    
+
     return {
       sunrise: defaultSunrise,
       sunset: defaultSunset,
@@ -95,7 +98,7 @@ const getNextDaySunrise = (date: Date, coordinates: Coordinates): Date => {
   const nextDay = new Date(date);
   nextDay.setDate(nextDay.getDate() + 1);
   nextDay.setHours(0, 0, 0, 0);
-  
+
   return getSunTimes(nextDay, coordinates).sunrise;
 };
 
@@ -124,22 +127,17 @@ export const calculateRomanHours = (
 
     // Graceful fallback instead of throwing
     if (!nextSunrise || nextSunrise <= sunset) {
-      throw new Error("Invalid night duration");
+      throw new Error('Invalid night duration');
     }
 
     const dayDuration = sunset.getTime() - sunrise.getTime();
     const nightDuration = nextSunrise.getTime() - sunset.getTime();
 
     if (dayDuration <= 0 || nightDuration <= 0) {
-      throw new Error("Invalid durations");
+      throw new Error('Invalid durations');
     }
 
-    const buildHour = (
-      hour: number,
-      base: Date,
-      duration: number,
-      index: number
-    ): RomanHour => {
+    const buildHour = (hour: number, base: Date, duration: number, index: number): RomanHour => {
       const slice = duration / 12;
       return {
         hour,
@@ -149,20 +147,14 @@ export const calculateRomanHours = (
     };
 
     return [
-      ...Array.from({ length: 12 }, (_, i) =>
-        buildHour(i, sunrise, dayDuration, i)
-      ),
-      ...Array.from({ length: 12 }, (_, i) =>
-        buildHour(i + 12, sunset, nightDuration, i)
-      ),
+      ...Array.from({ length: 12 }, (_, i) => buildHour(i, sunrise, dayDuration, i)),
+      ...Array.from({ length: 12 }, (_, i) => buildHour(i + 12, sunset, nightDuration, i)),
     ];
   } catch (err) {
     // Matches your test expectations
-    console.error("Falling back to equal hours:", err);
+    console.error('Falling back to equal hours:', err);
     return createFallbackRomanHours(
-      date instanceof Date && !isNaN(date.getTime())
-        ? date
-        : new Date()
+      date instanceof Date && !isNaN(date.getTime()) ? date : new Date()
     );
   }
 };

@@ -22,4 +22,3 @@ export type { ChatScreenProps } from './ChatScreen';
 export type { HabitsScreenProps } from './HabitsScreen';
 export type { JournalScreenProps } from './JournalScreen';
 export type { TasksScreenProps } from './TasksScreen';
-

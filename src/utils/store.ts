@@ -4,20 +4,29 @@ import { useSyncExternalStore } from 'react';
  * A minimal replacement for Zustand that works with React 19/Web
  * Supports basic state management and subscriptions.
  */
-export function createStore<T>(initializer: (set: (partial: Partial<T> | ((state: T) => Partial<T>)) => void, get: () => T) => T) {
+export function createStore<T>(
+  initializer: (set: (partial: Partial<T> | ((state: T) => Partial<T>)) => void, get: () => T) => T
+): {
+  (): T;
+  <U>(selector: (state: T) => U): U;
+  getState: () => T;
+  setState: (partial: Partial<T> | ((state: T) => Partial<T>)) => void;
+  subscribe: (listener: () => void) => () => void;
+} {
   let state: T;
   const listeners = new Set<() => void>();
 
-  const setState = (partial: Partial<T> | ((state: T) => Partial<T>)) => {
-    const next = typeof partial === 'function' ? (partial as any)(state) : partial;
+  const setState = (partial: Partial<T> | ((state: T) => Partial<T>)): void => {
+    const next =
+      typeof partial === 'function' ? (partial as (state: T) => Partial<T>)(state) : partial;
     if (Object.is(next, state)) return;
     state = Object.assign({}, state, next);
     listeners.forEach(l => l());
   };
 
-  const getState = () => state;
+  const getState = (): T => state;
 
-  const subscribe = (listener: () => void) => {
+  const subscribe = (listener: () => void): (() => void) => {
     listeners.add(listener);
     return () => listeners.delete(listener);
   };
@@ -26,7 +35,7 @@ export function createStore<T>(initializer: (set: (partial: Partial<T> | ((state
   state = initializer(setState, getState);
 
   // The hook function
-  const useStore = (selector: (s: T) => any = (s) => s) => {
+  const useStore = <U>(selector: (s: T) => U = (s: T) => s as unknown as U): U => {
     return useSyncExternalStore(subscribe, () => selector(getState()));
   };
 
@@ -34,9 +43,10 @@ export function createStore<T>(initializer: (set: (partial: Partial<T> | ((state
   Object.assign(useStore, { getState, setState, subscribe });
 
   return useStore as {
-    (selector?: (state: T) => any): any;
+    (): T;
+    <U>(selector: (state: T) => U): U;
     getState: () => T;
-    setState: (partial: any) => void;
+    setState: (partial: Partial<T> | ((state: T) => Partial<T>)) => void;
     subscribe: (listener: () => void) => () => void;
-  }; 
+  };
 }

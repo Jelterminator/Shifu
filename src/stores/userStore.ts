@@ -30,12 +30,16 @@ const loadInitialState = (): { user: User; isAuthenticated: boolean } => {
   try {
     const json = storage.get(STORAGE_KEY);
     if (json) {
-      const parsed = JSON.parse(json);
+      const parsed = JSON.parse(json) as
+        | { state?: { user: User; isAuthenticated: boolean } }
+        | { user: User; isAuthenticated: boolean };
       // Handle zestand persist structure if migration needed: { state: { ... }, version: 0 }
       // Assuming our custom store just saves the object directly or we migrated
       // For now, let's assume standard object structure
-      if (parsed.state) return parsed.state; // ZUSTAND COMPAT
-      return parsed;
+      if ('state' in parsed && parsed.state) {
+        return parsed.state; // ZUSTAND COMPAT
+      }
+      return parsed as { user: User; isAuthenticated: boolean };
     }
   } catch (e) {
     console.error('Failed to load user state', e);
@@ -43,19 +47,19 @@ const loadInitialState = (): { user: User; isAuthenticated: boolean } => {
   return { user: DEFAULT_USER, isAuthenticated: false };
 };
 
-export const useUserStore = createStore<UserStoreState>((set, get) => {
+export const useUserStore = createStore<UserStoreState>(set => {
   const initial = loadInitialState();
-  
+
   return {
     user: initial.user,
     isAuthenticated: initial.isAuthenticated,
-    
-    setUser: (user) => {
+
+    setUser: user => {
       const newState = { user, isAuthenticated: true };
       set(newState);
       storage.set(STORAGE_KEY, JSON.stringify({ state: newState })); // Mimic zustand structure for compat
     },
-    
+
     clearUser: () => {
       const newState = { user: DEFAULT_USER, isAuthenticated: false };
       set(newState);
