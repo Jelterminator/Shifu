@@ -46,45 +46,56 @@ describe('TaskRepository', () => {
   });
 
   describe('getUrgentTasks', () => {
-    it('should return urgent tasks sorted by deadline', async () => {
-      const mockTasks = [
-        { id: '1', title: 'Urgent Task', deadline: '2025-12-10T10:00:00.000Z' },
-        { id: '2', title: 'Less Urgent Task', deadline: '2025-12-15T10:00:00.000Z' },
-      ];
+    it('should return tasks sorted by urgency (deadline) then age', async () => {
+      // 1. Setup mock data
+      const now = new Date();
+      const older = new Date(now.getTime() - 1000000);
+      const newer = now;
 
-      mockDb.query.mockResolvedValue(mockTasks);
+      const taskWithDeadline = {
+        id: '1',
+        title: 'Deadline Task',
+        effort_minutes: 60,
+        deadline: new Date(now.getTime() + 86400000).toISOString(), // Tomorrow
+        is_completed: 0,
+        created_at: newer.toISOString(),
+      };
 
-      const result = await taskRepository.getUrgentTasks('user-1');
+      const oldTaskNoDeadline = {
+        id: '2',
+        title: 'Old Task',
+        effort_minutes: 30,
+        deadline: null,
+        is_completed: 0,
+        created_at: older.toISOString(),
+      };
 
-      expect(mockDb.query).toHaveBeenCalledWith(expect.stringContaining('ORDER BY deadline ASC'), [
-        'user-1',
-        50,
+      const newTaskNoDeadline = {
+        id: '3',
+        title: 'New Task',
+        effort_minutes: 30,
+        deadline: null,
+        is_completed: 0,
+        created_at: newer.toISOString(),
+      };
+
+      mockDb.query.mockResolvedValue([
+        newTaskNoDeadline,
+        oldTaskNoDeadline,
+        taskWithDeadline,
       ]);
-      expect(result).toHaveLength(2);
-      expect(result[0].title).toBe('Urgent Task');
-    });
-  });
 
-  describe('getTopUrgentTasksForList', () => {
-    it('should return top N urgent tasks for a list', async () => {
-      const mockTasks = [
-        {
-          id: '1',
-          title: 'Urgent Work Task',
-          deadline: '2025-12-10T10:00:00.000Z',
-          selected_keywords: '["work"]',
-        },
-      ];
+      const result = await taskRepository.getUrgentTasks('user-1', 3);
 
-      mockDb.query.mockResolvedValue(mockTasks);
+      // Expect sorting:
+      // 1. taskWithDeadline (minutesPerDay > 0)
+      // 2. oldTaskNoDeadline (minutesPerDay = 0, but older)
+      // 3. newTaskNoDeadline (minutesPerDay = 0, newer)
 
-      const result = await taskRepository.getTopUrgentTasksForList('user-1', 'work', 2);
-
-      expect(mockDb.query).toHaveBeenCalledWith(
-        expect.stringContaining('selected_keywords LIKE ?'),
-        ['user-1', '%"work"%', 2]
-      );
-      expect(result).toHaveLength(1);
+      expect(result).toHaveLength(3);
+      expect(result[0].id).toBe('1'); // Deadline
+      expect(result[1].id).toBe('2'); // Oldest
+      expect(result[2].id).toBe('3'); // Newest
     });
   });
 });

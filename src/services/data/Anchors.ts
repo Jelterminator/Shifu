@@ -17,8 +17,6 @@ export interface AnchorEvent {
 const ANCHORS_STORAGE_KEY = 'shifu_anchors';
 const LAST_CALCULATION_KEY = 'shifu_anchors_last_calc';
 
-
-
 class AnchorsService {
   private initialized = false;
 
@@ -250,12 +248,12 @@ class AnchorsService {
       // Calculate start and end of the GREGORIAN day for the given date
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
-      
+
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
       const allAnchors = this.getStoredAnchors();
-      
+
       // Filter by actual time range
       return allAnchors.filter(a => {
         return a.startTime >= startOfDay && a.startTime <= endOfDay;

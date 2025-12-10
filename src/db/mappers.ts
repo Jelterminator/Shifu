@@ -159,7 +159,7 @@ export function mapTaskRowToTask(row: TaskRow): Task {
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
-    
+
     // Computed props
     daysUntilDeadline,
     minutesPerDay,

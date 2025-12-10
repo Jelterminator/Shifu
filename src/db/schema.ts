@@ -190,4 +190,39 @@ export const MIGRATIONS: Migration[] = [
     ALTER TABLE projects ADD COLUMN selected_keywords TEXT NOT NULL DEFAULT '[]';
     `,
   },
+  {
+    version: 10,
+    sql: `
+    -- Vector Embeddings for RAG
+    CREATE TABLE IF NOT EXISTS vector_embeddings (
+      id TEXT PRIMARY KEY NOT NULL,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      vector BLOB NOT NULL,
+      dimensions INTEGER NOT NULL,
+      cluster_id INTEGER,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(entity_type, entity_id)
+    );
+    CREATE INDEX idx_vectors_entity ON vector_embeddings(entity_type, entity_id);
+    CREATE INDEX idx_vectors_cluster ON vector_embeddings(cluster_id);
+    CREATE INDEX idx_vectors_user ON vector_embeddings(user_id);
+    `,
+  },
+  {
+    version: 11,
+    sql: `
+    -- Vector Clusters for ANN Index
+    CREATE TABLE IF NOT EXISTS vector_clusters (
+      id INTEGER PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      centroid BLOB NOT NULL,
+      dimensions INTEGER NOT NULL,
+      member_count INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX idx_clusters_user ON vector_clusters(user_id);
+    `,
+  },
 ];

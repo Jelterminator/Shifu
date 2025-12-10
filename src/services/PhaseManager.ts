@@ -171,7 +171,7 @@ class PhaseManager {
     const last = block[block.length - 1];
 
     if (!first || !last) return;
-    
+
     phases.push({
       name,
       startTime: first.startTime,
@@ -212,7 +212,7 @@ class PhaseManager {
     try {
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
-      
+
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
@@ -259,7 +259,7 @@ class PhaseManager {
 
         const last = merged[merged.length - 1];
         if (!last) continue; // Should not happen given check above
-        
+
         if (last.name === p.name) {
           // Extend last phase
           last.endTime = p.endTime > last.endTime ? p.endTime : last.endTime;
@@ -270,11 +270,11 @@ class PhaseManager {
           merged.push(p);
         }
       }
-      
+
       return merged;
     } catch (error) {
-       console.error('❌ Error calculating Gregorian phases:', error);
-       return [];
+      console.error('❌ Error calculating Gregorian phases:', error);
+      return [];
     }
   }
 

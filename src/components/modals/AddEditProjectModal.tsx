@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { BORDER_RADIUS, KEYWORDS, SHADOWS, SPACING } from '../../constants';
 // Note: imports adjusted to match existing file structure if needed, or assuming constants/index exports them.
@@ -42,48 +42,53 @@ export function AddEditProjectModal({
   const [deadlineText, setDeadlineText] = useState('');
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
   // Subtask logic
   const [currentProject, setCurrentProject] = useState<Project | undefined>(project);
   const [subtasks, setSubtasks] = useState<Task[]>([]);
   const [isTaskModalVisible, setIsTaskModalVisible] = useState(false);
 
+  const loadSubtasks = useCallback(
+    async (projectId: string): Promise<void> => {
+      if (!user?.id) return;
+      try {
+        const tasks = await taskRepository.getTasksByProjectId(user.id, projectId);
+        setSubtasks(tasks);
+      } catch (e) {
+        console.error('Failed to load subtasks', e);
+      }
+    },
+    [user?.id]
+  );
+
   useEffect(() => {
     if (visible && project) {
       setCurrentProject(project);
-      
+
       setTitle(project.title);
       setNotes(project.notes || '');
-      setDeadlineText(project.deadline ? new Date(project.deadline).toISOString().slice(0, 10) : '');
+      setDeadlineText(
+        project.deadline ? new Date(project.deadline).toISOString().slice(0, 10) : ''
+      );
       setSelectedKeywords(project.selectedKeywords || []);
-      
+
       void loadSubtasks(project.id);
     } else if (visible) {
       // New project
       setCurrentProject(undefined);
       setSubtasks([]);
-      
+
       setTitle('');
       setNotes('');
       setDeadlineText('');
       setSelectedKeywords(initialKeywords);
     }
-  }, [visible, project, initialKeywords]);
-
-  const loadSubtasks = async (projectId: string) => {
-      if (!user?.id) return;
-      try {
-          const tasks = await taskRepository.getTasksByProjectId(user.id, projectId);
-          setSubtasks(tasks);
-      } catch (e) {
-          console.error("Failed to load subtasks", e);
-      }
-  };
+  }, [visible, project, initialKeywords, loadSubtasks]);
 
   const handleSave = async (openTasksAfter = false): Promise<void> => {
     if (!user || !user.id || !title.trim()) {
-        console.warn('Cannot save project: Missing user or title', { user, title });
-        return;
+      console.warn('Cannot save project: Missing user or title', { user, title });
+      return;
     }
     setLoading(true);
 
@@ -108,15 +113,15 @@ export function AddEditProjectModal({
         savedProject = await projectRepository.create(user.id, data);
         Alert.alert('Success', 'Project created. You can now add subtasks.');
       }
-      
+
       setCurrentProject(savedProject);
-      
+
       // If we want to continue to add tasks, don't close.
       if (openTasksAfter) {
-          setIsTaskModalVisible(true);
+        setIsTaskModalVisible(true);
       } else {
-          onSave?.();
-          onClose(); // Only close if not adding tasks
+        onSave?.();
+        onClose(); // Only close if not adding tasks
       }
     } catch (e) {
       console.error('Failed to save project', e);
@@ -211,9 +216,11 @@ export function AddEditProjectModal({
                       },
                     ]}
                     onPress={() => {
-                        setSelectedKeywords(prev => 
-                            prev.includes(keyword) ? prev.filter(k => k !== keyword) : [...prev, keyword]
-                        );
+                      setSelectedKeywords(prev =>
+                        prev.includes(keyword)
+                          ? prev.filter(k => k !== keyword)
+                          : [...prev, keyword]
+                      );
                     }}
                   >
                     <Text
@@ -227,53 +234,70 @@ export function AddEditProjectModal({
             </View>
             {/* Subtasks Section */}
             {currentProject && (
-                <View style={{ marginTop: SPACING.l }}>
-                    <Text style={[styles.label, { marginTop: 0, color: colors.textSecondary }]}>Subtasks</Text>
-                    
-                    {subtasks.length === 0 ? (
-                        <Text style={{ color: colors.textSecondary, fontStyle: 'italic', marginBottom: SPACING.m }}>No subtasks yet.</Text>
-                    ) : (
-                        subtasks.map(task => (
-                            <View key={task.id} style={{ marginBottom: SPACING.s }}>
-                                <TaskCard task={task} />
-                            </View>
-                        ))
-                    )}
-                    
-                    <TouchableOpacity 
-                        onPress={() => setIsTaskModalVisible(true)}
-                        style={{ alignSelf: 'flex-start', paddingVertical: SPACING.xs }}
-                    >
-                        <Text style={{ color: phaseColor, fontWeight: '600' }}>+ Add Subtask</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
+              <View style={{ marginTop: SPACING.l }}>
+                <Text style={[styles.label, { marginTop: 0, color: colors.textSecondary }]}>
+                  Subtasks
+                </Text>
 
+                {subtasks.length === 0 ? (
+                  <Text
+                    style={{
+                      color: colors.textSecondary,
+                      fontStyle: 'italic',
+                      marginBottom: SPACING.m,
+                    }}
+                  >
+                    No subtasks yet.
+                  </Text>
+                ) : (
+                  subtasks.map(task => (
+                    <View key={task.id} style={{ marginBottom: SPACING.s }}>
+                      <TaskCard task={task} />
+                    </View>
+                  ))
+                )}
+
+                <TouchableOpacity
+                  onPress={() => setIsTaskModalVisible(true)}
+                  style={{ alignSelf: 'flex-start', paddingVertical: SPACING.xs }}
+                >
+                  <Text style={{ color: phaseColor, fontWeight: '600' }}>+ Add Subtask</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </ScrollView>
 
           <View style={{ gap: SPACING.s, marginTop: SPACING.m }}>
             {/* Editing existing project */}
             {currentProject && (
-                <TouchableOpacity
-                    style={[styles.saveButton, { backgroundColor: phaseColor, opacity: loading ? 0.7 : 1 }]}
-                    onPress={() => void handleSave(false)}
-                    disabled={loading}
-                >
-                    <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Save Changes'}</Text>
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  { backgroundColor: phaseColor, opacity: loading ? 0.7 : 1 },
+                ]}
+                onPress={() => void handleSave(false)}
+                disabled={loading}
+              >
+                <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Save Changes'}</Text>
+              </TouchableOpacity>
             )}
-            
+
             {/* Creating new project -> Enforce adding tasks */}
             {!currentProject && (
-                <TouchableOpacity
-                    style={[styles.saveButton, { backgroundColor: phaseColor, opacity: loading ? 0.7 : 1 }]}
-                    onPress={() => void handleSave(true)}
-                    disabled={loading}
-                >
-                    <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Next: Add Subtasks'}</Text>
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  { backgroundColor: phaseColor, opacity: loading ? 0.7 : 1 },
+                ]}
+                onPress={() => void handleSave(true)}
+                disabled={loading}
+              >
+                <Text style={styles.saveButtonText}>
+                  {loading ? 'Saving...' : 'Next: Add Subtasks'}
+                </Text>
+              </TouchableOpacity>
             )}
-           </View>
+          </View>
 
           {/* Add Task Modal */}
           <AddEditTaskModal
@@ -284,7 +308,7 @@ export function AddEditProjectModal({
             initialKeywords={currentProject?.selectedKeywords}
             isSubtaskMode={true}
             onSave={() => {
-                if (currentProject) void loadSubtasks(currentProject.id);
+              if (currentProject) void loadSubtasks(currentProject.id);
             }}
           />
         </View>
@@ -355,7 +379,7 @@ const styles = StyleSheet.create({
     gap: SPACING.s,
   },
   keywordChip: {
-    width: '30%', 
+    width: '30%',
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,

@@ -104,6 +104,7 @@ describe('Mappers', () => {
       notes: null,
       is_completed: 1,
       linked_object_ids: '[]',
+      selected_keywords: '[]',
       created_at: mockDate.toISOString(),
       updated_at: mockDate.toISOString(),
       completed_at: mockDate.toISOString(),

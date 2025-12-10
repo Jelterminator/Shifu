@@ -58,7 +58,7 @@ const loadInitialState = (): { lists: ListConfiguration[] } => {
       const parsed = JSON.parse(json) as
         | { state?: { lists: ListConfiguration[] } }
         | { lists: ListConfiguration[] };
-      
+
       if ('state' in parsed && parsed.state) {
         return parsed.state;
       }

@@ -32,10 +32,12 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation, rou
     // Ideally we pass coords. User object might not have them if basic, assume default or current provided.
     const lat = user.latitude ?? 52.3676;
     const long = user.longitude ?? 4.9041;
-    
+
     // Import dynamically or use the imported instance
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { anchorsService } = require('../../services/data/Anchors');
+    const { anchorsService } = require('../../services/data/Anchors') as {
+      anchorsService: typeof import('../../services/data/Anchors').anchorsService;
+    };
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     anchorsService.recalculateFutureAnchors(lat, long);
 

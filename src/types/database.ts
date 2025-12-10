@@ -77,7 +77,7 @@ export interface Task {
   createdAt: Date;
   updatedAt: Date;
   completedAt?: Date;
-  
+
   // Computed properties
   daysUntilDeadline?: number;
   minutesPerDay?: number;
@@ -160,4 +160,3 @@ export interface Appointment {
   createdAt: Date;
   updatedAt: Date;
 }
-

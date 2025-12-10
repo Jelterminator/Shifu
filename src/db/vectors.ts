@@ -1,103 +1,130 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Vector Service
+ *
+ * High-level API for storing and querying vector embeddings.
+ * Uses platform-aware storage (SQLite on native, localStorage on web).
+ */
+import { getEmbedder } from '../services/ai/embedder';
+import type { LinkableEntityType, VectorEmbedding, VectorQueryResult } from '../types/vectorTypes';
+import { vectorStorage } from './vectorStorage';
 
-// MOCK TYPES to avoid import.meta crash from chromadb SDK
-type Collection = any;
-class ChromaClient {
-  constructor(_params: any) {}
-  async getOrCreateCollection(_params: any): Promise<any> {
-    await Promise.resolve();
-    return null;
-  }
-  async reset(): Promise<void> {
-    await Promise.resolve();
-  }
-}
-
-// Configuration - this would typically come from environment variables
-// For local device dev, we assume a local instance or proxy.
-// Given strict "on-device", this might imply a future embedded solution,
-// but for now we implement the standard client.
-const CHROMA_URL = 'http://localhost:8000';
-
+/**
+ * VectorService provides high-level operations for RAG embeddings
+ */
 class VectorService {
-  private client: ChromaClient;
-  private embeddingsCollection: Collection | null = null;
-  private summariesCollection: Collection | null = null;
   private isInitialized = false;
-
-  constructor() {
-    this.client = new ChromaClient({ path: CHROMA_URL });
-  }
 
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
-    await Promise.resolve();
 
-    try {
-      // eslint-disable-next-line no-console
-      console.log('⚠️ VectorService: mocked for React Native compatibility');
-      // Get or create collections
-      // this.embeddingsCollection = await this.client.getOrCreateCollection({
-      //   name: 'embeddings',
-      //   metadata: { description: 'Raw entity embeddings' },
-      // });
+    await vectorStorage.initialize();
+    this.isInitialized = true;
 
-      // this.summariesCollection = await this.client.getOrCreateCollection({
-      //   name: 'summaries',
-      //   metadata: { description: 'Hierarchical summary embeddings' },
-      // });
-
-      this.isInitialized = true;
-    } catch (error) {
-      // We don't throw here to avoid crashing the app if vector DB is offline,
-      // as per robust offline-first design.
-    }
+    // eslint-disable-next-line no-console
+    console.log('✅ VectorService initialized');
   }
 
-  // Generic add method
+  /**
+   * Add or update an embedding for an entity
+   * Automatically generates embedding from text using current embedder
+   */
   async addEmbedding(
-    _collectionName: 'embeddings' | 'summaries',
-    _id: string,
-    _vector: number[],
-    _metadata: Record<string, string | number | boolean>,
-    _document?: string
-  ): Promise<void> {
-    // Mock implementation
-    await Promise.resolve();
-    return;
+    userId: string,
+    entityType: LinkableEntityType | 'summary',
+    entityId: string,
+    text: string
+  ): Promise<string> {
+    if (!this.isInitialized) await this.initialize();
+
+    const embedder = getEmbedder();
+    const vector = await embedder.embed(text);
+
+    return vectorStorage.add(userId, entityType, entityId, vector);
   }
 
-  // Generic query method
+  /**
+   * Add embedding with pre-computed vector (for advanced use cases)
+   */
+  async addEmbeddingDirect(
+    userId: string,
+    entityType: LinkableEntityType | 'summary',
+    entityId: string,
+    vector: Float32Array
+  ): Promise<string> {
+    if (!this.isInitialized) await this.initialize();
+
+    return vectorStorage.add(userId, entityType, entityId, vector);
+  }
+
+  /**
+   * Query for similar entities using text
+   */
   async query(
-    _collectionName: 'embeddings' | 'summaries',
-    _queryVector: number[],
-    _nResults: number = 5,
-    _where?: Record<string, string | number | boolean>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<any> {
-    // Mock return
-    await Promise.resolve();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return {
-      ids: [[]],
-      embeddings: [[]],
-      documents: [[]],
-      metadatas: [[]],
-      distances: [[]],
-    };
+    userId: string,
+    queryText: string,
+    nResults: number = 5
+  ): Promise<VectorQueryResult[]> {
+    if (!this.isInitialized) await this.initialize();
+
+    const embedder = getEmbedder();
+    const queryVector = await embedder.embed(queryText);
+
+    return vectorStorage.query(userId, queryVector, nResults);
   }
 
-  // Delete
-  async delete(_collectionName: 'embeddings' | 'summaries', _id: string): Promise<void> {
-    await Promise.resolve();
-    return;
+  /**
+   * Query for similar entities using pre-computed vector
+   */
+  async queryDirect(
+    userId: string,
+    queryVector: Float32Array,
+    nResults: number = 5
+  ): Promise<VectorQueryResult[]> {
+    if (!this.isInitialized) await this.initialize();
+
+    return vectorStorage.query(userId, queryVector, nResults);
   }
 
+  /**
+   * Get embedding for a specific entity
+   */
+  async getByEntity(
+    entityType: LinkableEntityType | 'summary',
+    entityId: string
+  ): Promise<VectorEmbedding | null> {
+    if (!this.isInitialized) await this.initialize();
+
+    return vectorStorage.getByEntity(entityType, entityId);
+  }
+
+  /**
+   * Delete embedding for an entity
+   */
+  async delete(
+    entityType: LinkableEntityType | 'summary',
+    entityId: string
+  ): Promise<void> {
+    if (!this.isInitialized) await this.initialize();
+
+    return vectorStorage.delete(entityType, entityId);
+  }
+
+  /**
+   * Reset service state (useful for testing)
+   */
   async reset(): Promise<void> {
-    // await this.client.reset();
     this.isInitialized = false;
     await this.initialize();
   }
 }
 
-export const vectorService = new VectorService();
+// HMR-safe singleton
+const globalVectorService = globalThis as unknown as {
+  _shifu_vector_service?: VectorService;
+};
+
+if (!globalVectorService._shifu_vector_service) {
+  globalVectorService._shifu_vector_service = new VectorService();
+}
+
+export const vectorService = globalVectorService._shifu_vector_service;

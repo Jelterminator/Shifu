@@ -1,14 +1,14 @@
 import React, { useRef, useState } from 'react';
 import {
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
 import { BORDER_RADIUS, SHADOWS, SPACING } from '../constants/theme';
@@ -86,8 +86,6 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
 
   const { colors, phaseColor } = useThemeStore();
-
-
 
   const sendMessage = (text: string): void => {
     if (!text.trim()) return;

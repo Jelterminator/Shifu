@@ -11,6 +11,7 @@ import {
 import { BaseScreen } from '../components/BaseScreen';
 import { CalendarView } from '../components/CalendarView';
 import { AppointmentModal } from '../components/modals/AppointmentModal';
+import { PHASE_ICONS } from '../constants/theme';
 import { appointmentRepository } from '../db/repositories/AppointmentRepository';
 import { anchorsService } from '../services/data/Anchors';
 import { phaseManager, type WuXingPhase } from '../services/PhaseManager';
@@ -36,27 +37,12 @@ interface PhaseSection {
   isCurrentPhase: boolean;
 }
 
-const PHASE_ICONS: Record<string, string> = {
-  WOOD: '🌳',
-  FIRE: '🔥',
-  EARTH: '🌍',
-  METAL: '🔧',
-  WATER: '💧',
-};
-
 const formatTime = (date: Date): string => {
   return date.toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   });
-};
-
-const formatDuration = (minutes: number): string => {
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
 };
 
 const getEventTypeLabel = (type: EventType): string | null => {
@@ -81,7 +67,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
   const [error, setError] = useState<string | null>(null);
   const [phaseSections, setPhaseSections] = useState<PhaseSection[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  
+
   // Modals
   const [appointmentModalVisible, setAppointmentModalVisible] = useState(false);
 
@@ -105,14 +91,16 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
       if (Platform.OS !== 'web' || anchorsService.isInitialized()) {
         try {
           const rawAnchors = anchorsService.getAnchorsForDate(selectedDate);
-          events = events.concat(rawAnchors.map(a => ({
-            id: a.id,
-            title: a.title,
-            startTime: a.startTime,
-            durationMinutes: a.durationMinutes,
-            type: 'anchor' as EventType,
-            completed: false,
-          })));
+          events = events.concat(
+            rawAnchors.map(a => ({
+              id: a.id,
+              title: a.title,
+              startTime: a.startTime,
+              durationMinutes: a.durationMinutes,
+              type: 'anchor' as EventType,
+              completed: false,
+            }))
+          );
         } catch (e) {
           console.warn('Failed to load anchors', e);
         }
@@ -120,22 +108,24 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
 
       // 2. Appointments
       if (user?.id) {
-          try {
-              const appointments = await appointmentRepository.getForDate(user.id, selectedDate);
-              events = events.concat(appointments.map(a => {
-                  const duration = (a.endTime.getTime() - a.startTime.getTime()) / (1000 * 60);
-                  return {
-                      id: a.id,
-                      title: a.name,
-                      startTime: a.startTime,
-                      durationMinutes: Math.round(duration),
-                      type: 'fixed' as EventType,
-                      completed: false, // Appointments aren't tasks
-                  };
-              }));
-          } catch (e) {
-               console.warn('Failed to load appointments', e);
-          }
+        try {
+          const appointments = await appointmentRepository.getForDate(user.id, selectedDate);
+          events = events.concat(
+            appointments.map(a => {
+              const duration = (a.endTime.getTime() - a.startTime.getTime()) / (1000 * 60);
+              return {
+                id: a.id,
+                title: a.name,
+                startTime: a.startTime,
+                durationMinutes: Math.round(duration),
+                type: 'fixed' as EventType,
+                completed: false, // Appointments aren't tasks
+              };
+            })
+          );
+        } catch (e) {
+          console.warn('Failed to load appointments', e);
+        }
       }
 
       // Organize events by phase
@@ -168,7 +158,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
   };
 
   const handleFabPress = (): void => {
-      setAppointmentModalVisible(true);
+    setAppointmentModalVisible(true);
   };
 
   const renderEventCard = (event: AgendaEvent): React.JSX.Element => {
@@ -195,9 +185,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
         ]}
       >
         <View style={styles.eventTimeContainer}>
-          <Text style={[styles.eventTime, { color: colors.textSecondary }]}>
-            {timeRange}
-          </Text>
+          <Text style={[styles.eventTime, { color: colors.textSecondary }]}>{timeRange}</Text>
         </View>
 
         <View style={styles.eventContent}>
@@ -210,9 +198,9 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
                 ]}
               />
             )}
-             {!isCheckable && (
-                 <View style={{ width: 14, marginRight: 8 }} /> // Spacer to align text if checkable column exists
-             )}
+            {!isCheckable && (
+              <View style={{ width: 14, marginRight: 8 }} /> // Spacer to align text if checkable column exists
+            )}
             {typeLabel && (
               <Text
                 style={[styles.inlineBadge, { color: event.phaseColor || colors.textSecondary }]}
@@ -232,7 +220,10 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
     const isCurrent = section.isCurrentPhase;
 
     return (
-      <View key={`${section.phase.name}-${section.phase.startTime.toISOString()}`} style={styles.phaseSection}>
+      <View
+        key={`${section.phase.name}-${section.phase.startTime.toISOString()}`}
+        style={styles.phaseSection}
+      >
         <View
           style={[styles.phaseHeader, isCurrent && { backgroundColor: `${section.phase.color}15` }]}
         >
@@ -287,7 +278,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
       >
         <Text style={[styles.fabIcon, { marginTop: -8 }]}>+</Text>
       </TouchableOpacity>
-      
+
       <AppointmentModal
         visible={appointmentModalVisible}
         onClose={() => setAppointmentModalVisible(false)}

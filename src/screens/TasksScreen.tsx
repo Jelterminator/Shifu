@@ -32,7 +32,9 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
   const { lists } = useListStore();
 
   const [urgentTasks, setUrgentTasks] = useState<Task[]>([]);
-  const [listSummaries, setListSummaries] = useState<Record<string, { count: number; preview: Task[] }>>({});
+  const [listSummaries, setListSummaries] = useState<
+    Record<string, { count: number; preview: Task[] }>
+  >({});
   const [refreshing, setRefreshing] = useState(false);
 
   // Modal states
@@ -40,11 +42,13 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
   const [isListModalVisible, setIsListModalVisible] = useState(false);
   const [isAddListModalVisible, setIsAddListModalVisible] = useState(false);
   const [isProjectModalVisible, setIsProjectModalVisible] = useState(false);
-  
+
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [initialTaskKeywords, setInitialTaskKeywords] = useState<string[] | undefined>(undefined);
-  const [initialProjectKeywords, setInitialProjectKeywords] = useState<string[] | undefined>(undefined);
-  
+  const [initialProjectKeywords, setInitialProjectKeywords] = useState<string[] | undefined>(
+    undefined
+  );
+
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
   const [viewMode, setViewMode] = useState<'normal' | 'all' | 'completed'>('normal');
 
@@ -55,7 +59,7 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
       // Fetch urgent tasks (limit 3)
       const urgent = await taskRepository.getUrgentTasks(user.id!, 3);
       setUrgentTasks(urgent);
-      
+
       // Fetch list summaries
       const summaries = await taskRepository.getListSummaries(user.id!, lists);
       setListSummaries(summaries);
@@ -95,10 +99,10 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
     setInitialTaskKeywords(keywords);
     setIsTaskModalVisible(true);
   };
-  
+
   const handleAddProject = (keywords?: string[]): void => {
-      setInitialProjectKeywords(keywords);
-      setIsProjectModalVisible(true);
+    setInitialProjectKeywords(keywords);
+    setIsProjectModalVisible(true);
   };
 
   const handleOpenList = (listId: string): void => {
@@ -155,11 +159,9 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
         {urgentTasks.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                ⚡ Most Urgent
-              </Text>
-              <TouchableOpacity onPress={handleTaskComplete as any /* Hack for checkmark? No, separate mark done */}>
-                 {/* Placeholder for header actions if needed */}
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>⚡ Most Urgent</Text>
+              <TouchableOpacity onPress={() => {}}>
+                {/* Placeholder for header actions if needed */}
               </TouchableOpacity>
             </View>
             <FlatList
@@ -174,10 +176,7 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
               keyExtractor={item => item.id}
               scrollEnabled={false}
             />
-            <TouchableOpacity 
-              style={{ paddingVertical: SPACING.m }} 
-              onPress={handleViewAllTasks}
-            >
+            <TouchableOpacity style={{ paddingVertical: SPACING.m }} onPress={handleViewAllTasks}>
               <Text style={{ fontSize: 14, fontWeight: '500', color: phaseColor }}>
                 View all tasks sorted by priority →
               </Text>
@@ -191,8 +190,8 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
           <FlatList
             data={lists}
             renderItem={({ item }) => (
-              <ListCard 
-                list={item} 
+              <ListCard
+                list={item}
                 count={listSummaries[item.id]?.count || 0}
                 previewTasks={listSummaries[item.id]?.preview || []}
                 onPress={() => handleOpenList(item.id)}
@@ -204,28 +203,26 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
             scrollEnabled={false}
           />
           <TouchableOpacity
-              style={[styles.addListButton]}
-              onPress={() => setIsAddListModalVisible(true)}
-            >
-              <Text style={[styles.addListText, { color: colors.textSecondary }]}>+ Add List</Text>
+            style={[styles.addListButton]}
+            onPress={() => setIsAddListModalVisible(true)}
+          >
+            <Text style={[styles.addListText, { color: colors.textSecondary }]}>+ Add List</Text>
           </TouchableOpacity>
         </View>
 
         {/* Completed Tasks Link */}
-         <TouchableOpacity 
-            style={{ paddingVertical: SPACING.m, alignItems: 'center' }} 
-            onPress={handleViewCompletedTasks}
-          >
-           <Text style={{ fontSize: 14, fontWeight: '500', color: phaseColor }}>
-             View Completed Tasks →
-           </Text>
-         </TouchableOpacity>
+        <TouchableOpacity
+          style={{ paddingVertical: SPACING.m, alignItems: 'center' }}
+          onPress={handleViewCompletedTasks}
+        >
+          <Text style={{ fontSize: 14, fontWeight: '500', color: phaseColor }}>
+            View Completed Tasks →
+          </Text>
+        </TouchableOpacity>
 
         {/* Fallback Empty State if truly nothing */}
         {hasNoTasks && renderEmptyState()}
       </ScrollView>
-
-
 
       {/* Modals */}
       <AddEditTaskModal
@@ -236,14 +233,14 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
         initialKeywords={initialTaskKeywords}
         onSave={() => void loadData()}
       />
-      
+
       <AddEditProjectModal
         visible={isProjectModalVisible}
         onClose={() => setIsProjectModalVisible(false)}
         initialKeywords={initialProjectKeywords}
         onSave={() => void loadData()}
       />
-      
+
       <AddEditListModal
         visible={isAddListModalVisible}
         onClose={() => setIsAddListModalVisible(false)}

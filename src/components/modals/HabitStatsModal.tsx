@@ -49,16 +49,17 @@ export const HabitStatsModal: React.FC<HabitStatsModalProps> = ({
       <View style={styles.overlay}>
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={{ color: colors.textSecondary, fontSize: 16 }}>✕ Close</Text>
-            </TouchableOpacity>
-            <Text style={[styles.title, { color: colors.text }]}>Statistics</Text>
-            {onEdit && (
+            {onEdit ? (
               <TouchableOpacity onPress={onEdit}>
                 <Text style={{ color: phaseColor, fontSize: 16, fontWeight: '600' }}>Edit</Text>
               </TouchableOpacity>
+            ) : (
+              <View style={{ width: 50 }} />
             )}
-            {!onEdit && <View style={{ width: 50 }} />}
+            <Text style={[styles.title, { color: colors.text }]}>Statistics</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Text style={{ color: colors.textSecondary, fontSize: 16 }}>✕ Close</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.habitHeader}>

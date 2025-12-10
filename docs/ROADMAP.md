@@ -286,7 +286,7 @@ Animations, Reanimated 2, Dynamic Styling.
 - **Design System**
   
   - [x] Implement Typography (Inter) and Color Palettes (Wood, Fire, Earth, Metal, Water).
-  - [ ] Create reusable components: `PhaseCard`, `HabitRow`, `TaskChip`.
+  - [x] Create reusable components: `PhaseCard`, `HabitRow`, `TaskChip`.
 
 - **The Phase Clock (Core UI)**
   
@@ -298,7 +298,7 @@ Animations, Reanimated 2, Dynamic Styling.
   
   - [x] **Agenda Screen:** Timeline view, collapsible phase headers.
   - [x] **Habits Screen:** Interactive checkboxes, streak visualization (🔥).
-  - [ ] **Tasks Screen:** Urgency sorting (T1-T6 visual tiers).
+  - [x] **Tasks Screen:** Urgency sorting (T1-T6 visual tiers).
   - [x] **Journal Screen:** Star rating input, text area, auto-save drafts.
 
 ---
@@ -310,14 +310,25 @@ API Client, Sync Logic.
 
 - **Auth & Permissions**
   
-  - [ ] Implement Onboarding Flow (Location, Sleep Hours, Spiritual preferences).
-  - [ ] Request permissions: Location (Coarse), Notifications.
+  - [x] Implement Onboarding Flow (Location, Sleep Hours, Spiritual preferences).
+  - [x] Request permissions: Location (Coarse)
+  - [ ] Notifications.
 
 - **Google Integration (Client-Side)**
   
   - [ ] Implement Google Sign-In (OAuth2).
-  - [ ] **Calendar Sync:** Fetch events, map to `[FIXED]` blocks in local DB.
+  - [ ] **Calendar Sync:** Fetch events, map to Appointments.
   - [ ] **Tasks Sync:** Two-way sync with Google Tasks (optional).
+
+- **Microsoft Integration (Client-Side)**
+  
+  * [ ] Implement Microsoft Sign-In.
+  * [ ] **Calendar Sync:** Fetch events, map to Appointments.
+
+- **Apple Integration (Client-Side)**
+  
+  * [ ] Implement Apple Sign-In.
+  * [ ] **Calendar Sync:** Fetch events, map to Appointments.
 
 - **Conflict Resolution**
   
@@ -336,7 +347,7 @@ ONNX Runtime, WebAssembly.
   - [ ] Integrate **Transformers.js (Xenova)**.
   - [ ] Configure **ONNX Runtime** for React Native (Single-threaded WASM execution).
   - [ ] Implement `ModelLoader`: Download/Cache quantized models on first run.
-    - _Target Models:_ `DistilGPT-2` (Chat), `MiniLM` (Embeddings).
+    - _Target Models:_ `DistilGPT-2` (Chat), ??? (Embeddings), ??? (Scheduler Forest).
 
 - **The Coach (Chat UI)**
   

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { BORDER_RADIUS, SHADOWS, SPACING } from '../../constants';
 import { appointmentRepository } from '../../db/repositories/AppointmentRepository';
@@ -50,13 +50,13 @@ export function AppointmentModal({
         // New appointment
         setTitle('');
         setDescription('');
-        
+
         const start = initialDate ? new Date(initialDate) : new Date();
         // Round to next 15/30 min logic or just current time
         start.setSeconds(0, 0);
-        
+
         const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour default
-        
+
         setStartText(formatDateTime(start));
         setEndText(formatDateTime(end));
       }
@@ -78,15 +78,9 @@ export function AppointmentModal({
     const regex = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/;
     const match = str.match(regex);
     if (!match) return null;
-    
+
     const [_, y, m, d, h, min] = match;
-    const date = new Date(
-        parseInt(y), 
-        parseInt(m) - 1, 
-        parseInt(d), 
-        parseInt(h), 
-        parseInt(min)
-    );
+    const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), parseInt(h), parseInt(min));
     return isNaN(date.getTime()) ? null : date;
   }
 
@@ -98,13 +92,13 @@ export function AppointmentModal({
     const end = parseDateTime(endText);
 
     if (!start || !end) {
-        alert('Invalid date format. Use YYYY-MM-DD HH:mm');
-        return;
+      alert('Invalid date format. Use YYYY-MM-DD HH:mm');
+      return;
     }
 
     if (end <= start) {
-        alert('End time must be after start time');
-        return;
+      alert('End time must be after start time');
+      return;
     }
 
     setLoading(true);
@@ -171,7 +165,9 @@ export function AppointmentModal({
 
             <View style={{ flexDirection: 'row', gap: SPACING.m }}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Start (YYYY-MM-DD HH:mm)</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>
+                  Start (YYYY-MM-DD HH:mm)
+                </Text>
                 <TextInput
                   style={[
                     styles.input,
@@ -188,10 +184,12 @@ export function AppointmentModal({
                 />
               </View>
             </View>
-            
+
             <View style={{ flexDirection: 'row', gap: SPACING.m }}>
-               <View style={{ flex: 1 }}>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>End (YYYY-MM-DD HH:mm)</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>
+                  End (YYYY-MM-DD HH:mm)
+                </Text>
                 <TextInput
                   style={[
                     styles.input,
@@ -228,7 +226,6 @@ export function AppointmentModal({
               placeholder="Details..."
               placeholderTextColor={colors.textSecondary}
             />
-
           </ScrollView>
 
           <TouchableOpacity

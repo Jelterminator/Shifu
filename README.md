@@ -118,6 +118,13 @@ familiar API.
 2. Create a feature branch
 3. Run `npm run validate`
 4. Submit PR
+## Recent Updates
+
+- Refactored database layer with new vector handling.
+- Updated state management to custom store implementation.
+- Fixed various linting errors and improved TypeScript safety.
+- Implemented settings screen and agenda refinements.
+
 
 ## License
 

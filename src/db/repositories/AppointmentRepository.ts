@@ -7,7 +7,7 @@ class AppointmentRepository {
   async create(
     userId: string,
     data: Omit<Appointment, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'linkedObjectIds'> & {
-        linkedObjectIds?: string[];
+      linkedObjectIds?: string[];
     }
   ): Promise<Appointment> {
     const id = generateId();
@@ -30,7 +30,7 @@ class AppointmentRepository {
         data.source,
         linkedObjectIdsJson,
         now,
-        now
+        now,
       ]
     );
 
@@ -42,19 +42,19 @@ class AppointmentRepository {
   async getForDate(userId: string, date: Date): Promise<Appointment[]> {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
-    
+
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
-    
+
     const rows = await db.query<AppointmentRow>(
-        `SELECT * FROM appointments 
+      `SELECT * FROM appointments 
          WHERE user_id = ?
          AND start_time >= ? 
          AND start_time <= ?
          ORDER BY start_time ASC`,
-        [userId, startOfDay.toISOString(), endOfDay.toISOString()]
+      [userId, startOfDay.toISOString(), endOfDay.toISOString()]
     );
-    
+
     return rows.map(mapAppointmentRowToAppointment);
   }
 

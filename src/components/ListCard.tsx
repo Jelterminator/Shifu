@@ -14,7 +14,14 @@ interface ListCardProps {
   onAddProject?: () => void;
 }
 
-export function ListCard({ list, count, previewTasks, onPress, onAddTask, onAddProject }: ListCardProps): React.JSX.Element {
+export function ListCard({
+  list,
+  count,
+  previewTasks,
+  onPress,
+  onAddTask,
+  onAddProject,
+}: ListCardProps): React.JSX.Element {
   const { colors, phaseColor } = useThemeStore();
 
   // Use props directly, no internal state or effects!
@@ -54,21 +61,21 @@ export function ListCard({ list, count, previewTasks, onPress, onAddTask, onAddP
       )}
       {/* Footer Actions */}
       <View style={styles.footer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: phaseColor }]}
-          onPress={(e) => {
-              e.stopPropagation();
-              if (onAddTask) onAddTask();
+          onPress={e => {
+            e.stopPropagation();
+            if (onAddTask) onAddTask();
           }}
         >
           <Text style={styles.actionButtonText}>+ Task</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={[styles.actionButton, { borderColor: colors.border, borderWidth: 1 }]}
-          onPress={(e) => {
-              e.stopPropagation();
-              if (onAddProject) onAddProject();
+          onPress={e => {
+            e.stopPropagation();
+            if (onAddProject) onAddProject();
           }}
         >
           <Text style={[styles.actionButtonText, { color: colors.text }]}>+ Project</Text>
@@ -110,7 +117,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.s,
     paddingTop: SPACING.s,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0', 
+    borderTopColor: '#E0E0E0',
   },
   previewItem: {
     flexDirection: 'row',
@@ -128,22 +135,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footer: {
-      flexDirection: 'row',
-      marginTop: SPACING.m,
-      paddingTop: SPACING.s,
-      gap: SPACING.s,
+    flexDirection: 'row',
+    marginTop: SPACING.m,
+    paddingTop: SPACING.s,
+    gap: SPACING.s,
   },
   actionButton: {
-      flex: 1,
-      paddingHorizontal: SPACING.m,
-      paddingVertical: 8,
-      borderRadius: BORDER_RADIUS.small,
-      alignItems: 'center',
-      justifyContent: 'center',
+    flex: 1,
+    paddingHorizontal: SPACING.m,
+    paddingVertical: 8,
+    borderRadius: BORDER_RADIUS.small,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionButtonText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFF',
   },
 });

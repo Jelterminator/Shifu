@@ -1,4 +1,3 @@
-
 // Mock MMKV native module globally to prevent crash during import
 jest.mock('react-native-mmkv', () => ({
   MMKV: jest.fn().mockImplementation(() => ({
@@ -24,5 +23,5 @@ jest.mock('../src/utils/storage', () => ({
 import '../src/services/data/Anchors';
 
 test('imports', () => {
-    expect(1).toBe(1);
+  expect(1).toBe(1);
 });

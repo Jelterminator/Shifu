@@ -44,7 +44,7 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
             // Ideally we load full profile
             const dbUser = users[0];
             let practices: string[] = [];
-            
+
             try {
               if (dbUser.spiritual_practices) {
                 practices = JSON.parse(dbUser.spiritual_practices) as string[];

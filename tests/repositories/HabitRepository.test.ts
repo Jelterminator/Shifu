@@ -136,4 +136,62 @@ describe('HabitRepository', () => {
       );
     });
   });
+
+  describe('getWeeklyOverallProgress', () => {
+    it('should clamp progress per habit to its weekly goal', async () => {
+      // 1. Mock getAllForUser response (2 Active habits)
+      const habitA_Id = 'habit-A';
+      const habitB_Id = 'habit-B';
+
+      const mockRowA = {
+        id: habitA_Id,
+        user_id: mockUserId,
+        title: 'Run',
+        weekly_goal_minutes: 60,
+        selected_days: '{}',
+        selected_keywords: '[]',
+        is_active: 1,
+        linked_object_ids: '[]',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const mockRowB = {
+        id: habitB_Id,
+        user_id: mockUserId,
+        title: 'Read',
+        weekly_goal_minutes: 60,
+        selected_days: '{}',
+        selected_keywords: '[]',
+        is_active: 1,
+        linked_object_ids: '[]',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // 2. Mock plans response
+      // Habit A has 100 mins (Goal 60) -> Should count as 60
+      // Habit B has 0 mins (Goal 60) -> Should count as 0
+      const planRow = {
+        source_id: habitA_Id,
+        start_time: '2025-01-01T10:00:00.000Z',
+        end_time: '2025-01-01T11:40:00.000Z', // 100 mins later
+      };
+
+      // Sequence of DB calls:
+      // 1. getAllForUser -> db.query
+      // 2. getWeeklyOverallProgress plan query -> db.query
+
+      (db.query as jest.Mock)
+        .mockResolvedValueOnce([mockRowA, mockRowB]) // for getAllForUser
+        .mockResolvedValueOnce([planRow]); // for plans
+
+      const result = await habitRepository.getWeeklyOverallProgress(mockUserId);
+
+      // Total Goal: 60 + 60 = 120
+      // Current Progress: min(100, 60) + 0 = 60.
+      expect(result.totalGoal).toBe(120);
+      expect(result.currentProgress).toBe(60);
+    });
+  });
 });

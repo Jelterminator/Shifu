@@ -63,7 +63,7 @@ export function AddEditTaskModal({
       setNotes('');
       // Inherit deadline if provided
       setDeadlineText(initialDeadline ? initialDeadline.toISOString().slice(0, 10) : '');
-      
+
       if (initialListId) {
         const list = lists.find(l => l.id === initialListId);
         if (list) setSelectedKeywords(list.keywords || []);
@@ -78,15 +78,15 @@ export function AddEditTaskModal({
 
   const handleSave = async (closeAfter = true): Promise<void> => {
     if (!user) return;
-    
+
     // If title is empty:
     // - If closing (Done), just close.
     // - If staying (Create Next), do nothing.
     if (!title.trim()) {
-        if (closeAfter) {
-            onClose();
-        }
-        return;
+      if (closeAfter) {
+        onClose();
+      }
+      return;
     }
 
     setLoading(true);
@@ -114,15 +114,15 @@ export function AddEditTaskModal({
       }
 
       onSave?.();
-      
+
       if (closeAfter) {
-          onClose();
+        onClose();
       } else {
-          // Reset for next task
-          setTitle('');
-          setEffortMinutes('30');
-          setNotes('');
-          // Keep deadline and keywords as is for batch entry
+        // Reset for next task
+        setTitle('');
+        setEffortMinutes('30');
+        setNotes('');
+        // Keep deadline and keywords as is for batch entry
       }
     } catch (e) {
       console.error('Failed to save task', e);
@@ -165,53 +165,53 @@ export function AddEditTaskModal({
 
             {/* List Selection - Hidden in Subtask Mode */}
             {!isSubtaskMode && (
-                <>
+              <>
                 <Text style={[styles.label, { color: colors.textSecondary }]}>List</Text>
                 <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.listSelector}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.listSelector}
                 >
-                {lists.map(list => {
-                    const isSelected = selectedKeywords.some(k => list.keywords.includes(k)); 
+                  {lists.map(list => {
+                    const isSelected = selectedKeywords.some(k => list.keywords.includes(k));
                     return (
-                    <TouchableOpacity
+                      <TouchableOpacity
                         key={list.id}
                         style={[
-                        styles.liChip,
-                        {
+                          styles.liChip,
+                          {
                             backgroundColor: isSelected ? phaseColor : colors.background,
                             borderColor: isSelected ? phaseColor : colors.border,
-                        },
+                          },
                         ]}
                         onPress={() => {
-                            const newKeywords = new Set(selectedKeywords);
-                            // Clear other list keywords first? simpler to just add for now or toggle
-                             if (list.keywords && list.keywords.length > 0) {
-                                list.keywords.forEach(k => newKeywords.add(k));
-                            }
-                            setSelectedKeywords(Array.from(newKeywords));
+                          const newKeywords = new Set(selectedKeywords);
+                          // Clear other list keywords first? simpler to just add for now or toggle
+                          if (list.keywords && list.keywords.length > 0) {
+                            list.keywords.forEach(k => newKeywords.add(k));
+                          }
+                          setSelectedKeywords(Array.from(newKeywords));
                         }}
-                    >
+                      >
                         <Text style={{ marginRight: 6 }}>{list.icon}</Text>
                         <Text
-                        style={{
+                          style={{
                             color: isSelected ? '#fff' : colors.text,
                             fontWeight: isSelected ? '600' : '400',
-                        }}
+                          }}
                         >
-                        {list.name}
+                          {list.name}
                         </Text>
-                    </TouchableOpacity>
+                      </TouchableOpacity>
                     );
-                })}
+                  })}
                 </ScrollView>
-                </>
+              </>
             )}
 
             <View style={{ flexDirection: 'row', gap: SPACING.m }}>
               <View style={{ flex: 1 }}>
-                 {/* Effort */}
+                {/* Effort */}
                 <Text style={[styles.label, { color: colors.textSecondary }]}>Effort (min)</Text>
                 <TextInput
                   style={[
@@ -229,8 +229,8 @@ export function AddEditTaskModal({
                   placeholderTextColor={colors.textSecondary}
                 />
               </View>
-               <View style={{ flex: 1 }}>
-                 {/* Deadline */}
+              <View style={{ flex: 1 }}>
+                {/* Deadline */}
                 <Text style={[styles.label, { color: colors.textSecondary }]}>Deadline</Text>
                 <TextInput
                   style={[
@@ -270,7 +270,7 @@ export function AddEditTaskModal({
             />
 
             {/* Keywords (Bottom) */}
-             <Text style={[styles.label, { color: colors.textSecondary }]}>Keywords</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Keywords</Text>
             <View style={styles.keywordsContainer}>
               {KEYWORDS.map(keyword => {
                 const isSelected = selectedKeywords.includes(keyword);
@@ -285,9 +285,11 @@ export function AddEditTaskModal({
                       },
                     ]}
                     onPress={() => {
-                        setSelectedKeywords(prev => 
-                            prev.includes(keyword) ? prev.filter(k => k !== keyword) : [...prev, keyword]
-                        );
+                      setSelectedKeywords(prev =>
+                        prev.includes(keyword)
+                          ? prev.filter(k => k !== keyword)
+                          : [...prev, keyword]
+                      );
                     }}
                   >
                     <Text
@@ -302,30 +304,47 @@ export function AddEditTaskModal({
           </ScrollView>
 
           {isSubtaskMode ? (
-              <View style={{ flexDirection: 'row', gap: SPACING.m, marginTop: SPACING.m }}>
-                  <TouchableOpacity
-                    style={[styles.saveButton, { flex: 1, backgroundColor: colors.background, borderWidth: 1, borderColor: phaseColor, opacity: loading ? 0.7 : 1 }]}
-                    onPress={() => void handleSave(false)}
-                    disabled={loading}
-                  >
-                    <Text style={[styles.saveButtonText, { color: phaseColor }]}>{loading ? 'Saving...' : 'Create Next'}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.saveButton, { flex: 1, backgroundColor: phaseColor, opacity: loading ? 0.7 : 1 }]}
-                    onPress={() => void handleSave(true)}
-                    disabled={loading}
-                  >
-                    <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Done'}</Text>
-                  </TouchableOpacity>
-              </View>
-          ) : (
+            <View style={{ flexDirection: 'row', gap: SPACING.m, marginTop: SPACING.m }}>
               <TouchableOpacity
-                style={[styles.saveButton, { backgroundColor: phaseColor, opacity: loading ? 0.7 : 1 }]}
+                style={[
+                  styles.saveButton,
+                  {
+                    flex: 1,
+                    backgroundColor: colors.background,
+                    borderWidth: 1,
+                    borderColor: phaseColor,
+                    opacity: loading ? 0.7 : 1,
+                  },
+                ]}
+                onPress={() => void handleSave(false)}
+                disabled={loading}
+              >
+                <Text style={[styles.saveButtonText, { color: phaseColor }]}>
+                  {loading ? 'Saving...' : 'Create Next'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  { flex: 1, backgroundColor: phaseColor, opacity: loading ? 0.7 : 1 },
+                ]}
                 onPress={() => void handleSave(true)}
                 disabled={loading}
               >
-                <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Save Task'}</Text>
+                <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Done'}</Text>
               </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.saveButton,
+                { backgroundColor: phaseColor, opacity: loading ? 0.7 : 1 },
+              ]}
+              onPress={() => void handleSave(true)}
+              disabled={loading}
+            >
+              <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Save Task'}</Text>
+            </TouchableOpacity>
           )}
         </View>
       </View>
@@ -384,7 +403,7 @@ const styles = StyleSheet.create({
     gap: SPACING.s,
   },
   keywordChip: {
-    width: '30%', 
+    width: '30%',
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,

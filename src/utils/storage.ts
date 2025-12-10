@@ -17,9 +17,9 @@ function createStorage(): StorageAdapter {
   try {
     // Check if running in a browser environment with localStorage available
     // (This helps if we want to explicitly prefer localStorage on web without crashing MMKV first)
-    // However, react-native-mmkv might crash on import in some web setups if not handled, 
+    // However, react-native-mmkv might crash on import in some web setups if not handled,
     // but here we are inside the function.
-    
+
     // If we are strictly on standard React Native Web, MMKV new() might throw.
     const mmkv = new MMKV();
 
@@ -34,21 +34,21 @@ function createStorage(): StorageAdapter {
     };
   } catch (error) {
     // console.log('⚠️ MMKV not available, falling back to localStorage (Web mode?)');
-    
+
     if (typeof localStorage !== 'undefined') {
       return {
-        get: (key) => localStorage.getItem(key),
-        getString: (key) => localStorage.getItem(key) ?? undefined,
-        getBoolean: (key) => {
+        get: key => localStorage.getItem(key),
+        getString: key => localStorage.getItem(key) ?? undefined,
+        getBoolean: key => {
           const val = localStorage.getItem(key);
           return val === 'true' ? true : val === 'false' ? false : undefined;
         },
-        getNumber: (key) => {
+        getNumber: key => {
           const val = localStorage.getItem(key);
           return val ? Number(val) : undefined;
         },
         set: (key, value) => localStorage.setItem(key, String(value)),
-        delete: (key) => localStorage.removeItem(key),
+        delete: key => localStorage.removeItem(key),
         clear: () => localStorage.clear(),
       };
     }

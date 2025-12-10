@@ -36,11 +36,11 @@ export function ListDetailsModal({
 
   const list = lists.find(l => l.id === listId);
   const [items, setItems] = useState<ListItem[]>([]);
-  
+
   const [isTaskModalVisible, setIsTaskModalVisible] = useState(false);
   const [isEditListModalVisible, setIsEditListModalVisible] = useState(false);
   const [isProjectModalVisible, setIsProjectModalVisible] = useState(false);
-  
+
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
   const [editingProject, setEditingProject] = useState<Project | undefined>(undefined);
 
@@ -53,34 +53,38 @@ export function ListDetailsModal({
     try {
       let tasks: Task[] = [];
       let projects: Project[] = [];
-      
+
       if (isCompletedMode) {
-        tasks = await taskRepository.getCompletedTasks(user.id, 50); 
+        tasks = await taskRepository.getCompletedTasks(user.id, 50);
         // We could also fetch completed projects if needed, but keeping simple for now.
       } else if (isAllMode) {
         tasks = await taskRepository.getAllForUser(user.id, false);
         projects = await projectRepository.getAllForUser(user.id); // Need an Active Projects only filter potentially?
-        // Let's filter projects in memory if needed or repo update. 
+        // Let's filter projects in memory if needed or repo update.
         // Assuming getAllForUser returns all.
         // We probably only want active projects.
         // Repository update might be needed or just filter.
-        // Project doesn't have isCompleted in type def explicitly? 
+        // Project doesn't have isCompleted in type def explicitly?
         // It does: `isCompleted?: boolean` in `Project` interface?
         // Let's check type. existing code uses `isCompleted`.
-        
+
         // Filter active projects
         projects = projects.filter(p => !p.isCompleted);
-
       } else if (list) {
-         // Specific list by Keyword
-         const allTasks = await taskRepository.getAllForUser(user.id, false);
-         tasks = allTasks.filter(t => t.selectedKeywords.some(k => list.keywords.includes(k)));
-         
-         // Fetch projects by keyword
-         const allProjects = await projectRepository.getAllForUser(user.id);
-         projects = allProjects.filter(p => !p.isCompleted && p.selectedKeywords && p.selectedKeywords.some(k => list.keywords.includes(k)));
+        // Specific list by Keyword
+        const allTasks = await taskRepository.getAllForUser(user.id, false);
+        tasks = allTasks.filter(t => t.selectedKeywords.some(k => list.keywords.includes(k)));
+
+        // Fetch projects by keyword
+        const allProjects = await projectRepository.getAllForUser(user.id);
+        projects = allProjects.filter(
+          p =>
+            !p.isCompleted &&
+            p.selectedKeywords &&
+            p.selectedKeywords.some(k => list.keywords.includes(k))
+        );
       }
-      
+
       // Filter out tasks that belong to an active project
       const projectIds = new Set(projects.map(p => p.id));
       const standaloneTasks = tasks.filter(t => !t.projectId || !projectIds.has(t.projectId));
@@ -88,54 +92,59 @@ export function ListDetailsModal({
       // Filter projects: Hide if they have NO active subtasks
       // We need to check against ALL active tasks to see if project has any children
       const allActiveTasks = await taskRepository.getAllForUser(user.id, false);
-      const activeProjectIdsWithTasks = new Set(allActiveTasks.map(t => t.projectId).filter(Boolean));
-      
+      const activeProjectIdsWithTasks = new Set(
+        allActiveTasks.map(t => t.projectId).filter(Boolean)
+      );
+
       const activeProjectsWithTasks = projects.filter(p => activeProjectIdsWithTasks.has(p.id));
 
       // Combine
       const taskItems: ListItem[] = standaloneTasks.map(t => ({ type: 'task', data: t }));
-      const projectItems: ListItem[] = activeProjectsWithTasks.map(p => ({ type: 'project', data: p }));
-      
+      const projectItems: ListItem[] = activeProjectsWithTasks.map(p => ({
+        type: 'project',
+        data: p,
+      }));
+
       // Sort
       // Combine and Sort
       // Combine and Sort
       const combined = [...projectItems, ...taskItems].sort((a, b) => {
-          if (isAllMode) {
-              // Sort by Urgency (minutesPerDay) descending
-              // Projects don't have minutesPerDay calculated in mapper yet, so we treat them as neutral or calculate here?
-              // For now, let's assume Projects are important but tasks might be more urgent.
-              // We can check if a/b is project/task.
-              const getScore = (item: ListItem) => {
-                  if (item.type === 'task') return item.data.minutesPerDay || 0;
-                  // Give projects a default high urgency or based on deadline?
-                  // Let's use a proxy: if deadline < 2 days, very high.
-                  // For now, let's just use 0 for projects to let them sink, OR keep them mixed by ID?
-                  // User said "Projects are not special". 
-                  // If they have no deadline, they have 0 urgency.
-                  return 0; 
-              };
-              
-              const scoreA = getScore(a);
-              const scoreB = getScore(b);
-              
-              // If scores are similar (both 0), fallback to createdAt
-              if (Math.abs(scoreA - scoreB) < 0.1) {
-                  return new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime();
-              }
-              return scoreB - scoreA;
+        if (isAllMode) {
+          // Sort by Urgency (minutesPerDay) descending
+          // Projects don't have minutesPerDay calculated in mapper yet, so we treat them as neutral or calculate here?
+          // For now, let's assume Projects are important but tasks might be more urgent.
+          // We can check if a/b is project/task.
+          const getScore = (item: ListItem): number => {
+            if (item.type === 'task') return item.data.minutesPerDay || 0;
+            // Give projects a default high urgency or based on deadline?
+            // Let's use a proxy: if deadline < 2 days, very high.
+            // For now, let's just use 0 for projects to let them sink, OR keep them mixed by ID?
+            // User said "Projects are not special".
+            // If they have no deadline, they have 0 urgency.
+            return 0;
+          };
+
+          const scoreA = getScore(a);
+          const scoreB = getScore(b);
+
+          // If scores are similar (both 0), fallback to createdAt
+          if (Math.abs(scoreA - scoreB) < 0.1) {
+            return new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime();
           }
-          
-          // Default: Sort by createdAt descending (newest first)
-          const dateA = new Date(a.data.createdAt).getTime();
-          const dateB = new Date(b.data.createdAt).getTime();
-          return dateB - dateA;
+          return scoreB - scoreA;
+        }
+
+        // Default: Sort by createdAt descending (newest first)
+        const dateA = new Date(a.data.createdAt).getTime();
+        const dateB = new Date(b.data.createdAt).getTime();
+        return dateB - dateA;
       });
-      
+
       setItems(combined);
     } catch (e) {
       console.error('Error loading list data', e);
     }
-  }, [user, list, isAllMode, isCompletedMode, lists]);
+  }, [user, list, isAllMode, isCompletedMode]);
 
   useEffect(() => {
     if (visible && user) {
@@ -147,7 +156,7 @@ export function ListDetailsModal({
     setEditingProject(undefined);
     setIsProjectModalVisible(true);
   };
-  
+
   const handleEditProject = (project: Project): void => {
     setEditingProject(project);
     setIsProjectModalVisible(true);
@@ -173,16 +182,16 @@ export function ListDetailsModal({
     setIsTaskModalVisible(true);
   };
 
-  const getTitle = () => {
+  const getTitle = (): string => {
     if (isCompletedMode) return 'Completed Tasks';
     if (isAllMode) return 'All Tasks (Urgency)';
     return list?.name || 'List Details';
   };
 
-  const getIcon = () => {
-      if (isCompletedMode) return '✅';
-      if (isAllMode) return '⚡';
-      return list?.icon || '📝';
+  const getIcon = (): string => {
+    if (isCompletedMode) return '✅';
+    if (isAllMode) return '⚡';
+    return list?.icon || '📝';
   };
 
   return (
@@ -194,12 +203,9 @@ export function ListDetailsModal({
     >
       <View style={styles.overlay}>
         {/* Close Button Outside */}
-        <TouchableOpacity 
-          style={styles.closeButtonOutside}
-          onPress={onClose}
-        >
+        <TouchableOpacity style={styles.closeButtonOutside} onPress={onClose}>
           <View style={styles.closeHub}>
-             <Text style={styles.closeText}>✕</Text>
+            <Text style={styles.closeText}>✕</Text>
           </View>
         </TouchableOpacity>
 
@@ -209,10 +215,10 @@ export function ListDetailsModal({
               <Text style={styles.icon}>{getIcon()}</Text>
               <Text style={[styles.title, { color: colors.text }]}>{getTitle()}</Text>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                 {items.length} items
+                {items.length} items
               </Text>
             </View>
-            
+
             {/* Edit Button Inside - Top Right */}
             {list && !isAllMode && !isCompletedMode && (
               <TouchableOpacity
@@ -228,27 +234,29 @@ export function ListDetailsModal({
             <FlatList
               data={items}
               renderItem={({ item }) => {
-                  if (item.type === 'project') {
-                      return (
-                          <ProjectCard
-                             project={item.data}
-                             onPress={() => handleEditProject(item.data)}
-                             onEdit={() => handleEditProject(item.data)}
-                             onSubtaskChange={() => {
-                                 void loadData();
-                                 onUpdate?.();
-                             }}
-                             // onDelete TODO
-                          />
-                      );
-                  }
+                if (item.type === 'project') {
                   return (
-                    <TaskCard
-                      task={item.data}
-                      onPress={() => handleEditTask(item.data)}
-                      onToggleComplete={isCompletedMode ? undefined : () => void handleTaskComplete(item.data)}
+                    <ProjectCard
+                      project={item.data}
+                      onPress={() => handleEditProject(item.data)}
+                      onEdit={() => handleEditProject(item.data)}
+                      onSubtaskChange={() => {
+                        void loadData();
+                        onUpdate?.();
+                      }}
+                      // onDelete TODO
                     />
                   );
+                }
+                return (
+                  <TaskCard
+                    task={item.data}
+                    onPress={() => handleEditTask(item.data)}
+                    onToggleComplete={
+                      isCompletedMode ? undefined : () => void handleTaskComplete(item.data)
+                    }
+                  />
+                );
               }}
               keyExtractor={item => `${item.type}-${item.data.id}`}
               contentContainerStyle={{ paddingBottom: 100 }}
@@ -256,41 +264,41 @@ export function ListDetailsModal({
           </View>
 
           {!isCompletedMode && !isAllMode && (
-          <View
-            style={[
-              styles.footer,
-              { backgroundColor: colors.surface, borderTopColor: colors.border },
-            ]}
-          >
-            <TouchableOpacity
-              style={[styles.addButton, { backgroundColor: phaseColor }]}
-              onPress={handleAddTask}
-            >
-              <Text style={styles.addButtonText}>+ Add Task {list ? `to ${list.name}` : ''}</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
+            <View
               style={[
-                  styles.addButton, 
-                  { 
-                      marginTop: SPACING.s, 
-                      backgroundColor: colors.background, 
-                      borderWidth: 1, 
-                      borderColor: colors.border 
-                  }
+                styles.footer,
+                { backgroundColor: colors.surface, borderTopColor: colors.border },
               ]}
-              onPress={handleAddProject}
             >
-              <Text style={[styles.addButtonText, { color: colors.text }]}>+ Add Project</Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={[styles.addButton, { backgroundColor: phaseColor }]}
+                onPress={handleAddTask}
+              >
+                <Text style={styles.addButtonText}>+ Add Task {list ? `to ${list.name}` : ''}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.addButton,
+                  {
+                    marginTop: SPACING.s,
+                    backgroundColor: colors.background,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  },
+                ]}
+                onPress={handleAddProject}
+              >
+                <Text style={[styles.addButtonText, { color: colors.text }]}>+ Add Project</Text>
+              </TouchableOpacity>
+            </View>
           )}
 
           <AddEditTaskModal
             visible={isTaskModalVisible}
             onClose={() => setIsTaskModalVisible(false)}
             task={editingTask}
-            initialListId={list?.id} 
+            initialListId={list?.id}
             onSave={() => {
               void loadData();
               onUpdate?.();
@@ -298,13 +306,13 @@ export function ListDetailsModal({
           />
 
           <AddEditListModal
-             visible={isEditListModalVisible}
-             onClose={() => setIsEditListModalVisible(false)}
-             initialListId={list?.id}
-             onSave={() => {
-                 void loadData();
-                 onUpdate?.();
-             }}
+            visible={isEditListModalVisible}
+            onClose={() => setIsEditListModalVisible(false)}
+            initialListId={list?.id}
+            onSave={() => {
+              void loadData();
+              onUpdate?.();
+            }}
           />
 
           <AddEditProjectModal
@@ -313,8 +321,8 @@ export function ListDetailsModal({
             project={editingProject}
             initialKeywords={list ? list.keywords : undefined}
             onSave={() => {
-                void loadData();
-                onUpdate?.();
+              void loadData();
+              onUpdate?.();
             }}
           />
         </View>

@@ -453,7 +453,14 @@ class HabitRepository {
   ): Promise<{ totalGoal: number; currentProgress: number }> {
     // 1. Get total weekly goal from all active habits
     const habits = await this.getAllForUser(userId, true);
-    const totalGoal = habits.reduce((sum, h) => sum + (h.weeklyGoalMinutes || 0), 0);
+    let totalGoal = 0;
+    const habitGoals = new Map<string, number>();
+
+    for (const h of habits) {
+      const g = h.weeklyGoalMinutes || 0;
+      totalGoal += g;
+      habitGoals.set(h.id, g);
+    }
 
     // 2. Calculate actual minutes completed this week (Mon-Sun or Rolling 7 days?)
     // "Weekly Goal" usually implies correct calendar week (Mon-Sun).
@@ -472,8 +479,8 @@ class HabitRepository {
     nextSunday.setDate(sunday.getDate() + 7);
 
     // Query all plans for this user within range
-    const rows = await db.query<{ start_time: string; end_time: string }>(
-      `SELECT start_time, end_time
+    const rows = await db.query<{ source_id: string; start_time: string; end_time: string }>(
+      `SELECT source_id, start_time, end_time
        FROM plans
        WHERE user_id = ?
          AND source_type = 'habit'
@@ -483,12 +490,35 @@ class HabitRepository {
       [userId, sunday.toISOString(), nextSunday.toISOString()]
     );
 
-    let currentProgress = 0;
+    // Sum progress PER HABIT
+    const progressByHabit = new Map<string, number>();
+
     for (const row of rows) {
       const start = new Date(row.start_time).getTime();
       const end = new Date(row.end_time).getTime();
       const mins = (end - start) / 60000;
-      currentProgress += mins;
+
+      const current = progressByHabit.get(row.source_id) || 0;
+      progressByHabit.set(row.source_id, current + mins);
+    }
+
+    // Sum clamped progress
+    let currentProgress = 0;
+    // We iterate over the habits we know about (active ones)
+    // If there are plans for deleted/inactive habits, should we count them?
+    // User logic: "progress can only increase from habits until they have reached their weekly target"
+    // implies we care about the targets of *current* habits.
+    // If a habit is inactive, its goal is 0 (not in the list), so usually checks shouldn't count?
+    // Or should we just iterate over `progressByHabit`?
+    // If we iterate over active habits, we miss plans for habits that became inactive mid-week.
+    // However, `totalGoal` is derived from active habits only.
+    // So for consistency, we should probably only sum progress for active habits.
+
+    for (const h of habits) {
+      const goal = habitGoals.get(h.id) || 0;
+      const actual = progressByHabit.get(h.id) || 0;
+      // Clamp
+      currentProgress += Math.min(actual, goal);
     }
 
     return {

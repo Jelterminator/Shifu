@@ -1,4 +1,5 @@
-import type { WuXingPhase } from '../services/PhaseManager';
+import { PHASE_COLORS } from '../constants/theme';
+import { phaseManager, type WuXingPhase } from '../services/PhaseManager';
 import { storage } from '../utils/storage';
 import { createStore } from '../utils/store';
 
@@ -54,37 +55,56 @@ const calculateIsDark = (mode: ThemeMode, phase: WuXingPhase | null): boolean =>
   }
 };
 
-export const useThemeStore = createStore<ThemeState>((set, get) => ({
-  mode: (storage.get('theme_mode') as ThemeMode) || 'phase-aware',
-  isDark: false,
-  currentPhase: null,
-  phaseColor: DEFAULT_COLOR,
-  colors: getColors(false, DEFAULT_COLOR),
+export const useThemeStore = createStore<ThemeState>((set, get) => {
+  // Initialize state derived from phase and storage
+  const mode = (storage.get('theme_mode') as ThemeMode) || 'phase-aware';
+  let currentPhase: WuXingPhase | null = null;
+  let phaseColor = DEFAULT_COLOR;
 
-  setTheme: mode => {
-    const { currentPhase } = get();
-    const isDark = calculateIsDark(mode, currentPhase);
-    const phaseColor = currentPhase ? currentPhase.color : DEFAULT_COLOR;
+  try {
+    currentPhase = phaseManager.getCurrentPhase();
+    if (currentPhase) {
+      phaseColor = PHASE_COLORS[currentPhase.name].primary;
+    }
+  } catch {
+    // Fallback to defaults
+  }
 
-    storage.set('theme_mode', mode);
+  const isDark = calculateIsDark(mode, currentPhase);
+  const colors = getColors(isDark, phaseColor);
 
-    set({
-      mode,
-      isDark,
-      colors: getColors(isDark, phaseColor),
-    });
-  },
+  return {
+    mode,
+    isDark,
+    currentPhase,
+    phaseColor,
+    colors,
 
-  setCurrentPhase: phase => {
-    const { mode } = get();
-    const isDark = calculateIsDark(mode, phase);
-    const phaseColor = phase.color;
+    setTheme: mode => {
+      const { currentPhase } = get();
+      const isDark = calculateIsDark(mode, currentPhase);
+      const phaseColor = currentPhase ? currentPhase.color : DEFAULT_COLOR;
 
-    set({
-      currentPhase: phase,
-      isDark,
-      phaseColor,
-      colors: getColors(isDark, phaseColor),
-    });
-  },
-}));
+      storage.set('theme_mode', mode);
+
+      set({
+        mode,
+        isDark,
+        colors: getColors(isDark, phaseColor),
+      });
+    },
+
+    setCurrentPhase: phase => {
+      const { mode } = get();
+      const isDark = calculateIsDark(mode, phase);
+      const phaseColor = phase.color;
+
+      set({
+        currentPhase: phase,
+        isDark,
+        phaseColor,
+        colors: getColors(isDark, phaseColor),
+      });
+    },
+  };
+});

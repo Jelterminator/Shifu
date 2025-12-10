@@ -65,16 +65,23 @@ class TaskRepository {
       `SELECT * FROM tasks 
        WHERE user_id = ? 
          AND is_completed = 0 
-         AND deadline IS NOT NULL 
-       LIMIT 100`, // Fetch enough candidates
+       LIMIT 1000`, // Fetch enough candidates
       [userId]
     );
-    
+
     const tasks = rows.map(mapTaskRowToTask);
-    
-    // Sort by descending minutePerDay/Urgency
-    tasks.sort((a, b) => (b.minutesPerDay || 0) - (a.minutesPerDay || 0));
-    
+
+    // Sort by descending minutePerDay/Urgency, then by Age (Oldest first)
+    tasks.sort((a, b) => {
+      const urgencyA = a.minutesPerDay || 0;
+      const urgencyB = b.minutesPerDay || 0;
+      if (urgencyA !== urgencyB) {
+        return urgencyB - urgencyA; // Higher urgency first
+      }
+      // Same urgency (e.g. both 0/no deadline) -> Oldest first
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+
     return tasks.slice(0, limit);
   }
 
@@ -102,11 +109,14 @@ class TaskRepository {
   }
 
   // Returns { [listId]: { count: number, preview: Task[] } }
-  async getListSummaries(userId: string, lists: ListConfiguration[]): Promise<Record<string, { count: number; preview: Task[] }>> {
-    // This is a naive implementation: loop queries. 
+  async getListSummaries(
+    userId: string,
+    lists: ListConfiguration[]
+  ): Promise<Record<string, { count: number; preview: Task[] }>> {
+    // This is a naive implementation: loop queries.
     // Optimized: Fetch ALL active tasks for user, then partition in memory.
     // Fetching all might be heavy if >1000 tasks, but likely fine for local DB <10k.
-    
+
     const allActiveRows = await db.query<TaskRow>(
       'SELECT * FROM tasks WHERE user_id = ? AND is_completed = 0',
       [userId]
@@ -117,17 +127,17 @@ class TaskRepository {
 
     for (const list of lists) {
       // Filter by keywords (array overlap)
-      const matches = allActive.filter(t => 
-        t.selectedKeywords.some(k => list.keywords.includes(k)) 
+      const matches = allActive.filter(
+        t => t.selectedKeywords.some(k => list.keywords.includes(k))
         // || (list.plan_outside_work && t.isNonWork?) -- future logic
       );
-      
+
       // Sort for preview: highest urgency first
       matches.sort((a, b) => (b.minutesPerDay || 0) - (a.minutesPerDay || 0));
 
       result[list.id] = {
         count: matches.length,
-        preview: matches.slice(0, 3) // Preview top 3
+        preview: matches.slice(0, 3), // Preview top 3
       };
     }
     return result;
@@ -142,7 +152,7 @@ class TaskRepository {
     );
     return rows.map(mapTaskRowToTask);
   }
-  
+
   async getCompletedTasks(userId: string, limit = 20): Promise<Task[]> {
     const rows = await db.query<TaskRow>(
       `SELECT * FROM tasks 

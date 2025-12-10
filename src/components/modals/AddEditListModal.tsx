@@ -7,7 +7,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { BORDER_RADIUS, DAYS, KEYWORDS, PHASES, SPACING } from '../../constants';
 import { useListStore } from '../../stores/listStore';
@@ -37,7 +37,7 @@ export function AddEditListModal({
   const [allowedDays, setAllowedDays] = useState<string[]>(DAYS);
   const [allowedPhases, setAllowedPhases] = useState<string[]>([...PHASES]);
 
-  const handleSave = () => {
+  const handleSave = (): void => {
     const listData = {
       name,
       icon,
@@ -50,9 +50,9 @@ export function AddEditListModal({
     };
 
     if (initialListId) {
-       updateList(initialListId, listData);
+      updateList(initialListId, listData);
     } else {
-       addList(listData);
+      addList(listData);
     }
 
     onSave?.();
@@ -60,7 +60,7 @@ export function AddEditListModal({
     resetForm();
   };
 
-  const resetForm = () => {
+  const resetForm = (): void => {
     setName('');
     setIcon('📝');
     setKeywords([]);
@@ -68,9 +68,9 @@ export function AddEditListModal({
     setPlanOutsideWork(true);
     setAllowedDays(DAYS);
     setAllowedPhases([...PHASES]);
-  }
+  };
 
-  const toggleDay = (day: string) => {
+  const toggleDay = (day: string): void => {
     if (allowedDays.includes(day)) {
       setAllowedDays(allowedDays.filter(d => d !== day));
     } else {
@@ -78,7 +78,7 @@ export function AddEditListModal({
     }
   };
 
-  const togglePhase = (phase: string) => {
+  const togglePhase = (phase: string): void => {
     if (allowedPhases.includes(phase)) {
       setAllowedPhases(allowedPhases.filter(p => p !== phase));
     } else {
@@ -128,12 +128,12 @@ export function AddEditListModal({
 
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Scheduling Rules</Text>
-            
+
             <View style={styles.switchRow}>
               <Text style={{ color: colors.text }}>Plan during work hours</Text>
               <Switch value={planDuringWork} onValueChange={setPlanDuringWork} />
             </View>
-             <View style={styles.switchRow}>
+            <View style={styles.switchRow}>
               <Text style={{ color: colors.text }}>Plan outside work hours</Text>
               <Switch value={planOutsideWork} onValueChange={setPlanOutsideWork} />
             </View>
@@ -142,82 +142,86 @@ export function AddEditListModal({
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Allowed Days</Text>
             <View style={styles.chipContainer}>
-                {DAYS.map(day => (
-                    <TouchableOpacity
-                        key={day}
-                        style={[
-                            styles.chip, 
-                            allowedDays.includes(day) && { backgroundColor: phaseColor }
-                        ]}
-                        onPress={() => toggleDay(day)}
-                    >
-                        <Text style={[
-                             styles.chipText, 
-                             { color: allowedDays.includes(day) ? '#fff' : colors.text }
-                        ]}>
-                            {day.slice(0, 3).toUpperCase()}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+              {DAYS.map(day => (
+                <TouchableOpacity
+                  key={day}
+                  style={[
+                    styles.chip,
+                    allowedDays.includes(day) && { backgroundColor: phaseColor },
+                  ]}
+                  onPress={() => toggleDay(day)}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      { color: allowedDays.includes(day) ? '#fff' : colors.text },
+                    ]}
+                  >
+                    {day.slice(0, 3).toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
 
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Allowed Phases</Text>
             <View style={styles.chipContainer}>
-                {PHASES.map(phase => (
-                    <TouchableOpacity
-                        key={phase}
-                        style={[
-                            styles.chip, 
-                            allowedPhases.includes(phase) && { backgroundColor: phaseColor }
-                        ]}
-                        onPress={() => togglePhase(phase)}
-                    >
-                         <Text style={[
-                             styles.chipText, 
-                             { color: allowedPhases.includes(phase) ? '#fff' : colors.text }
-                        ]}>
-                            {phase}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+              {PHASES.map(phase => (
+                <TouchableOpacity
+                  key={phase}
+                  style={[
+                    styles.chip,
+                    allowedPhases.includes(phase) && { backgroundColor: phaseColor },
+                  ]}
+                  onPress={() => togglePhase(phase)}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      { color: allowedPhases.includes(phase) ? '#fff' : colors.text },
+                    ]}
+                  >
+                    {phase}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
 
           <View style={styles.formGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Keywords</Text>
             <View style={styles.keywordsContainer}>
-               {KEYWORDS.map(keyword => {
-                   const isSelected = keywords.includes(keyword);
-                   return (
-                       <TouchableOpacity
-                           key={keyword}
-                           style={[
-                               styles.keywordChip, 
-                               { 
-                                   backgroundColor: isSelected ? phaseColor : colors.background,
-                                   borderColor: isSelected ? phaseColor : colors.border
-                               }
-                           ]}
-                           onPress={() => {
-                               setKeywords(prev => 
-                                   prev.includes(keyword) ? prev.filter(k => k !== keyword) : [...prev, keyword]
-                               );
-                           }}
-                       >
-                           <Text style={[
-                                styles.keywordText, 
-                                { color: isSelected ? '#fff' : colors.text }
-                           ]}>
-                               {keyword}
-                           </Text>
-                       </TouchableOpacity>
-                   );
-               })}
+              {KEYWORDS.map(keyword => {
+                const isSelected = keywords.includes(keyword);
+                return (
+                  <TouchableOpacity
+                    key={keyword}
+                    style={[
+                      styles.keywordChip,
+                      {
+                        backgroundColor: isSelected ? phaseColor : colors.background,
+                        borderColor: isSelected ? phaseColor : colors.border,
+                      },
+                    ]}
+                    onPress={() => {
+                      setKeywords(prev =>
+                        prev.includes(keyword)
+                          ? prev.filter(k => k !== keyword)
+                          : [...prev, keyword]
+                      );
+                    }}
+                  >
+                    <Text
+                      style={[styles.keywordText, { color: isSelected ? '#fff' : colors.text }]}
+                    >
+                      {keyword}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
-
         </ScrollView>
 
         <View style={[styles.footer, { borderTopColor: colors.border }]}>
@@ -301,7 +305,7 @@ const styles = StyleSheet.create({
     gap: SPACING.s,
   },
   keywordChip: {
-    width: '30%', 
+    width: '30%',
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,
