@@ -38,6 +38,11 @@ declare module '*.onnx' {
   export default value;
 }
 
+declare module '*.wasm' {
+  const value: any;
+  export default value;
+}
+
 // Path aliases
 // These invoke the typescript compiler to look up paths in tsconfig.json
 // DO NOT ADD: declare module '@/services/*' etc. as it hides all type errors!

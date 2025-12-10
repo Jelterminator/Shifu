@@ -1,6 +1,9 @@
 export interface StorageAdapter {
   get(key: string): string | null;
-  set(key: string, value: string): void;
+  getString(key: string): string | undefined;
+  getBoolean(key: string): boolean | undefined;
+  getNumber(key: string): number | undefined;
+  set(key: string, value: string | boolean | number): void;
   delete(key: string): void;
   clear(): void;
 }
@@ -10,41 +13,44 @@ export interface StorageAdapter {
  */
 const webStorage: StorageAdapter = {
   get: key => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        return localStorage.getItem(key);
-      }
-      return null;
-    } catch (error) {
-      console.error(`Web storage get error for ${key}:`, error);
-      return null;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem(key);
     }
+    return null;
+  },
+  getString: key => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem(key) ?? undefined;
+    }
+    return undefined;
+  },
+  getBoolean: key => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const val = localStorage.getItem(key);
+      return val === 'true';
+    }
+    return undefined;
+  },
+  getNumber: key => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const val = localStorage.getItem(key);
+      return val ? Number(val) : undefined;
+    }
+    return undefined;
   },
   set: (key, value) => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem(key, value);
-      }
-    } catch (error) {
-      console.error(`Web storage set error for ${key}:`, error);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem(key, String(value));
     }
   },
   delete: key => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.removeItem(key);
-      }
-    } catch (error) {
-      console.error(`Web storage delete error for ${key}:`, error);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem(key);
     }
   },
   clear: () => {
-    try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.clear();
-      }
-    } catch (error) {
-      console.error('Web storage clear error:', error);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.clear();
     }
   },
 };

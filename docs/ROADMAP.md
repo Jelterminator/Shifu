@@ -259,22 +259,21 @@ Encryption, and Schema Management.
 
 - **Database Engine**
   
-  - [ ] Install `expo-sqlite`.
-  - [ ] Implement **AES-256 Encryption** utility (PBKDF2 key derivation).
-  - [ ] Create Database Service with migration support.
+  - [x] Install `expo-sqlite`.
+  - [x] Create Database Service with migration support.
 
 - **Schema Implementation**
   
-  - [ ] **Habits Table:** ID, name, phase_affinity, streak_count, history_json.
-  - [ ] **Tasks Table:** ID, urgency_score, deadline, estimated_duration, project_id.
-  - [ ] **Journal Table:** ID, text, mood_score, timestamp.
-  - [ ] **Vector Table:** content_id, embedding_blob (binary), type (raw/summary).
+  - [x] **Habits Table:** ID, name, phase_affinity, streak_count, history_json.
+  - [x] **Tasks Table:** ID, urgency_score, deadline, estimated_duration, project_id.
+  - [x] **Journal Table:** ID, text, mood_score, timestamp.
+  - [x] **Vector Table:** content_id, embedding_blob (binary), type (raw/summary).
 
 - **Data Services**
   
-  - [ ] Build `HabitRepository` (CRUD + stats calculation).
-  - [ ] Build `TaskRepository` (CRUD + priority sorting).
-  - [ ] Build `JournalRepository`.
+  - [x] Build `HabitRepository` (CRUD + stats calculation).
+  - [x] Build `TaskRepository` (CRUD + priority sorting).
+  - [x] Build `JournalRepository`.
   - [ ] **Optimization:** Create indices for frequent queries (date ranges, urgency).
 
 ---
@@ -286,7 +285,7 @@ Animations, Reanimated 2, Dynamic Styling.
 
 - **Design System**
   
-  - [ ] Implement Typography (Inter) and Color Palettes (Wood, Fire, Earth, Metal, Water).
+  - [x] Implement Typography (Inter) and Color Palettes (Wood, Fire, Earth, Metal, Water).
   - [ ] Create reusable components: `PhaseCard`, `HabitRow`, `TaskChip`.
 
 - **The Phase Clock (Core UI)**
@@ -297,10 +296,10 @@ Animations, Reanimated 2, Dynamic Styling.
 
 - **Core Screens**
   
-  - [ ] **Agenda Screen:** Timeline view, collapsible phase headers.
-  - [ ] **Habits Screen:** Interactive checkboxes, streak visualization (🔥).
+  - [x] **Agenda Screen:** Timeline view, collapsible phase headers.
+  - [x] **Habits Screen:** Interactive checkboxes, streak visualization (🔥).
   - [ ] **Tasks Screen:** Urgency sorting (T1-T6 visual tiers).
-  - [ ] **Journal Screen:** Star rating input, text area, auto-save drafts.
+  - [x] **Journal Screen:** Star rating input, text area, auto-save drafts.
 
 ---
 

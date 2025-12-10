@@ -31,8 +31,7 @@
       "@utils/*": ["src/utils/*"],
       "@models/*": ["src/models/*"],
       "@types/*": ["src/types/*"],
-      "@assets/*": ["assets/*"],
-      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"]
+      "@assets/*": ["assets/*"]
     },
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM"],

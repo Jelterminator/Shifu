@@ -6,6 +6,7 @@ export { AgendaScreen } from './AgendaScreen';
 export { ChatScreen } from './ChatScreen';
 export { HabitsScreen } from './HabitsScreen';
 export { JournalScreen } from './JournalScreen';
+export { SettingsScreen } from './SettingsScreen';
 export { TasksScreen } from './TasksScreen';
 
 // Onboarding Screens

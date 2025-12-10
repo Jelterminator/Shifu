@@ -10,6 +10,7 @@ interface ThemeColors {
   surface: string;
   text: string;
   textSecondary: string;
+  border: string;
 }
 
 interface ThemeState {
@@ -31,6 +32,7 @@ const getColors = (isDark: boolean, phaseColor: string): ThemeColors => ({
   surface: isDark ? '#2A2A2A' : '#FFFFFF',
   text: isDark ? '#FFFFFF' : '#1A1A1A',
   textSecondary: isDark ? '#B0B0B0' : '#9E9E9E',
+  border: isDark ? '#404040' : '#E0E0E0',
 });
 
 const calculateIsDark = (mode: ThemeMode, phase: WuXingPhase | null): boolean => {

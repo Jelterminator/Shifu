@@ -97,7 +97,6 @@ const getSunTimes = (date: Date, coordinates: Coordinates): SunTimes => {
 const getNextDaySunrise = (date: Date, coordinates: Coordinates): Date => {
   const nextDay = new Date(date);
   nextDay.setDate(nextDay.getDate() + 1);
-  nextDay.setHours(0, 0, 0, 0);
 
   return getSunTimes(nextDay, coordinates).sunrise;
 };
@@ -127,6 +126,9 @@ export const calculateRomanHours = (
 
     // Graceful fallback instead of throwing
     if (!nextSunrise || nextSunrise <= sunset) {
+      console.warn(
+        `Invalid night duration calculation. Date: ${date.toISOString()}, Sunrise: ${sunrise?.toISOString()}, Sunset: ${sunset?.toISOString()}, NextSunrise: ${nextSunrise?.toISOString()}`
+      );
       throw new Error('Invalid night duration');
     }
 

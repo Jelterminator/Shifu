@@ -116,53 +116,71 @@ class PhaseManager {
   /**
    * Convert Roman hours to Wu Xing phases.
    */
+  /**
+   * Convert Roman hours to Wu Xing phases by grouping contiguous blocks.
+   */
   private mapHoursToPhases(romanHours: RomanHour[]): WuXingPhase[] {
     const phases: WuXingPhase[] = [];
+    if (romanHours.length === 0) return phases;
 
-    for (const [phaseName, config] of Object.entries(PHASE_MAP)) {
-      const phaseHours = romanHours.filter(rh => config.romanHours.includes(rh.hour));
-
-      if (phaseHours.length === 0) continue;
-
-      const firstHour = phaseHours[0];
-      const lastHour = phaseHours[phaseHours.length - 1];
-
-      if (!firstHour || !lastHour) continue;
-
-      // Determine phase start and end times
-      let startTime = firstHour.startTime;
-      let endTime = lastHour.endTime;
-
-      // Special handling for WOOD wraparound (21-23 then 0-2)
-      if (
-        phaseName === 'WOOD' &&
-        config.romanHours.some(h => h >= 21) &&
-        config.romanHours.some(h => h <= 2)
-      ) {
-        const nightHours = phaseHours.filter(rh => rh.hour >= 21);
-        const dayHours = phaseHours.filter(rh => rh.hour <= 2);
-
-        const firstNight = nightHours[0];
-        const lastDay = dayHours[dayHours.length - 1];
-
-        if (firstNight && lastDay) {
-          startTime = firstNight.startTime;
-          endTime = lastDay.endTime;
-        }
+    // Helper to find phase name for a given hour
+    const getPhaseName = (hour: number): keyof typeof PHASE_MAP | null => {
+      for (const [name, config] of Object.entries(PHASE_MAP)) {
+        if (config.romanHours.includes(hour)) return name as keyof typeof PHASE_MAP;
       }
+      return null;
+    };
 
-      phases.push({
-        name: phaseName as keyof typeof PHASE_MAP,
-        startTime,
-        endTime,
-        color: config.color,
-        romanHours: config.romanHours,
-        qualities: config.qualities,
-        idealTasks: config.idealTasks,
-      });
+    let currentPhaseName: keyof typeof PHASE_MAP | null = null;
+    let currentBlock: RomanHour[] = [];
+
+    // Iterate sorted hours (0..23)
+    for (const rh of romanHours) {
+      const phaseName = getPhaseName(rh.hour);
+      if (!phaseName) continue;
+
+      if (phaseName !== currentPhaseName) {
+        // Close previous block
+        if (currentPhaseName && currentBlock.length > 0) {
+          this.pushPhaseBlock(phases, currentPhaseName, currentBlock);
+        }
+        // Start new block
+        currentPhaseName = phaseName;
+        currentBlock = [rh];
+      } else {
+        // Continue block
+        currentBlock.push(rh);
+      }
+    }
+
+    // Close final block
+    if (currentPhaseName && currentBlock.length > 0) {
+      this.pushPhaseBlock(phases, currentPhaseName, currentBlock);
     }
 
     return phases;
+  }
+
+  private pushPhaseBlock(
+    phases: WuXingPhase[],
+    name: keyof typeof PHASE_MAP,
+    block: RomanHour[]
+  ): void {
+    const config = PHASE_MAP[name];
+    const first = block[0];
+    const last = block[block.length - 1];
+
+    if (!first || !last) return;
+    
+    phases.push({
+      name,
+      startTime: first.startTime,
+      endTime: last.endTime,
+      color: config.color,
+      romanHours: block.map(h => h.hour),
+      qualities: config.qualities,
+      idealTasks: config.idealTasks,
+    });
   }
 
   /**
@@ -183,6 +201,81 @@ class PhaseManager {
    */
   calculateTodayPhases(): WuXingPhase[] {
     return this.calculatePhasesForDate(new Date());
+  }
+
+  /**
+   * Calculate phases for a continuous Gregorian day (00:00 to 23:59).
+   * Stitches phases from the previous day's cycle (covering early morning)
+   * and current day's cycle.
+   */
+  getPhasesForGregorianDate(date: Date): WuXingPhase[] {
+    try {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // 1. Get phases for "Yesterday" (Solar)
+      // yesterday's solar cycle: Sunrise(Yesterday) -> Sunrise(Today)
+      // This covers the period from 00:00 Today until Sunrise Today.
+      const yesterday = new Date(date);
+      yesterday.setDate(date.getDate() - 1);
+      const phasesYesterday = this.calculatePhasesForDate(yesterday);
+
+      // 2. Get phases for "Today" (Solar)
+      // today's solar cycle: Sunrise(Today) -> Sunrise(Tomorrow)
+      const phasesToday = this.calculatePhasesForDate(date);
+
+      // 3. Combine and Filter
+      // We want parts of phases that overlap with [00:00, 23:59] of input date.
+      const allPhases = [...phasesYesterday, ...phasesToday];
+      const result: WuXingPhase[] = [];
+
+      for (const p of allPhases) {
+        // Find intersection of Phase [p.start, p.end] and Day [startOfDay, endOfDay]
+        const rangeStart = p.startTime < startOfDay ? startOfDay : p.startTime;
+        const rangeEnd = p.endTime > endOfDay ? endOfDay : p.endTime;
+
+        if (rangeStart < rangeEnd) {
+          result.push({
+            ...p,
+            startTime: rangeStart,
+            endTime: rangeEnd,
+          });
+        }
+      }
+
+      // Sort by start time just in case
+      result.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+      // Merge adjacent phases with same name
+      const merged: WuXingPhase[] = [];
+      for (const p of result) {
+        if (merged.length === 0) {
+          merged.push(p);
+          continue;
+        }
+
+        const last = merged[merged.length - 1];
+        if (!last) continue; // Should not happen given check above
+        
+        if (last.name === p.name) {
+          // Extend last phase
+          last.endTime = p.endTime > last.endTime ? p.endTime : last.endTime;
+          // Merge roman hours (dedupe?)
+          last.romanHours = [...new Set([...last.romanHours, ...p.romanHours])];
+          // Keep other props from last (color, etc are same)
+        } else {
+          merged.push(p);
+        }
+      }
+      
+      return merged;
+    } catch (error) {
+       console.error('❌ Error calculating Gregorian phases:', error);
+       return [];
+    }
   }
 
   /**

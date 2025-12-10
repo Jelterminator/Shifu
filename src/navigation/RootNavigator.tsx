@@ -11,6 +11,7 @@ import {
   JournalScreen,
   LoadingSetupScreen,
   LocationSetupScreen,
+  SettingsScreen,
   SleepHoursSetupScreen,
   SpiritualPracticesSetupScreen,
   TasksScreen,
@@ -41,6 +42,7 @@ function MainTabNavigator(): React.JSX.Element {
 
   return (
     <Tab.Navigator
+      initialRouteName="Agenda"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
@@ -69,6 +71,13 @@ export function RootNavigator(): React.JSX.Element {
   const onboardingComplete = storage.get('onboarding_complete') === 'true';
   const initialRouteName = onboardingComplete ? 'MainTabs' : 'Welcome';
 
+  // Use a safer selection from store
+  const themeColors = useThemeStore(state => state.colors);
+
+  if (!themeColors) {
+    return <></>; // Return empty fragment to satisfy JSX.Element return type
+  }
+
   // console.log('🧭 RootNavigator: Initial route:', initialRouteName);
 
   return (
@@ -84,6 +93,16 @@ export function RootNavigator(): React.JSX.Element {
 
         {/* Main App */}
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+        <Stack.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{
+            headerShown: true, // Show header for Settings
+            presentation: 'modal', // Nice modal presentation
+            headerStyle: { backgroundColor: themeColors.surface },
+            headerTintColor: themeColors.text,
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -156,7 +156,7 @@ export function CalendarView({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
@@ -164,12 +164,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 8,
+    marginBottom: 8,
+    paddingBottom: 4,
     borderBottomWidth: 1,
   },
   monthLabel: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   navButtons: {
@@ -177,28 +177,27 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   navButton: {
-    padding: 4,
+    padding: 2,
   },
   navButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   weekRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    // justifyContent: 'space-between', // Can cause gaps, better to use fixed widths or percentages if possible?
-    // Flex wrap with specific widths is safer.
   },
   dayCell: {
     width: '14.28%', // 100% / 7
-    aspectRatio: 1,
+    height: 36, // Fixed height to be more compact
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 2,
   },
   weekDayText: {
     fontSize: 12,

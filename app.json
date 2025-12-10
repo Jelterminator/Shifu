@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shifu.app"
@@ -27,6 +29,9 @@
       "favicon": "./assets/favicon.png",
       "output": "single",
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      "expo-sqlite"
+    ]
   }
 }

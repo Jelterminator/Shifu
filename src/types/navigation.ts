@@ -26,8 +26,9 @@ export type RootStackParamList = {
   LocationSetup: undefined;
   SleepHoursSetup: undefined;
   WorkHoursSetup: undefined;
-  SpiritualPracticesSetup: undefined;
+  SpiritualPracticesSetup: { isEditing?: boolean } | undefined;
   LoadingSetup: undefined;
+  Settings: undefined;
 };
 
 /**
@@ -45,6 +46,8 @@ export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScre
   BottomTabScreenProps<MainTabParamList, T>,
   RootStackScreenProps<keyof RootStackParamList>
 >;
+
+export type HabitsScreenProps = MainTabScreenProps<'Habits'>;
 
 /**
  * Declaration merging for useNavigation hook type safety

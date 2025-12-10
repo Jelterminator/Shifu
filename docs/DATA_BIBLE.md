@@ -1,4 +1,4 @@
-# Shifu Data Bible
+# Shifu's Data Ching
 
 > *"Shifu Dai Lee has seen through meditative insight (and me through struggling with an MVP in Python) that there is an exact number of datatypes required for this project."*
 
@@ -8,13 +8,13 @@ All structures orbit **time**, and all objects may **cross-reference** each othe
 
 ## Core Domain Objects
 
-| Category | Types |
-|----------|-------|
-| **Temporal** | `ShifuDate`, `WuXingPhase` |
-| **Agenda Items** | `Appointment`, `Plan`, `Anchor` |
-| **Planning Requests** | `Habit`, `Task`, `Project` |
-| **Knowledge** | `JournalEntry`, `Note`, `InsightNote` |
-| **AI/ML** | `VectorEmbedding`, `ModelVersion` |
+| Category              | Types                                 |
+| --------------------- | ------------------------------------- |
+| **Temporal**          | `ShifuDate`, `WuXingPhase`            |
+| **Agenda Items**      | `Appointment`, `Plan`, `Anchor`       |
+| **Planning Requests** | `Habit`, `Task`, `Project`            |
+| **Knowledge**         | `JournalEntry`, `Note`, `InsightNote` |
+| **AI/ML**             | `VectorEmbedding`, `ModelVersion`     |
 
 ---
 
@@ -88,13 +88,13 @@ export type TaskKeyword =
 
 **Canonical Phase Definitions:**
 
-| Phase | Color | Roman Hours | Qualities | Ideal Tasks |
-|-------|-------|-------------|-----------|-------------|
-| 🌲 WOOD | `#4A7C59` | 21-23, 0-1 | Growth, Planning, Vitality | `spiritual`, `planning`, `movement` |
-| 🔥 FIRE | `#E63946` | 2-6 | Peak energy, expression | `deep_work`, `creative`, `pomodoro` |
-| 🌍 EARTH | `#C49551` | 7-8 | Stability, nourishment | `rest`, `integration`, `light_tasks` |
-| ⚙️ METAL | `#A8AAAD` | 9-12 | Precision, organization | `admin`, `planning`, `study` |
-| 💧 WATER | `#457B9D` | 13-20 | Rest, consolidation | `rest`, `reflection`, `recovery` |
+| Phase    | Color     | Roman Hours | Qualities                  | Ideal Tasks                          |
+| -------- | --------- | ----------- | -------------------------- | ------------------------------------ |
+| 🌲 WOOD  | `#4A7C59` | 21-23, 0-1  | Growth, Planning, Vitality | `spiritual`, `planning`, `movement`  |
+| 🔥 FIRE  | `#E63946` | 2-6         | Peak energy, expression    | `deep_work`, `creative`, `pomodoro`  |
+| 🌍 EARTH | `#C49551` | 7-8         | Stability, nourishment     | `rest`, `integration`, `light_tasks` |
+| ⚙️ METAL | `#A8AAAD` | 9-12        | Precision, organization    | `admin`, `planning`, `study`         |
+| 💧 WATER | `#457B9D` | 13-20       | Rest, consolidation        | `rest`, `reflection`, `recovery`     |
 
 ---
 
@@ -244,6 +244,7 @@ export interface Tradition {
 ```
 
 > **Roman Hour Conversion:**
+> 
 > 1. Get user location coordinates
 > 2. Calculate sunrise and sunset times
 > 3. Divide daylight into 12 equal segments (hours 0-11)
@@ -336,15 +337,15 @@ export interface Task extends Linkable {
 
 **Urgency Level Calculation:**
 
-| Level | Minutes/Day | Max in Daily Prompt |
-|-------|-------------|---------------------|
-| T1 | 360+ (6h+) | 5 |
-| T2 | 240-360 (4-6h) | 4 |
-| T3 | 120-240 (2-4h) | 3 |
-| T4 | 60-120 (1-2h) | 2 |
-| T5 | 30-60 | 1 |
-| T6 | <30 | 1 |
-| CHORE | No deadline | 5 |
+| Level | Minutes/Day    | Max in Daily Prompt |
+| ----- | -------------- | ------------------- |
+| T1    | 360+ (6h+)     | 5                   |
+| T2    | 240-360 (4-6h) | 4                   |
+| T3    | 120-240 (2-4h) | 3                   |
+| T4    | 60-120 (1-2h)  | 2                   |
+| T5    | 30-60          | 1                   |
+| T6    | <30            | 1                   |
+| CHORE | No deadline    | 5                   |
 
 ### Project
 
@@ -574,6 +575,7 @@ export interface User {
 > *"The SQL layer is not the source of truth for meaning, only for persistence. It mirrors the datatypes above in normalized form while preserving free-text semantics and deferring interpretation to agents."*
 
 **Design Principles:**
+
 1. All tables use TEXT UUIDs as primary keys (portable, debuggable)
 2. Dates stored as ISO-8601 TEXT for human readability
 3. JSON stored as TEXT for flexible structured data
@@ -843,6 +845,7 @@ CREATE INDEX idx_links_to ON links(to_type, to_id);
 ```
 
 **Supported Entity Types:**
+
 - `appointment`, `plan`, `anchor`
 - `habit`, `task`, `project`
 - `journal_entry`, `note`, `insight`
@@ -906,6 +909,7 @@ CREATE INDEX idx_clusters_user ON vector_clusters(user_id);
 ```
 
 **RAG Retrieval Strategy:**
+
 1. Embed user query using MiniLM model
 2. Find nearest cluster centroids (k-means)
 3. Search within top clusters for nearest vectors
@@ -964,26 +968,32 @@ CREATE INDEX idx_practices_hour ON practice_templates(roman_hour);
 ## Architecture Decisions
 
 ### 1. UUID Primary Keys
+
 - **Why TEXT, not INTEGER:** Portable across systems, enables offline ID generation, human-debuggable
 - **Trade-off:** Slightly larger storage, acceptable for mobile scale
 
 ### 2. ISO-8601 Date Strings
+
 - **Why TEXT, not INTEGER timestamps:** Human-readable in SQLite browser, timezone-aware, simplifies debugging
 - **Format:** `YYYY-MM-DDTHH:MM:SS.sssZ` for full datetime, `YYYY-MM-DD` for date-only
 
 ### 3. JSON in TEXT Columns
+
 - **Why:** Flexible schema evolution, no complex joins for arrays, native JSON functions in SQLite 3.38+
 - **Where:** `selected_days`, `selected_keywords`, `linked_object_ids`, `source_ids`, `metrics`
 
 ### 4. Append-Only Tables
+
 - **Which:** `plans`, `progress_events`
 - **Why:** Preserves training data for on-device ML, enables time-series analysis, immutable audit trail
 
 ### 5. Separate Vector Tables
+
 - **Why not in entity tables:** Large BLOB overhead, different access patterns, enables efficient clustering
 - **Cleanup:** Orphan vectors cleaned during nightly maintenance
 
 ### 6. Links Table (Junction)
+
 - **Why universal linking:** Any-to-any relationships without schema changes, bidirectional traversal
 - **Alternative considered:** Array of IDs in each row (chosen for quick reads, links table for queries needing joins)
 
@@ -992,6 +1002,7 @@ CREATE INDEX idx_practices_hour ON practice_templates(roman_hour);
 ## Query Patterns
 
 ### Get Today's Agenda
+
 ```sql
 SELECT * FROM (
   SELECT id, 'appointment' as type, name, start_time, end_time FROM appointments WHERE user_id = ? AND date(start_time) = ?
@@ -1003,6 +1014,7 @@ SELECT * FROM (
 ```
 
 ### Get Urgent Tasks for Scheduling
+
 ```sql
 SELECT 
   t.*,
@@ -1017,6 +1029,7 @@ LIMIT 15;
 ```
 
 ### Get Backlinks for Entity
+
 ```sql
 SELECT from_type, from_id 
 FROM links 
@@ -1024,6 +1037,7 @@ WHERE to_type = ? AND to_id = ?;
 ```
 
 ### RAG Context Retrieval
+
 ```sql
 -- Step 1: Get recent summaries (always included)
 SELECT content FROM insight_notes 
@@ -1064,14 +1078,14 @@ async function migrate(db: SQLiteDatabase): Promise<void> {
 
 ## File Cross-Reference
 
-| Domain | TypeScript File | SQLite Table(s) |
-|--------|-----------------|-----------------|
-| User | `stores/userStore.ts` | `users` |
-| Phases | `services/PhaseManager.ts` | (computed) |
-| Anchors | `services/data/Anchors.ts`, `data/practices.ts` | `anchors`, `practice_templates` |
-| Habits | `services/data/Habits.ts` | `habits` |
-| Tasks | `services/data/Tasks.ts` | `tasks`, `projects` |
-| Journal | (TBD) | `journal_entries`, `journal_segments` |
-| RAG | `services/ai/RAGEngine.ts` | `vector_embeddings`, `vector_clusters` |
-| Models | `services/ai/ModelRegistry.ts` | `model_versions` |
-| Summaries | `services/data/Summarizer.ts` | `insight_notes` |
+| Domain    | TypeScript File                                 | SQLite Table(s)                        |
+| --------- | ----------------------------------------------- | -------------------------------------- |
+| User      | `stores/userStore.ts`                           | `users`                                |
+| Phases    | `services/PhaseManager.ts`                      | (computed)                             |
+| Anchors   | `services/data/Anchors.ts`, `data/practices.ts` | `anchors`, `practice_templates`        |
+| Habits    | `services/data/Habits.ts`                       | `habits`                               |
+| Tasks     | `services/data/Tasks.ts`                        | `tasks`, `projects`                    |
+| Journal   | (TBD)                                           | `journal_entries`, `journal_segments`  |
+| RAG       | `services/ai/RAGEngine.ts`                      | `vector_embeddings`, `vector_clusters` |
+| Models    | `services/ai/ModelRegistry.ts`                  | `model_versions`                       |
+| Summaries | `services/data/Summarizer.ts`                   | `insight_notes`                        |

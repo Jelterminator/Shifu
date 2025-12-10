@@ -17,14 +17,13 @@ export interface AnchorEvent {
 const ANCHORS_STORAGE_KEY = 'shifu_anchors';
 const LAST_CALCULATION_KEY = 'shifu_anchors_last_calc';
 
+
+
 class AnchorsService {
   private initialized = false;
 
   initialize(latitude: number, longitude: number): void {
     try {
-      // console.log('🔄 AnchorsService: Initializing...');
-
-      // Validate storage is available
       if (!storage) {
         console.warn('⚠️ AnchorsService: Storage not available, skipping initialization');
         return;
@@ -32,31 +31,36 @@ class AnchorsService {
 
       const lastCalcStr = storage.get(LAST_CALCULATION_KEY);
       const now = new Date();
-
       let shouldCalculate = false;
 
       if (!lastCalcStr) {
         shouldCalculate = true;
-        // console.log('📅 AnchorsService: No previous calculation found');
       } else {
-        try {
-          const lastCalc = new Date(lastCalcStr);
-          const daysSinceCalc = (now.getTime() - lastCalc.getTime()) / (1000 * 60 * 60 * 24);
-          const isSaturday = now.getDay() === 6;
+        const lastCalc = new Date(lastCalcStr);
+        const startOfCurrentWeek = this.getStartOfWeek(now);
 
-          if ((isSaturday && daysSinceCalc > 0.5) || daysSinceCalc > 6) {
-            shouldCalculate = true;
-            // console.log(
-            // `📅 AnchorsService: Recalculation needed (${daysSinceCalc.toFixed(1)} days since last calculation)`
-            // );
-          } else {
-            // console.log(
-            // `✅ AnchorsService: Anchors up to date (${daysSinceCalc.toFixed(1)} days old)`
-            // );
-          }
-        } catch (dateError) {
-          console.warn('⚠️ AnchorsService: Invalid last calculation date, will recalculate');
+        // 1. If last calculation was before the start of the current week,
+        // we need to refresh to ensure the full current week is available/correct.
+        if (lastCalc < startOfCurrentWeek) {
           shouldCalculate = true;
+          // console.log('📅 AnchorsService: New week started, recalculating...');
+        } else {
+          // 2. Saturday Night Logic (Schedule Next Week)
+          // If it is Saturday Night (>= 18:00) AND we haven't calculated since Sat 18:00
+          // (i.e., we haven't "released" the new batch yet)
+          const isSaturday = now.getDay() === 6;
+          const isEvening = now.getHours() >= 18;
+
+          if (isSaturday && isEvening) {
+            // Check if we already ran the Sat night update
+            const satNightStart = new Date(now);
+            satNightStart.setHours(18, 0, 0, 0);
+
+            if (lastCalc < satNightStart) {
+              shouldCalculate = true;
+              // console.log('📅 AnchorsService: Saturday Night! Scheduling next batch...');
+            }
+          }
         }
       }
 
@@ -65,101 +69,157 @@ class AnchorsService {
       }
 
       this.initialized = true;
-      // console.log('✅ AnchorsService: Initialized successfully');
     } catch (error) {
       console.error('❌ AnchorsService: Initialization failed:', error);
-      // Don't throw - allow graceful degradation
       this.initialized = false;
+    }
+  }
+
+  /**
+   * Recalculates anchors for the future, preserving the past.
+   * CALL THIS when Settings change.
+   */
+  recalculateFutureAnchors(latitude: number, longitude: number): void {
+    try {
+      // console.log('🔄 AnchorsService: Recalculating future anchors due to settings change...');
+      const now = new Date();
+
+      // 1. Generate fresh anchors for the standard window (Current Week + Next Week)
+      const freshAnchors = this.generateAnchors(latitude, longitude);
+
+      // 2. Get existing anchors
+      const existingAnchors = this.getStoredAnchors();
+
+      // 3. Merge: Keep PAST existing anchors, use FUTURE fresh anchors
+      // "The past is the past and remains."
+      const pastAnchors = existingAnchors.filter(a => a.startTime <= now);
+      const futureAnchors = freshAnchors.filter(a => a.startTime > now);
+
+      const merged = [...pastAnchors, ...futureAnchors];
+
+      // 4. Store
+      this.saveAnchors(merged);
+      // console.log(`✅ AnchorsService: Updated. Preserved ${pastAnchors.length} past, Added ${futureAnchors.length} future.`);
+    } catch (error) {
+      console.error('❌ AnchorsService: Failed to recalculate future anchors:', error);
     }
   }
 
   private calculateAndStoreAnchors(latitude: number, longitude: number): void {
     try {
-      // console.log('🔄 Calculating anchors/practices for next 14 days...');
+      const anchors = this.generateAnchors(latitude, longitude);
 
-      const anchors: AnchorEvent[] = [];
-      const startDate = new Date();
-      startDate.setHours(0, 0, 0, 0);
+      // In a standard scheduled calc, we want to ensure retention of the *current* week history
+      // if we are mid-week.
+      // However, since generateAnchors(startOfWeek) regenerates the WHOLE current week (Mon-Sun)
+      // plus the next week, it effectively "refreshes" the current week's schedule.
+      // This is acceptable for a background refresh (unlike user settings change where we want strictly fixed past).
+      // We will merge with *older* history if needed (e.g., from previous weeks),
+      // but strictly adhering to "always want them scheduled in for the entire current week".
 
-      // Get selected practices from store
-      const userStoreState = useUserStore.getState();
-      const selectedPracticeIds = userStoreState.user.spiritualPractices || [];
+      // Let's keep existing anchors that are OLDER than the new generation start date (Last Week or older)
+      // just in case we want to scroll back (though user didn't explicitly ask for infinite history).
+      // Using startOfWeek as the cutoff.
 
-      // console.log(`📋 Found ${selectedPracticeIds.length} selected practices`);
-
-      // Create a map of selected practice definitions
-      const relevantPractices: {
-        id: string;
-        name: string;
-        romanHour: number;
-        durationMinutes: number;
-      }[] = [];
-
-      RELIGIOUS_PRACTICES.forEach(tradition => {
-        tradition.categories.forEach(category => {
-          category.practices.forEach(practice => {
-            if (selectedPracticeIds.includes(practice.id)) {
-              relevantPractices.push(practice);
-            }
-          });
-        });
-      });
-
-      // console.log(`✅ Filtered to ${relevantPractices.length} relevant practices to schedule`);
-
-      // Calculate for 14 days
-      for (let i = 0; i < 14; i++) {
-        const date = new Date(startDate);
-        date.setDate(startDate.getDate() + i);
-        const dateStr = date.toISOString().split('T')[0] || '';
-
-        try {
-          // Calculate Roman Hours for this day
-          const romanHours = calculateRomanHours(date, latitude, longitude);
-
-          // Schedule each selected practice
-          for (const practice of relevantPractices) {
-            const hourInfo = romanHours.find(rh => rh.hour === practice.romanHour);
-
-            if (hourInfo) {
-              anchors.push({
-                id: `practice-${dateStr}-${practice.id}`,
-                type: 'anchor',
-                title: practice.name,
-                startTime: hourInfo.startTime,
-                durationMinutes: practice.durationMinutes,
-                dateStr: dateStr,
-                isPractice: true,
-              });
-            }
-          }
-        } catch (dayError) {
-          console.warn(`⚠️ Failed to calculate Roman hours for ${dateStr}:`, dayError);
-          // Continue with next day
-        }
-      }
-
-      // Merge with existing anchors
+      const startOfWeek = this.getStartOfWeek(new Date());
       const existingAnchors = this.getStoredAnchors();
-      const anchorMap = new Map<string, AnchorEvent>();
 
-      existingAnchors.forEach(a => anchorMap.set(a.id, a));
-      anchors.forEach(a => anchorMap.set(a.id, a));
+      // Keep history strictly before this week
+      const historicalAnchors = existingAnchors.filter(a => a.startTime < startOfWeek);
 
-      // Filter out past anchors (keep only future or recent past within 1 day)
-      const mergedAnchors = Array.from(anchorMap.values()).filter(
-        a => new Date(a.startTime).getTime() > Date.now() - 86400000
-      );
+      const merged = [...historicalAnchors, ...anchors];
 
-      // Store the results
-      storage.set(ANCHORS_STORAGE_KEY, JSON.stringify(mergedAnchors));
-      storage.set(LAST_CALCULATION_KEY, new Date().toISOString());
-
-      // console.log(`✅ Saved ${mergedAnchors.length} scheduled anchor events`);
+      this.saveAnchors(merged);
     } catch (error) {
-      console.error('❌ Failed to calculate and store anchors:', error);
+      console.error('❌ AnchorsService: Failed to calculate and store anchors:', error);
       throw error;
     }
+  }
+
+  private generateAnchors(latitude: number, longitude: number): AnchorEvent[] {
+    const anchors: AnchorEvent[] = [];
+    const now = new Date();
+    const startOfWeek = this.getStartOfWeek(now);
+
+    // Schedule for 14 days from Start of Current Week
+    // This covers: Current Week (Mon-Sun) + Next Week (Mon-Sun)
+    // This satisfies "entire current week" + "new batch (next week)" availability.
+    const DAYS_TO_SCHEDULE = 14;
+
+    const userStoreState = useUserStore.getState();
+    const selectedPracticeIds = userStoreState.user.spiritualPractices || [];
+
+    const relevantPractices: {
+      id: string;
+      name: string;
+      romanHour: number;
+      durationMinutes: number;
+    }[] = [];
+
+    RELIGIOUS_PRACTICES.forEach(tradition => {
+      tradition.categories.forEach(category => {
+        category.practices.forEach(practice => {
+          if (selectedPracticeIds.includes(practice.id)) {
+            relevantPractices.push(practice);
+          }
+        });
+      });
+    });
+
+    for (let i = 0; i < DAYS_TO_SCHEDULE; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0] || '';
+
+      try {
+        const romanHours = calculateRomanHours(date, latitude, longitude);
+
+        for (const practice of relevantPractices) {
+          const hourInfo = romanHours.find(rh => rh.hour === practice.romanHour);
+
+          if (hourInfo) {
+            anchors.push({
+              id: `practice-${dateStr}-${practice.id}`,
+              type: 'anchor',
+              title: practice.name,
+              startTime: hourInfo.startTime,
+              durationMinutes: practice.durationMinutes,
+              dateStr: dateStr,
+              isPractice: true,
+            });
+          }
+        }
+      } catch (dayError) {
+        console.warn(`⚠️ Failed to calculate Roman hours for ${dateStr}:`, dayError);
+      }
+    }
+    return anchors;
+  }
+
+  private saveAnchors(anchors: AnchorEvent[]): void {
+    // Deduplicate by ID just in case
+    const map = new Map<string, AnchorEvent>();
+    anchors.forEach(a => map.set(a.id, a));
+    const unique = Array.from(map.values());
+
+    storage.set(ANCHORS_STORAGE_KEY, JSON.stringify(unique));
+    storage.set(LAST_CALCULATION_KEY, new Date().toISOString());
+  }
+
+  private getStartOfWeek(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay();
+    // 0 = Sunday, 1 = Monday.
+    // If Sunday (0), we want previous Monday (-6 days).
+    // If Monday (1), we want Today (-0 days implies setDate... wait).
+    // Logic: diff = d.getDate() - day + (day == 0 ? -6 : 1);
+    // Tue (2) -> d - 2 + 1 = d - 1. (Monday). Correct.
+    // Mon (1) -> d - 1 + 1 = d. Correct.
+    // Sun (0) -> d - 0 - 6 = d - 6. Correct.
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    d.setDate(diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
   }
 
   private getStoredAnchors(): AnchorEvent[] {
@@ -182,14 +242,24 @@ class AnchorsService {
 
   getAnchorsForDate(date: Date): AnchorEvent[] {
     if (!this.initialized) {
-      console.warn('⚠️ AnchorsService: Not initialized, returning empty array');
-      return [];
+      // Try to return something if checks pass? No, just warn.
+      // console.warn('⚠️ AnchorsService: Not initialized');
     }
 
     try {
-      const dateStr = date.toISOString().split('T')[0] || '';
+      // Calculate start and end of the GREGORIAN day for the given date
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
       const allAnchors = this.getStoredAnchors();
-      return allAnchors.filter(a => a.dateStr === dateStr);
+      
+      // Filter by actual time range
+      return allAnchors.filter(a => {
+        return a.startTime >= startOfDay && a.startTime <= endOfDay;
+      });
     } catch (error) {
       console.error('❌ Failed to get anchors for date:', error);
       return [];

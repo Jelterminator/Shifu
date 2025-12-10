@@ -1,16 +1,13 @@
-import { create } from 'zustand';
+import { createStore } from '../utils/store';
 
 export interface UIStoreState {
   isLoading: boolean;
   error: string | null;
-}
-
-export interface UIStoreActions {
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
 }
 
-export const useUIStore = create<UIStoreState & UIStoreActions>(set => ({
+export const useUIStore = createStore<UIStoreState>(set => ({
   isLoading: false,
   error: null,
   setLoading: isLoading => set({ isLoading }),

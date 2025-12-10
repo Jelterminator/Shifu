@@ -8,12 +8,14 @@ import type { RootStackParamList } from '../../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SpiritualPracticesSetup'>;
 
-export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation }) => {
+export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation, route }) => {
   const user = useUserStore(state => state.user);
   const setUser = useUserStore(state => state.setUser);
   const [selectedPractices, setSelectedPractices] = useState<string[]>(
     user.spiritualPractices || []
   );
+
+  const isEditing = route.params?.isEditing ?? false;
 
   const handleTogglePractice = (id: string): void => {
     setSelectedPractices(prev => (prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]));
@@ -24,7 +26,29 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation }) =
       ...user,
       spiritualPractices: selectedPractices,
     });
-    navigation.navigate('LoadingSetup');
+
+    // Recalculate anchors based on new settings (Future Only)
+    // We do this sync-ish, but it might block slightly.
+    // Ideally we pass coords. User object might not have them if basic, assume default or current provided.
+    const lat = user.latitude ?? 52.3676;
+    const long = user.longitude ?? 4.9041;
+    
+    // Import dynamically or use the imported instance
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { anchorsService } = require('../../services/data/Anchors');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    anchorsService.recalculateFutureAnchors(lat, long);
+
+    if (isEditing) {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        // Fallback if accessed directly (unlikely)
+        navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+      }
+    } else {
+      navigation.navigate('LoadingSetup');
+    }
   };
 
   const renderPracticeItem = (practice: {
@@ -70,8 +94,14 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation }) =
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>🙏 Spiritual Anchors</Text>
-        <Text style={styles.subtitle}>Select daily practices to anchor your rhythm.</Text>
+        <Text style={styles.title}>
+          {isEditing ? '🙏 Update Disciplines' : '🙏 Spiritual Anchors'}
+        </Text>
+        <Text style={styles.subtitle}>
+          {isEditing
+            ? 'Reconfigure your daily practices.'
+            : 'Select daily practices to anchor your rhythm.'}
+        </Text>
       </View>
 
       <SectionList
@@ -89,7 +119,9 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation }) =
 
       <View style={styles.footer}>
         <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
-          <Text style={styles.continueButtonText}>Continue ({selectedPractices.length}) →</Text>
+          <Text style={styles.continueButtonText}>
+            {isEditing ? 'Save Changes' : `Continue (${selectedPractices.length}) →`}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -152,7 +152,7 @@ planning experience.
 | **State/Type Safety**        | **Zustand + TypeScript**                          | Ultra-lightweight state manager (~2KB gzipped [1]) with a simple hook API. Eliminates Redux boilerplate with minimal overhead.                                                                              |
 | **Local Database**           | **SQLite** via `expo-sqlite`                      | ACID-compliant relational DB. SQLite is self-contained and serverless, optimized for on-device/offline use [2] [4].                                                                                         |
 | **Key-Value Store**          | **MMKV** (primary) + **AsyncStorage**             | MMKV is a native C++-backed store (via JSI) that is ~30× faster than AsyncStorage [5], ideal for config and cache. AsyncStorage is only used for trivial data.                                              |
-| **Vector DB / Index**        | **SQLite + Custom ANN Index**                     | Embeddings stored in SQLite tables. A custom approximate nearest-neighbor (k-means) index accelerates similarity search (O(log n) retrieval).                                                               |
+| **Vector DB / Index**        | **ChromaDB**                                      | Specialized vector database for embeddings. Handles similarity search and clustering efficiently.                                                                                                           |
 | **AI Inference**             | **Transformers.js (Xenova)**                      | Runs quantized ONNX models (e.g., decision tree ensembles, DistilGPT-2) on-device via WebAssembly/JS. Models are quantized (4/8-bit) to reduce memory [7]. No server needed.                                |
 | **AI Processing**            | **Custom Prompt Engineering + Summary Hierarchy** | Hierarchical summarization (daily→weekly→monthly→quarterly) dramatically reduces RAG context size. Custom prompt templates (via LangChain.js or similar) structure queries and context efficiently.         |
 | **Local Training Framework** | **TensorFlow.js (Decision Trees) + ONNX Runtime** | On-device fine-tuning of scheduling models using lightweight decision-tree ensembles. We constrain ONNX to single-thread (WASM) on mobile to avoid known concurrency issues [8].                            |
@@ -339,9 +339,9 @@ provide personalized advice with 10x faster response times while maintaining con
    - **Summary Level:** AI-generated summaries (daily→weekly→monthly→quarterly)
 
 2. **Intelligent Vector Storage:**
-   - Primary vectors stored in SQLite `vectors` table with metadata
-   - **Summary vectors** stored in separate optimized table with timestamp ranges
-   - Custom ANN index using k-means clustering for O(log n) retrieval
+   - Primary vectors stored in **ChromaDB**
+   - **Summary vectors** also stored in ChromaDB collections
+   - Efficient similarity search provided by ChromaDB
 
 3. **Hierarchical Retrieval Process:** When the user prompts the Coach, the query is immediately
    embedded, then a Multi-Level Search:

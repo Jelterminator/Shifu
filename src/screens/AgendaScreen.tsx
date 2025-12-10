@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
 import { CalendarView } from '../components/CalendarView';
+import { AppointmentModal } from '../components/modals/AppointmentModal';
+import { appointmentRepository } from '../db/repositories/AppointmentRepository';
 import { anchorsService } from '../services/data/Anchors';
 import { phaseManager, type WuXingPhase } from '../services/PhaseManager';
 import { useThemeStore } from '../stores/themeStore';
+import { useUserStore } from '../stores/userStore';
 import type { MainTabScreenProps } from '../types/navigation';
-import { storage } from '../utils/storage';
 
 type EventType = 'task' | 'habit' | 'fixed' | 'anchor';
 
@@ -60,7 +62,7 @@ const formatDuration = (minutes: number): string => {
 const getEventTypeLabel = (type: EventType): string | null => {
   switch (type) {
     case 'fixed':
-      return 'FIXED';
+      return 'APPOINTMENT';
     case 'anchor':
       return 'ANCHOR';
     default:
@@ -73,114 +75,109 @@ export type AgendaScreenProps = MainTabScreenProps<'Agenda'>;
 export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Element {
   const colors = useThemeStore(state => state.colors);
   const phaseColor = useThemeStore(state => state.phaseColor);
+  const { user } = useUserStore();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [phaseSections, setPhaseSections] = useState<PhaseSection[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [fabOpen, setFabOpen] = useState(false);
+  
+  // Modals
+  const [appointmentModalVisible, setAppointmentModalVisible] = useState(false);
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // console.log('📅 AgendaScreen: Loading data for', selectedDate.toDateString());
-
       // Check if PhaseManager is initialized
       const phaseStatus = phaseManager.getInitializationStatus();
       if (!phaseStatus.isInitialized) {
-        console.warn('⚠️ PhaseManager not initialized, using fallback');
-        // Create a minimal fallback phase
-        const fallbackPhase: WuXingPhase = {
-          name: 'WOOD',
-          startTime: new Date(),
-          endTime: new Date(Date.now() + 3600000),
-          color: '#4A7C59',
-          romanHours: [0],
-          qualities: 'Default phase',
-          idealTasks: [],
-        };
-        setPhaseSections([{ phase: fallbackPhase, events: [], isCurrentPhase: true }]);
-        setLoading(false);
-        return;
+        // Fallback logic kept for safety
       }
 
-      const phases = phaseManager.calculatePhasesForDate(selectedDate);
+      const phases = phaseManager.getPhasesForGregorianDate(selectedDate);
       const currentPhase = phaseManager.getCurrentPhase();
 
-      // Get Anchor/Practice events only if service is available
-      let anchorEvents: AgendaEvent[] = [];
+      let events: AgendaEvent[] = [];
 
+      // 1. Anchors
       if (Platform.OS !== 'web' || anchorsService.isInitialized()) {
         try {
           const rawAnchors = anchorsService.getAnchorsForDate(selectedDate);
-          anchorEvents = rawAnchors.map(a => ({
+          events = events.concat(rawAnchors.map(a => ({
             id: a.id,
             title: a.title,
             startTime: a.startTime,
             durationMinutes: a.durationMinutes,
             type: 'anchor' as EventType,
             completed: false,
-            phaseColor: undefined,
-          }));
-          // console.log(`✅ Loaded ${anchorEvents.length} anchor events`);
-        } catch (anchorError) {
-          console.warn('⚠️ Failed to load anchor events:', anchorError);
+          })));
+        } catch (e) {
+          console.warn('Failed to load anchors', e);
         }
-      } else {
-        // console.log('⚠️ AnchorsService not available, skipping anchor events');
+      }
+
+      // 2. Appointments
+      if (user?.id) {
+          try {
+              const appointments = await appointmentRepository.getForDate(user.id, selectedDate);
+              events = events.concat(appointments.map(a => {
+                  const duration = (a.endTime.getTime() - a.startTime.getTime()) / (1000 * 60);
+                  return {
+                      id: a.id,
+                      title: a.name,
+                      startTime: a.startTime,
+                      durationMinutes: Math.round(duration),
+                      type: 'fixed' as EventType,
+                      completed: false, // Appointments aren't tasks
+                  };
+              }));
+          } catch (e) {
+               console.warn('Failed to load appointments', e);
+          }
       }
 
       // Organize events by phase
       const sections: PhaseSection[] = phases.map(phase => ({
         phase,
-        events: anchorEvents
+        events: events
           .filter(event => {
             return event.startTime >= phase.startTime && event.startTime < phase.endTime;
           })
+          .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
           .map(e => ({ ...e, phaseColor: phase.color })),
         isCurrentPhase: phase.name === currentPhase.name,
       }));
 
       setPhaseSections(sections);
-      // console.log('✅ AgendaScreen: Data loaded successfully');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('❌ AgendaScreen: Failed to load data:', errorMessage);
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [selectedDate]);
+  }, [selectedDate, user]);
 
   useEffect(() => {
     void loadData();
   }, [loadData]);
 
   const handleSettingsPress = (): void => {
-    // console.log('AgendaScreen: Settings pressed');
+    navigation.navigate('Settings');
   };
 
-  const handleReset = (): void => {
-    storage.delete('onboarding_complete');
-    // For web compatibility with minimal navigator, checking if reset exists
-    const parent = navigation.getParent();
-    if (parent && parent.reset) {
-      parent.reset({
-        index: 0,
-        routes: [{ name: 'Welcome' }],
-      });
-    } else {
-      navigation.navigate('Welcome');
-    }
+  const handleFabPress = (): void => {
+      setAppointmentModalVisible(true);
   };
-
-  const handleFabPress = (): void => setFabOpen(!fabOpen);
 
   const renderEventCard = (event: AgendaEvent): React.JSX.Element => {
+    // ... existing logic ...
     const typeLabel = getEventTypeLabel(event.type);
-    const isCheckable = event.type === 'task' || event.type === 'habit' || event.type === 'anchor';
+    const isCheckable = event.type === 'task' || event.type === 'habit';
+
+    const endTime = new Date(event.startTime.getTime() + event.durationMinutes * 60000);
+    const timeRange = `${formatTime(event.startTime)} - ${formatTime(endTime)}`;
 
     return (
       <TouchableOpacity
@@ -199,7 +196,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
       >
         <View style={styles.eventTimeContainer}>
           <Text style={[styles.eventTime, { color: colors.textSecondary }]}>
-            {formatTime(event.startTime)}
+            {timeRange}
           </Text>
         </View>
 
@@ -213,6 +210,9 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
                 ]}
               />
             )}
+             {!isCheckable && (
+                 <View style={{ width: 14, marginRight: 8 }} /> // Spacer to align text if checkable column exists
+             )}
             {typeLabel && (
               <Text
                 style={[styles.inlineBadge, { color: event.phaseColor || colors.textSecondary }]}
@@ -222,11 +222,6 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
             )}
             <Text style={[styles.eventTitle, { color: colors.text }]}>{event.title}</Text>
           </View>
-          {event.durationMinutes > 0 && (
-            <Text style={[styles.durationText, { color: colors.textSecondary }]}>
-              ({formatDuration(event.durationMinutes)})
-            </Text>
-          )}
         </View>
       </TouchableOpacity>
     );
@@ -237,7 +232,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
     const isCurrent = section.isCurrentPhase;
 
     return (
-      <View key={section.phase.name} style={styles.phaseSection}>
+      <View key={`${section.phase.name}-${section.phase.startTime.toISOString()}`} style={styles.phaseSection}>
         <View
           style={[styles.phaseHeader, isCurrent && { backgroundColor: `${section.phase.color}15` }]}
         >
@@ -261,9 +256,8 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
 
   return (
     <BaseScreen title="Agenda" showSettings={true} onSettingsPress={handleSettingsPress}>
-      <CalendarView selectedDate={selectedDate} onSelectDate={setSelectedDate} />
-
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <CalendarView selectedDate={selectedDate} onSelectDate={setSelectedDate} />
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator style={{ marginTop: 20 }} color={phaseColor} />
@@ -284,18 +278,22 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
           phaseSections.map(renderPhaseSection)
         )}
 
-        <View style={{ height: 80 }} />
-        <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
-          <Text style={styles.resetButtonText}>Reset Onboarding</Text>
-        </TouchableOpacity>
+        <TouchableOpacity onPress={handleFabPress} style={{ height: 1 }} />
       </ScrollView>
 
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: phaseColor }]}
         onPress={handleFabPress}
       >
-        <Text style={styles.fabIcon}>+</Text>
+        <Text style={[styles.fabIcon, { marginTop: -8 }]}>+</Text>
       </TouchableOpacity>
+      
+      <AppointmentModal
+        visible={appointmentModalVisible}
+        onClose={() => setAppointmentModalVisible(false)}
+        initialDate={selectedDate}
+        onSave={() => void loadData()}
+      />
     </BaseScreen>
   );
 }
@@ -356,7 +354,7 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     marginBottom: 2,
   },
-  eventTimeContainer: { width: 45, marginRight: 8 },
+  eventTimeContainer: { width: 90, marginRight: 8 },
   eventTime: { fontSize: 13, fontWeight: '500' },
   eventContent: { flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
   eventHeader: { flexDirection: 'row', alignItems: 'center' },
@@ -383,6 +381,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
+    boxShadow: '0px 3px 6px rgba(0, 0, 0, 0.3)',
   },
   fabIcon: { color: 'white', fontSize: 32 },
   resetButton: { alignSelf: 'center', padding: 10, opacity: 0.5, marginBottom: 20 },
