@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BORDER_RADIUS, SPACING } from '../../constants/theme';
 import { projectRepository } from '../../db/repositories/ProjectRepository';
 import { taskRepository } from '../../db/repositories/TaskRepository';
@@ -202,14 +202,24 @@ export function ListDetailsModal({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        {/* Close Button Outside */}
-        <TouchableOpacity style={styles.closeButtonOutside} onPress={onClose}>
-          <View style={styles.closeHub}>
-            <Text style={styles.closeText}>✕</Text>
-          </View>
-        </TouchableOpacity>
-
         <View style={[styles.container, { backgroundColor: colors.background }]}>
+          {/* Top Action Bar */}
+          <View style={styles.actionBar}>
+            {/* Edit Button - Top Left */}
+            {list && !isAllMode && !isCompletedMode ? (
+              <TouchableOpacity onPress={() => setIsEditListModalVisible(true)}>
+                <Text style={{ color: phaseColor, fontSize: 16, fontWeight: '600' }}>Edit</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: 40 }} /> // Spacer to balance
+            )}
+
+            {/* Close Functionality - Top Right */}
+            <TouchableOpacity onPress={onClose}>
+              <Text style={{ color: colors.textSecondary, fontSize: 16 }}>✕ Close</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.header}>
             <View>
               <Text style={styles.icon}>{getIcon()}</Text>
@@ -218,16 +228,6 @@ export function ListDetailsModal({
                 {items.length} items
               </Text>
             </View>
-
-            {/* Edit Button Inside - Top Right */}
-            {list && !isAllMode && !isCompletedMode && (
-              <TouchableOpacity
-                onPress={() => setIsEditListModalVisible(true)}
-                style={[styles.editBtn, { backgroundColor: colors.surface }]}
-              >
-                <Text style={{ color: colors.text }}>Edit</Text>
-              </TouchableOpacity>
-            )}
           </View>
 
           <View style={styles.content}>
@@ -337,44 +337,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
-  closeButtonOutside: {
-    position: 'absolute',
-    top: 60, // Adjust for Safe Area approximately
-    right: 20,
-    zIndex: 10,
-  },
-  closeHub: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
-  },
-  closeText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-  },
   container: {
     height: '85%', // Not full screen
     borderTopLeftRadius: BORDER_RADIUS.large,
     borderTopRightRadius: BORDER_RADIUS.large,
     overflow: 'hidden',
   },
+  actionBar: {
+    paddingHorizontal: SPACING.l,
+    paddingTop: SPACING.l,
+    paddingBottom: SPACING.s,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   header: {
-    padding: SPACING.l,
+    paddingHorizontal: SPACING.l,
+    paddingBottom: SPACING.l,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',

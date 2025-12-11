@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity } from 'react-native';
 
+import { useUserStore } from '../../stores/userStore';
 import type { RootStackParamList } from '../../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WorkHoursSetup'>;
@@ -10,8 +11,12 @@ export const WorkHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [workStart, setWorkStart] = useState('09:00');
   const [workEnd, setWorkEnd] = useState('17:00');
 
+  const setUser = useUserStore((state) => state.setUser);
+  const user = useUserStore((state) => state.user);
+
   const handleContinue = (): void => {
-    navigation.navigate('SleepHoursSetup');
+      setUser({ ...user, workStart, workEnd });
+      navigation.navigate('SleepHoursSetup');
   };
 
   return (

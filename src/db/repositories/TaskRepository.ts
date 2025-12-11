@@ -220,6 +220,15 @@ class TaskRepository {
   async delete(id: string): Promise<void> {
     await db.execute('DELETE FROM tasks WHERE id = ?', [id]);
   }
+
+  // BATCH UPDATE
+  async updatePositions(updates: { id: string; position: number }[]): Promise<void> {
+    await db.transaction(async tx => {
+      for (const { id, position } of updates) {
+        await tx.runAsync('UPDATE tasks SET position_in_project = ? WHERE id = ?', [position, id]);
+      }
+    });
+  }
 }
 
 export const taskRepository = new TaskRepository();

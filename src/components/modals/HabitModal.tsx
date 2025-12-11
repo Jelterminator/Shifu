@@ -24,15 +24,17 @@ interface HabitModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (habitData: Partial<Habit>) => void;
+  onDelete?: () => void;
   initialHabit?: Habit | null;
 }
 
-const DURATIONS = [5, 15, 30, 45, 60];
+const DURATIONS = [5, 10, 15, 20, 30, 45, 60, 90];
 
 export const HabitModal: React.FC<HabitModalProps> = ({
   visible,
   onClose,
   onSave,
+  onDelete,
   initialHabit,
 }) => {
   const { colors, phaseColor } = useThemeStore();
@@ -306,9 +308,6 @@ export const HabitModal: React.FC<HabitModalProps> = ({
           </ScrollView>
 
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={[styles.cancelText, { color: colors.textSecondary }]}>Cancel</Text>
-            </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.saveButton,
@@ -319,6 +318,15 @@ export const HabitModal: React.FC<HabitModalProps> = ({
             >
               <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
+
+            {initialHabit && onDelete && (
+                <TouchableOpacity 
+                    style={[styles.saveButton, { backgroundColor: 'transparent', marginTop: SPACING.s }]} 
+                    onPress={onDelete}
+                >
+                    <Text style={{ color: '#FF3B30', fontWeight: '600', fontSize: 16 }}>Delete Habit</Text>
+                </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>
@@ -431,14 +439,8 @@ const styles = StyleSheet.create({
     gap: SPACING.s,
   },
   keywordChip: {
-    width: '30%', // Approx 3 per row for 6x3? No, 6x3 means 6 columns?
-    // User said "6x3 roster". 6 columns, 3 rows? Or 6 rows, 3 columns?
-    // "6x3" usually means WxH or RowsxCols.
-    // 18 keywords. 6 cols x 3 rows fits well on wide/tablet, but on phone 3 cols x 6 rows is more likely.
-    // I will stick to flex wrap. 30% width roughly gives 3 columns.
-    // If user meant 6 columns, that's very dense for mobile.
-    // I'll assume they meant "grid of 18 items".
-    // I'll use 30% width - gap to get ~3 columns.
+    width: '31%',
+    flexGrow: 1,
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,
@@ -452,25 +454,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingTop: SPACING.m,
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
   },
-  cancelButton: {
-    padding: SPACING.m,
-    flex: 1,
-    alignItems: 'center',
-  },
-  cancelText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
   saveButton: {
     padding: SPACING.m,
     borderRadius: BORDER_RADIUS.medium,
-    flex: 1,
     alignItems: 'center',
   },
   saveButtonText: {

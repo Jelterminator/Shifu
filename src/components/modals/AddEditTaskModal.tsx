@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { BORDER_RADIUS, KEYWORDS, SHADOWS, SPACING } from '../../constants';
 import { taskRepository } from '../../db/repositories/TaskRepository';
@@ -14,6 +15,8 @@ import { useListStore } from '../../stores/listStore';
 import { useThemeStore } from '../../stores/themeStore';
 import { useUserStore } from '../../stores/userStore';
 import type { Task } from '../../types/database';
+import { ConfirmationModal } from './ConfirmationModal';
+
 
 interface AddEditTaskModalProps {
   visible: boolean;
@@ -48,6 +51,8 @@ export function AddEditTaskModal({
   const [notes, setNotes] = useState('');
   const [deadlineText, setDeadlineText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deleteConfVisible, setDeleteConfVisible] = useState(false);
+
 
   useEffect(() => {
     if (visible && task) {
@@ -131,6 +136,25 @@ export function AddEditTaskModal({
     }
   };
 
+  const handleDelete = (): void => {
+    if (!task) return;
+    setDeleteConfVisible(true);
+  };
+
+  const executeDelete = async (): Promise<void> => {
+     if (!task) return;
+     try {
+         await taskRepository.delete(task.id);
+         setDeleteConfVisible(false);
+         onSave?.();
+         onClose();
+     } catch (e) {
+         console.error(e);
+         Alert.alert('Error', 'Failed to delete task');
+     }
+  };
+
+    
   return (
     <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
@@ -346,10 +370,33 @@ export function AddEditTaskModal({
               <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Save Task'}</Text>
             </TouchableOpacity>
           )}
+
+          {task && (
+            <TouchableOpacity
+              style={[
+                styles.saveButton,
+                { backgroundColor: 'transparent', marginTop: SPACING.s },
+              ]}
+              onPress={handleDelete}
+            >
+              <Text style={{ color: '#FF3B30', fontWeight: '600' }}>Delete Task</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
+      
+      <ConfirmationModal
+        visible={deleteConfVisible}
+        title="Delete Task"
+        message="Are you sure you want to delete this task?"
+        onConfirm={() => void executeDelete()}
+        onCancel={() => setDeleteConfVisible(false)}
+        confirmLabel="Delete"
+        isDestructive
+      />
     </Modal>
   );
+
 }
 
 const styles = StyleSheet.create({
@@ -403,7 +450,8 @@ const styles = StyleSheet.create({
     gap: SPACING.s,
   },
   keywordChip: {
-    width: '30%',
+    width: '31%',
+    flexGrow: 1,
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,

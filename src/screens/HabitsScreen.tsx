@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
+import { ConfirmationModal } from '../components/modals/ConfirmationModal';
 import { HabitModal } from '../components/modals/HabitModal';
 import { HabitStatsModal } from '../components/modals/HabitStatsModal';
+
 import {
   BORDER_RADIUS,
   PHASE_ICONS,
@@ -11,31 +13,36 @@ import {
   WEEKDAY_ABBREVIATIONS,
 } from '../constants/theme';
 import { habitRepository } from '../db/repositories/HabitRepository';
+import { planRepository } from '../db/repositories/PlanRepository';
 import { useThemeStore } from '../stores/themeStore';
 import { useUserStore } from '../stores/userStore';
-import type { Habit } from '../types/database';
+import type { Habit, Plan } from '../types/database';
 import type { HabitsScreenProps } from '../types/navigation';
 
 export type { HabitsScreenProps };
 
-// ...
-
+// Helper function
 const getPhaseIcon = (idealPhase?: string): string => {
   if (!idealPhase) return '🌳';
   return PHASE_ICONS[idealPhase] || '🌳';
 };
-
 export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Element {
   const [loading, setLoading] = useState(true);
   const [weeklyProgress, setWeeklyProgress] = useState({ totalGoal: 0, currentProgress: 0 });
   const [habitsWithHistory, setHabitsWithHistory] = useState<
     { habit: Habit; history: boolean[]; streak: number; weeklyProgress: number }[]
   >([]);
+  // State to hold today's plans for smart toggling and filtering
+  const [todayPlans, setTodayPlans] = useState<Plan[]>([]); 
 
   // Modals state
   const [habitModalVisible, setHabitModalVisible] = useState(false);
+// ...
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [statsHabit, setStatsHabit] = useState<Habit | null>(null);
+  const [deleteConfirmationVisible, setDeleteConfirmationVisible] = useState(false);
+  const [habitToDelete, setHabitToDelete] = useState<Habit | null>(null);
+
 
   const userId = useUserStore(state => state.user.id);
   const { colors, phaseColor } = useThemeStore();
@@ -47,12 +54,20 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
     }
     try {
       setLoading(true);
-      const [weekly, dashboardData] = await Promise.all([
+      
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const [weekly, dashboardData, todaysPlansData] = await Promise.all([
         habitRepository.getWeeklyOverallProgress(userId),
         habitRepository.getHabitsWithDashboardData(userId),
+        planRepository.getForDateRange(userId, startOfDay, endOfDay)
       ]);
       setWeeklyProgress(weekly);
       setHabitsWithHistory(dashboardData);
+      setTodayPlans(todaysPlansData);
     } catch (error) {
       console.error('Failed to load habits:', error);
     } finally {
@@ -64,35 +79,49 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
     void loadData();
   }, [loadData]);
 
+
+
   const handleToggleCompletion = async (habit: Habit, dateDate?: Date): Promise<void> => {
     if (!userId) return;
     const date = dateDate || new Date();
+    
+    // Only use plan-based toggle for "Today" interactions
+    const isToday = !dateDate || dateDate.toDateString() === new Date().toDateString();
 
     try {
-      let shouldComplete = true; // default track
-
-      // Find current status if possible
+      // Determine current completion state from history
+      let isCurrentlyCompleted = false; 
       const habitEntry = habitsWithHistory.find(h => h.habit.id === habit.id);
       if (habitEntry) {
-        // Calculate index: 0 is T-6, 6 is Today
         const today = new Date();
         const diffDays = Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-        // diffDays = 0 => index 6. diffDays = 6 => index 0.
         const index = 6 - diffDays;
         if (index >= 0 && index < 7) {
-          if (habitEntry.history[index]) {
-            shouldComplete = false; // It was true, so we undo
-          }
+          isCurrentlyCompleted = !!habitEntry.history[index];
         }
       }
 
+      const shouldComplete = !isCurrentlyCompleted;
+
+      if (isToday) {
+        // Find today's plan for this habit (at most 1)
+        const todayPlan = todayPlans.find(p => p.sourceId === habit.id && p.sourceType === 'habit');
+        
+        if (todayPlan) {
+          // Plan exists: just toggle its done status
+          await planRepository.update(todayPlan.id, { done: shouldComplete });
+          void loadData();
+          return;
+        }
+      }
+
+      // Fallback: No plan exists (or editing past days) - use legacy behavior
       if (!shouldComplete) {
         await habitRepository.undoCompletion(habit.id, date);
       } else {
         await habitRepository.trackCompletion(userId, habit.id, date, habit.minimumSessionMinutes);
       }
 
-      // Refresh all
       void loadData();
     } catch (error) {
       console.error('Failed to toggle completion:', error);
@@ -152,11 +181,11 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
   const { totalGoal, currentProgress } = weeklyProgress;
   const progressPercentage = totalGoal > 0 ? Math.min(100, (currentProgress / totalGoal) * 100) : 0;
 
-  // Today's Habits: Filter habits where selectedDays[today] is true
-  const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+  // Today's Habits: Filter habits that have a corresponding plan for today
   const todaysHabits = habitsWithHistory.filter(h => {
-    // @ts-expect-error dynamic access
-    return h.habit.selectedDays[todayName] === true;
+     // Check if there is a plan for this habit in todayPlans
+     // Typed as any temporarily
+     return todayPlans.some(p => p.sourceId === h.habit.id && p.sourceType === 'habit');
   });
 
   const renderProgressBar = (): React.JSX.Element => (
@@ -344,6 +373,25 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
     </View>
   );
 
+  const handleDeleteHabit = (habit: Habit): void => {
+    setHabitToDelete(habit);
+    setDeleteConfirmationVisible(true);
+  };
+
+  const executeDeleteHabit = async (): Promise<void> => {
+    if (!userId || !habitToDelete) return;
+    try {
+      await habitRepository.delete(habitToDelete.id);
+      setHabitModalVisible(false);
+      setDeleteConfirmationVisible(false); // Close confirmation
+      setHabitToDelete(null);
+      void loadData();
+    } catch (error) {
+       Alert.alert('Error', 'Failed to delete habit');
+    }
+  };
+
+
   return (
     <BaseScreen navigation={navigation} title="Habits" footer={null}>
       <FlatList
@@ -359,6 +407,7 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
         onClose={() => setHabitModalVisible(false)}
         onSave={data => void handleSaveHabit(data)}
         initialHabit={editingHabit}
+        onDelete={() => editingHabit && handleDeleteHabit(editingHabit)}
       />
 
       <HabitStatsModal
@@ -367,7 +416,21 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
         onClose={() => setHabitStatsVisible(false)}
         onEdit={() => statsHabit && openEditModal(statsHabit)}
       />
+
+      <ConfirmationModal
+        visible={deleteConfirmationVisible}
+        title="Delete Habit"
+        message="Are you sure you want to delete this habit? All history will be lost."
+        onConfirm={() => void executeDeleteHabit()}
+        onCancel={() => {
+          setDeleteConfirmationVisible(false);
+          setHabitToDelete(null);
+        }}
+        confirmLabel="Delete"
+        isDestructive
+      />
     </BaseScreen>
+
   );
 }
 

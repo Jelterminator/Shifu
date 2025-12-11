@@ -5,6 +5,8 @@ import type {
   HabitRow,
   JournalEntry,
   JournalEntryRow,
+  Plan,
+  PlanRow,
   Project,
   ProjectRow,
   Task,
@@ -99,7 +101,7 @@ export function mapHabitToRow(habit: Habit): HabitRow {
 /**
  * Calculate urgency metrics based on deadline and effort.
  */
-function determineUrgency(
+export function determineUrgency(
   deadline?: Date,
   effortMinutes: number = 30
 ): {
@@ -271,5 +273,42 @@ export function mapAppointmentToRow(appointment: Appointment): AppointmentRow {
     linked_object_ids: safeStringify(appointment.linkedObjectIds),
     created_at: appointment.createdAt.toISOString(),
     updated_at: appointment.updatedAt.toISOString(),
+  };
+}
+
+export function mapPlanRowToPlan(row: PlanRow): Plan {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    description: row.description || undefined,
+    startTime: new Date(row.start_time),
+    endTime: new Date(row.end_time),
+    done: row.done === null ? null : toBool(row.done),
+    sourceId: row.source_id || undefined,
+    sourceType: row.source_type || undefined,
+    rating: row.rating || undefined,
+    linkedObjectIds: safeParse(row.linked_object_ids, []),
+    createdAt: new Date(row.created_at),
+    completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+  };
+}
+
+export function mapPlanToRow(plan: Plan): PlanRow {
+  return {
+    id: plan.id,
+    user_id: plan.userId,
+    name: plan.name,
+    description: plan.description || null,
+    start_time: plan.startTime.toISOString(),
+    end_time: plan.endTime.toISOString(),
+    done: plan.done === null ? null : toInt(plan.done as boolean),
+    source_id: plan.sourceId || null,
+    source_type: plan.sourceType || null,
+    rating: plan.rating || null,
+    linked_object_ids: safeStringify(plan.linkedObjectIds),
+    created_at: plan.createdAt.toISOString(),
+    updated_at: plan.createdAt.toISOString(), // Plans are append-only mostly, but row needs it 
+    completed_at: plan.completedAt ? plan.completedAt.toISOString() : null,
   };
 }

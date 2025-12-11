@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BORDER_RADIUS, SHADOWS, SPACING, URGENCY_COLORS } from '../constants/theme';
+import { determineUrgency } from '../db/mappers';
 import { useThemeStore } from '../stores/themeStore';
 import type { Task } from '../types/database';
 
@@ -9,19 +10,46 @@ interface TaskCardProps {
   onPress?: () => void;
   onToggleComplete?: () => void;
   showSubtasks?: boolean;
+  mode?: 'default' | 'planning';
+  index?: number;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
+  /** Override for completion status (e.g., from Plan.done) */
+  isCompleted?: boolean;
+  /** Force a neutral/default color instead of urgency-based color */
+  useDefaultColor?: boolean;
 }
 
-export function TaskCard({ task, onPress, onToggleComplete }: TaskCardProps): React.JSX.Element {
+export function TaskCard({
+  task,
+  onPress,
+  onToggleComplete,
+  mode = 'default',
+  index,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
+  isCompleted,
+  useDefaultColor,
+}: TaskCardProps): React.JSX.Element {
   const { colors } = useThemeStore();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // TODO: Implement actual urgency logic shared with Repo or Helper
-  // For now, mapping effort/deadline to T-levels if computed in Repo, OR computing here if simple
-  // Assuming Repo might return a computed 'urgencyLevel' if we extend the type, checking simple logic:
+  // Use override if provided, otherwise fall back to task property
+  const completed = isCompleted ?? task.isCompleted;
 
-  // Placeholder urgency logic for UI visual (Replace with shared logic)
-  const urgencyTier = 'T1'; // Defaulting for visual
-  const tierColor = URGENCY_COLORS[urgencyTier as keyof typeof URGENCY_COLORS] || URGENCY_COLORS.T4;
+  // Urgency logic
+  const deadlineDate = typeof task.deadline === 'string' ? new Date(task.deadline) : task.deadline;
+  const urgencyTier = determineUrgency(deadlineDate, task.effortMinutes).urgencyLevel; // Defaulting for visual
+  
+  // If urgency is T6 or CHORE, use the current phase color (standard color of the moment)
+  const isLowUrgency = urgencyTier === 'T6' || urgencyTier === 'CHORE';
+  const tierColor = (useDefaultColor || isLowUrgency) 
+    ? colors.primary 
+    : URGENCY_COLORS[urgencyTier as keyof typeof URGENCY_COLORS];
 
   const handlePress = (): void => {
     setIsExpanded(!isExpanded);
@@ -39,6 +67,8 @@ export function TaskCard({ task, onPress, onToggleComplete }: TaskCardProps): Re
     return `Dec ${date.getDate()}`; // TODO: Real format
   };
 
+  const isPlanning = mode === 'planning';
+
   return (
     <TouchableOpacity
       style={[styles.container, { backgroundColor: colors.surface, borderColor: tierColor }]}
@@ -49,15 +79,44 @@ export function TaskCard({ task, onPress, onToggleComplete }: TaskCardProps): Re
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>{task.title}</Text>
-          <TouchableOpacity
-            onPress={onToggleComplete}
-            style={[styles.checkbox, { borderColor: colors.textSecondary }]}
-          >
-            {task.isCompleted && (
-              <View style={[styles.checked, { backgroundColor: colors.primary }]} />
-            )}
-          </TouchableOpacity>
+          <Text style={[styles.title, { color: colors.text }]}>
+            {isPlanning && index !== undefined ? `${index + 1}. ` : ''}
+            {task.title}
+          </Text>
+
+          {isPlanning ? (
+            <View style={styles.moveButtons}>
+              <TouchableOpacity
+                onPress={e => {
+                  e.stopPropagation();
+                  onMoveUp?.();
+                }}
+                disabled={isFirst}
+                style={[styles.moveBtn, { opacity: isFirst ? 0.3 : 1 }]}
+              >
+                <Text style={{ fontSize: 16, color: colors.text }}>▲</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={e => {
+                  e.stopPropagation();
+                  onMoveDown?.();
+                }}
+                disabled={isLast}
+                style={[styles.moveBtn, { opacity: isLast ? 0.3 : 1 }]}
+              >
+                <Text style={{ fontSize: 16, color: colors.text }}>▼</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              onPress={onToggleComplete}
+              style={[styles.checkbox, { borderColor: colors.textSecondary }]}
+            >
+              {completed && (
+                <View style={[styles.checked, { backgroundColor: colors.primary }]} />
+              )}
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.meta}>
@@ -137,5 +196,12 @@ const styles = StyleSheet.create({
   noteText: {
     fontSize: 14,
     fontStyle: 'italic',
+  },
+  moveButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  moveBtn: {
+    padding: 4,
   },
 });

@@ -17,11 +17,12 @@ import { AddEditTaskModal } from '../components/modals/AddEditTaskModal';
 import { ListDetailsModal } from '../components/modals/ListDetailsModal';
 import { TaskCard } from '../components/TaskCard';
 import { BORDER_RADIUS, SPACING } from '../constants/theme';
+import { planRepository } from '../db/repositories/PlanRepository';
 import { taskRepository } from '../db/repositories/TaskRepository';
 import { useListStore } from '../stores/listStore';
 import { useThemeStore } from '../stores/themeStore';
 import { useUserStore } from '../stores/userStore';
-import type { Task } from '../types/database';
+import type { Plan, Task } from '../types/database';
 import type { MainTabScreenProps } from '../types/navigation';
 
 export type TasksScreenProps = MainTabScreenProps<'Tasks'>;
@@ -32,6 +33,8 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
   const { lists } = useListStore();
 
   const [urgentTasks, setUrgentTasks] = useState<Task[]>([]);
+  const [todayPlans, setTodayPlans] = useState<Plan[]>([]);
+  const [todayTasks, setTodayTasks] = useState<Task[]>([]);
   const [listSummaries, setListSummaries] = useState<
     Record<string, { count: number; preview: Task[] }>
   >({});
@@ -63,6 +66,24 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
       // Fetch list summaries
       const summaries = await taskRepository.getListSummaries(user.id!, lists);
       setListSummaries(summaries);
+
+      // Fetch today's plans for tasks
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      const plansForToday = await planRepository.getForDateRange(user.id!, startOfDay, endOfDay);
+      const taskPlans = plansForToday.filter(p => p.sourceType === 'task');
+      setTodayPlans(taskPlans);
+
+      // Fetch corresponding tasks
+      const taskIds = [...new Set(taskPlans.map(p => p.sourceId).filter(Boolean))] as string[];
+      const tasksForToday: Task[] = [];
+      for (const id of taskIds) {
+        const t = await taskRepository.getById(id);
+        if (t) tasksForToday.push(t);
+      }
+      setTodayTasks(tasksForToday);
     } catch (error) {
       console.error('Failed to load tasks:', error);
     } finally {
@@ -79,11 +100,56 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
   const handleTaskComplete = async (task: Task): Promise<void> => {
     if (!user) return;
     try {
-      await taskRepository.update(task.id, { isCompleted: !task.isCompleted });
+      const newCompleted = !task.isCompleted;
+      
+      // 1. Mark task complete
+      await taskRepository.update(task.id, { isCompleted: newCompleted });
+
+      // 2. Sync: Update plans
+      const allPlansForTask = await planRepository.getBySourceId(user.id!, task.id, 'task');
+
+      if (newCompleted) {
+        if (allPlansForTask.length === 0) {
+          // Unplanned completion: Create a hidden "Task Completion" plan
+          // This ensures stats (if any) could track it, but Agenda hides it
+          await planRepository.create(user.id!, {
+             name: 'Task Completion',
+             description: 'Unplanned completion',
+             startTime: new Date(),
+             endTime: new Date(new Date().getTime() + (task.effortMinutes || 30) * 60000),
+             done: true,
+             sourceId: task.id,
+             sourceType: 'task',
+             linkedObjectIds: []
+          });
+        } else {
+          // Scheduled: Mark all existing plans as done
+          for (const plan of allPlansForTask) {
+            await planRepository.update(plan.id, { done: true });
+          }
+        }
+      } else {
+        // Uncompleting
+        for (const plan of allPlansForTask) {
+           if (plan.name === 'Task Completion') {
+             // If it was an unplanned completion plan, delete it (clean up)
+             await planRepository.delete(plan.id);
+           } else {
+             await planRepository.update(plan.id, { done: false });
+           }
+        }
+      }
+
       await loadData(); // Refresh to remove/update
     } catch (e) {
       console.error('Failed to update task', e);
     }
+  };
+
+  // Handler for toggling from Today's Tasks section - uses same logic
+  const handleTodayTaskToggle = async (task: Task): Promise<void> => {
+    // Just call the same handler - when task is completed, all plans get synced
+    await handleTaskComplete(task);
   };
 
   const handleEditTask = (task: Task): void => {
@@ -155,36 +221,35 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
           />
         }
       >
-        {/* Urgent Section */}
-        {urgentTasks.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>⚡ Most Urgent</Text>
-              <TouchableOpacity onPress={() => {}}>
-                {/* Placeholder for header actions if needed */}
-              </TouchableOpacity>
-            </View>
+        {/* 1. Today's Tasks Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>📅 Today&apos;s Tasks</Text>
+          {todayTasks.length > 0 ? (
             <FlatList
-              data={urgentTasks}
-              renderItem={({ item }) => (
-                <TaskCard
-                  task={item}
-                  onPress={() => handleEditTask(item)}
-                  onToggleComplete={() => void handleTaskComplete(item)}
-                />
-              )}
+              data={todayTasks}
+              renderItem={({ item }) => {
+                const plan = todayPlans.find(p => p.sourceId === item.id);
+                return (
+                  <TaskCard
+                    task={item}
+                    isCompleted={plan?.done ?? item.isCompleted}
+                    useDefaultColor={true}
+                    onPress={() => handleEditTask(item)}
+                    onToggleComplete={() => void handleTodayTaskToggle(item)}
+                  />
+                );
+              }}
               keyExtractor={item => item.id}
               scrollEnabled={false}
             />
-            <TouchableOpacity style={{ paddingVertical: SPACING.m }} onPress={handleViewAllTasks}>
-              <Text style={{ fontSize: 14, fontWeight: '500', color: phaseColor }}>
-                View all tasks sorted by priority →
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+          ) : (
+            <Text style={{ color: colors.textSecondary, fontStyle: 'italic', marginBottom: SPACING.m }}>
+              No tasks scheduled for today.
+            </Text>
+          )}
+        </View>
 
-        {/* My Lists Section */}
+        {/* 2. My Lists Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>📋 My Lists</Text>
           <FlatList
@@ -210,13 +275,43 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
           </TouchableOpacity>
         </View>
 
-        {/* Completed Tasks Link */}
+        {/* 3. Most Urgent Section */}
+        {urgentTasks.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>⚡ Most Urgent</Text>
+            </View>
+            <FlatList
+              data={urgentTasks}
+              renderItem={({ item }) => (
+                <TaskCard
+                  task={item}
+                  onPress={() => handleEditTask(item)}
+                  onToggleComplete={() => void handleTaskComplete(item)}
+                />
+              )}
+              keyExtractor={item => item.id}
+              scrollEnabled={false}
+            />
+          </View>
+        )}
+
+        {/* Footer Actions */}
         <TouchableOpacity
           style={{ paddingVertical: SPACING.m, alignItems: 'center' }}
+          onPress={handleViewAllTasks}
+        >
+          <Text style={{ fontSize: 14, fontWeight: '500', color: phaseColor }}>
+            View all tasks sorted by urgency →
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{ paddingVertical: SPACING.s, alignItems: 'center' }}
           onPress={handleViewCompletedTasks}
         >
           <Text style={{ fontSize: 14, fontWeight: '500', color: phaseColor }}>
-            View Completed Tasks →
+            View completed tasks →
           </Text>
         </TouchableOpacity>
 

@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { BORDER_RADIUS, KEYWORDS, SHADOWS, SPACING } from '../../constants';
 // Note: imports adjusted to match existing file structure if needed, or assuming constants/index exports them.
@@ -18,6 +18,8 @@ import { useUserStore } from '../../stores/userStore';
 import type { Project, Task } from '../../types/database';
 import { TaskCard } from '../TaskCard';
 import { AddEditTaskModal } from './AddEditTaskModal';
+import { ConfirmationModal } from './ConfirmationModal';
+
 
 interface AddEditProjectModalProps {
   visible: boolean;
@@ -42,6 +44,8 @@ export function AddEditProjectModal({
   const [deadlineText, setDeadlineText] = useState('');
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deleteConfVisible, setDeleteConfVisible] = useState(false);
+
 
   // Subtask logic
   const [currentProject, setCurrentProject] = useState<Project | undefined>(project);
@@ -84,6 +88,55 @@ export function AddEditProjectModal({
       setSelectedKeywords(initialKeywords);
     }
   }, [visible, project, initialKeywords, loadSubtasks]);
+
+  const handleMoveTask = async (index: number, direction: 'up' | 'down'): Promise<void> => {
+    if (!currentProject) return;
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === subtasks.length - 1) return;
+
+    const newSubtasks = [...subtasks];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+    // Swap
+    [newSubtasks[index], newSubtasks[targetIndex]] = [newSubtasks[targetIndex], newSubtasks[index]];
+
+    // Assign positions
+    const updates = newSubtasks.map((t, i) => ({
+      id: t.id,
+      position: i,
+    }));
+    
+    // Optimistic update
+    setSubtasks(newSubtasks);
+
+    // DB Update
+    try {
+      await taskRepository.updatePositions(updates);
+    } catch (error) {
+       console.error("Failed to reorder", error);
+       Alert.alert("Error", "Failed to save order");
+       void loadSubtasks(currentProject.id); // Revert
+    }
+  };
+
+  const handleDelete = (): void => {
+    if (!currentProject) return;
+    setDeleteConfVisible(true);
+  };
+
+  const executeDelete = async (): Promise<void> => {
+     if (!currentProject) return;
+     try {
+         await projectRepository.delete(currentProject.id);
+         onSave?.();
+         onClose();
+         setDeleteConfVisible(false);
+     } catch (e) {
+         console.error(e);
+         Alert.alert('Error', 'Failed to delete project');
+     }
+  };
+
 
   const handleSave = async (openTasksAfter = false): Promise<void> => {
     if (!user || !user.id || !title.trim()) {
@@ -236,7 +289,7 @@ export function AddEditProjectModal({
             {currentProject && (
               <View style={{ marginTop: SPACING.l }}>
                 <Text style={[styles.label, { marginTop: 0, color: colors.textSecondary }]}>
-                  Subtasks
+                  Subtasks (Planned Order)
                 </Text>
 
                 {subtasks.length === 0 ? (
@@ -250,9 +303,17 @@ export function AddEditProjectModal({
                     No subtasks yet.
                   </Text>
                 ) : (
-                  subtasks.map(task => (
+                  subtasks.map((task, index) => (
                     <View key={task.id} style={{ marginBottom: SPACING.s }}>
-                      <TaskCard task={task} />
+                      <TaskCard 
+                        task={task} 
+                        mode="planning"
+                        index={index}
+                        isFirst={index === 0}
+                        isLast={index === subtasks.length - 1}
+                        onMoveUp={() => void handleMoveTask(index, 'up')}
+                        onMoveDown={() => void handleMoveTask(index, 'down')}
+                      />
                     </View>
                   ))
                 )}
@@ -268,7 +329,6 @@ export function AddEditProjectModal({
           </ScrollView>
 
           <View style={{ gap: SPACING.s, marginTop: SPACING.m }}>
-            {/* Editing existing project */}
             {currentProject && (
               <TouchableOpacity
                 style={[
@@ -280,6 +340,18 @@ export function AddEditProjectModal({
               >
                 <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Save Changes'}</Text>
               </TouchableOpacity>
+            )}
+
+            {currentProject && (
+                <TouchableOpacity
+                    style={[
+                        styles.saveButton,
+                        { backgroundColor: 'transparent', marginTop: SPACING.s },
+                    ]}
+                    onPress={handleDelete}
+                >
+                    <Text style={{ color: '#FF3B30', fontWeight: '600' }}>Delete Project</Text>
+                </TouchableOpacity>
             )}
 
             {/* Creating new project -> Enforce adding tasks */}
@@ -311,10 +383,22 @@ export function AddEditProjectModal({
               if (currentProject) void loadSubtasks(currentProject.id);
             }}
           />
+
         </View>
       </View>
+
+      <ConfirmationModal
+        visible={deleteConfVisible}
+        title="Delete Project"
+        message="Are you sure you want to delete this project? All subtasks will be deleted."
+        onConfirm={() => void executeDelete()}
+        onCancel={() => setDeleteConfVisible(false)}
+        confirmLabel="Delete"
+        isDestructive
+      />
     </Modal>
   );
+
 }
 
 const styles = StyleSheet.create({
@@ -379,7 +463,8 @@ const styles = StyleSheet.create({
     gap: SPACING.s,
   },
   keywordChip: {
-    width: '30%',
+    width: '31%',
+    flexGrow: 1,
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,

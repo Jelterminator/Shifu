@@ -160,3 +160,34 @@ export interface Appointment {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Plans
+export interface PlanRow extends BaseEntity {
+  user_id: string;
+  name: string;
+  description: string | null;
+  start_time: string;
+  end_time: string;
+  done: number | null;
+  source_id: string | null;
+  source_type: 'habit' | 'task' | null;
+  rating: number | null;
+  linked_object_ids: string | null;
+  completed_at: string | null;
+}
+
+export interface Plan {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  startTime: Date;
+  endTime: Date;
+  done: boolean | null;
+  sourceId?: string;
+  sourceType?: 'habit' | 'task';
+  rating?: number;
+  linkedObjectIds: string[];
+  createdAt: Date;
+  completedAt?: Date;
+}

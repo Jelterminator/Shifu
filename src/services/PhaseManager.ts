@@ -1,3 +1,4 @@
+import { PHASE_CONFIG } from '../constants/phases';
 import { calculateRomanHours as calculateRomanHoursUtil } from '../utils/sunTimeUtils';
 
 export interface RomanHour {
@@ -15,39 +16,6 @@ export interface WuXingPhase {
   qualities: string;
   idealTasks: string[];
 }
-
-const PHASE_MAP = {
-  WOOD: {
-    color: '#4A7C59',
-    romanHours: [21, 22, 23, 0, 1],
-    qualities: 'Growth, Planning, Vitality. Spiritual centering & movement.',
-    idealTasks: ['spiritual', 'planning', 'movement'],
-  },
-  FIRE: {
-    color: '#E63946',
-    romanHours: [2, 3, 4, 5, 6],
-    qualities: 'Peak energy, expression. Deep work & execution.',
-    idealTasks: ['deep_work', 'creative', 'pomodoro'],
-  },
-  EARTH: {
-    color: '#C49551',
-    romanHours: [7, 8],
-    qualities: 'Stability, nourishment. Lunch & restoration.',
-    idealTasks: ['rest', 'integration', 'light_tasks'],
-  },
-  METAL: {
-    color: '#A8AAAD',
-    romanHours: [9, 10, 11, 12],
-    qualities: 'Precision, organization. Admin & review.',
-    idealTasks: ['admin', 'planning', 'study'],
-  },
-  WATER: {
-    color: '#457B9D',
-    romanHours: [13, 14, 15, 16, 17, 18, 19, 20],
-    qualities: 'Rest, consolidation. Wind-down & recovery.',
-    idealTasks: ['rest', 'reflection', 'recovery'],
-  },
-};
 
 // Default location (Amsterdam) for fallback
 const DEFAULT_LOCATION = {
@@ -94,9 +62,9 @@ class PhaseManager {
    */
   private ensureLocation(): { latitude: number; longitude: number; timezone: string } {
     if (!this.userLocation) {
-      console.warn(
-        `⚠️  PhaseManager not initialized. Using default location (${DEFAULT_LOCATION.latitude}, ${DEFAULT_LOCATION.longitude})`
-      );
+      // console.info(
+      //   `ℹ️  PhaseManager not initialized. Using default location (${DEFAULT_LOCATION.latitude}, ${DEFAULT_LOCATION.longitude})`
+      // );
       return DEFAULT_LOCATION;
     }
     return this.userLocation;
@@ -124,14 +92,14 @@ class PhaseManager {
     if (romanHours.length === 0) return phases;
 
     // Helper to find phase name for a given hour
-    const getPhaseName = (hour: number): keyof typeof PHASE_MAP | null => {
-      for (const [name, config] of Object.entries(PHASE_MAP)) {
-        if (config.romanHours.includes(hour)) return name as keyof typeof PHASE_MAP;
+    const getPhaseName = (hour: number): keyof typeof PHASE_CONFIG | null => {
+      for (const [name, config] of Object.entries(PHASE_CONFIG)) {
+        if (config.romanHours.includes(hour)) return name as keyof typeof PHASE_CONFIG;
       }
       return null;
     };
 
-    let currentPhaseName: keyof typeof PHASE_MAP | null = null;
+    let currentPhaseName: keyof typeof PHASE_CONFIG | null = null;
     let currentBlock: RomanHour[] = [];
 
     // Iterate sorted hours (0..23)
@@ -163,17 +131,19 @@ class PhaseManager {
 
   private pushPhaseBlock(
     phases: WuXingPhase[],
-    name: keyof typeof PHASE_MAP,
+    name: keyof typeof PHASE_CONFIG,
     block: RomanHour[]
   ): void {
-    const config = PHASE_MAP[name];
+    const config = PHASE_CONFIG[name];
+    if (!config) return;
+
     const first = block[0];
     const last = block[block.length - 1];
 
     if (!first || !last) return;
 
     phases.push({
-      name,
+      name: name as any, // Cast to match WuXingPhase (strict union vs string key)
       startTime: first.startTime,
       endTime: last.endTime,
       color: config.color,

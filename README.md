@@ -20,7 +20,9 @@ device. No company servers. No data collection. Just you, your habits, and an in
 
 - 🎨 **Dynamic Wu Xing Theming** - Phase-aware color schemes that adapt to solar time
 - 📍 **Location-Based Solar Calculus** - Accurate Roman hour calculations using sunrise/sunset
+- 🧠 **SchedulerAI** - Intelligent "Best Fit & Spill" algorithm that generates daily plans respecting your energy phases
 - 🙏 **Spiritual Practice Integration** - Multi-tradition daily practice scheduler
+- 🛡️ **Respectful Planning** - Automatically avoids scheduling tasks during your defining Sleep and Work blocks
 - 🌓 **Onboarding Flow** - Comprehensive setup for location, practices, and preferences
 - 📅 **Agenda Landing** - Quick access to your daily schedule
 
@@ -75,6 +77,7 @@ shifu/
 │   │   ├── AgendaScreen.tsx    # Main dashboard
 │   │   └── ...
 │   ├── services/
+│   │   ├── ai/                 # SchedulerAI Logic
 │   │   ├── PhaseManager.ts     # Wu Xing phase calculations
 │   │   └── data/               # Anchors & Practices
 │   ├── stores/                 # State management
@@ -110,6 +113,14 @@ familiar API.
 - **Roman Hours** calculation (unequal hours) for accurate circadian alignment.
 - **Wu Xing Phases** mapped automatically to solar time.
 
+### 🤖 SchedulerAI (V1)
+
+The core intelligence of Shifu is the **SchedulerAI**. It uses a "Best Fit & Spill" algorithm to organize your day:
+1. **Phase Matching:** Matches tasks to your current Wu Xing energy phase (e.g., Creative work in Fire phase).
+2. **Best Fit:** Finds the smallest sufficient time slot for a task to preserve large blocks for deep work.
+3. **Spill & Fill:** Intelligently splits large tasks into the biggest available slots if continuous time isn't available.
+4. **Boundary Respect:** Strictly observes your configured Sleep and Work boundaries.
+
 ---
 
 ## Contributing
@@ -118,12 +129,13 @@ familiar API.
 2. Create a feature branch
 3. Run `npm run validate`
 4. Submit PR
+
 ## Recent Updates
 
-- Refactored database layer with new vector handling.
-- Updated state management to custom store implementation.
-- Fixed various linting errors and improved TypeScript safety.
-- Implemented settings screen and agenda refinements.
+- **SchedulerAI Implementation:** Advanced heuristic scheduling with phase awareness.
+- **Wu Xing Constants:** Centralized logic for Elements, Colors, and Keywords.
+- **Scheduling Fixes:** Resolved user ID segregation and added future-plan clearing.
+- **Performance:** Optimized database queries for task retrieval.
 
 
 ## License

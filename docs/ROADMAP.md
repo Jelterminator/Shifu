@@ -290,9 +290,9 @@ Animations, Reanimated 2, Dynamic Styling.
 
 - **The Phase Clock (Core UI)**
   
-  - [ ] **SVG Implementation:** Draw dynamic arcs based on current time/location.
-  - [ ] **Animation:** Implement "Breathing" effect and rotation using `react-native-reanimated`.
-  - [ ] **Logic:** Connect to `Anchors.ts` to calculate solar phases based on GPS/Timezone.
+  - [x] **SVG Implementation:** Draw dynamic arcs based on current time/location.
+  - [x] **Animation:** Implement "Breathing" effect and rotation using `react-native-reanimated`.
+  - [x] **Logic:** Connect to `Anchors.ts` to calculate solar phases based on GPS/Timezone.
 
 - **Core Screens**
   
@@ -303,41 +303,11 @@ Animations, Reanimated 2, Dynamic Styling.
 
 ---
 
-## 🔌 Phase 4: Integrations & Synchronization (Weeks 8-9)
 
-**Goal:** Connect to the outside world without compromising privacy. **Technical Focus:** OAuth 2.0,
-API Client, Sync Logic.
-
-- **Auth & Permissions**
-  
-  - [x] Implement Onboarding Flow (Location, Sleep Hours, Spiritual preferences).
-  - [x] Request permissions: Location (Coarse)
-  - [ ] Notifications.
-
-- **Google Integration (Client-Side)**
-  
-  - [ ] Implement Google Sign-In (OAuth2).
-  - [ ] **Calendar Sync:** Fetch events, map to Appointments.
-  - [ ] **Tasks Sync:** Two-way sync with Google Tasks (optional).
-
-- **Microsoft Integration (Client-Side)**
-  
-  * [ ] Implement Microsoft Sign-In.
-  * [ ] **Calendar Sync:** Fetch events, map to Appointments.
-
-- **Apple Integration (Client-Side)**
-  
-  * [ ] Implement Apple Sign-In.
-  * [ ] **Calendar Sync:** Fetch events, map to Appointments.
-
-- **Conflict Resolution**
-  
-  - [ ] Implement "Last Write Wins" logic for simple conflicts.
-  - [ ] Build UI for manual conflict resolution (User decides).
 
 ---
 
-## 🧠 Phase 5: Cognition (AI Foundation) (Weeks 10-12)
+## 🧠 Phase 4: Cognition (AI Foundation) (Weeks 10-12)
 
 **Goal:** Enable on-device inference and the Chat interface. **Technical Focus:** Transformers.js,
 ONNX Runtime, WebAssembly.
@@ -351,7 +321,7 @@ ONNX Runtime, WebAssembly.
 
 - **The Coach (Chat UI)**
   
-  - [ ] Build Chat Interface: Message bubbles, typing indicators.
+  - [x] Build Chat Interface: Message bubbles, typing indicators.
   - [ ] **Prompt Engineering:** Create system prompts injected with current time/phase context.
   - [ ] **Quick Actions:** Implement chip-based prompts ("Optimize Today", "Add Task").
 
@@ -359,6 +329,39 @@ ONNX Runtime, WebAssembly.
   
   - [ ] Implement model lazy-loading and unloading to manage RAM.
   - [ ] Add "Device Tier" detection to disable AI on low-end phones.
+
+---
+
+## 🔌 Phase 5: Integrations & Synchronization (Weeks 8-9)
+
+**Goal:** Connect to the outside world without compromising privacy. **Technical Focus:** OAuth 2.0,API Client, Sync Logic.
+
+* **Auth & Permissions**
+  
+  * [x] Implement Onboarding Flow (Location, Sleep Hours, Spiritual preferences).
+  * [x] Request permissions: Location (Coarse)
+  * [ ] Notifications.
+
+* **Google Integration (Client-Side)**
+  
+  * [ ] Implement Google Sign-In (OAuth2).
+  * [ ] **Calendar Sync:** Fetch events, map to Appointments.
+  * [ ] **Tasks Sync:** Two-way sync with Google Tasks (optional).
+
+* **Microsoft Integration (Client-Side)**
+  
+  * [ ] Implement Microsoft Sign-In.
+  * [ ] **Calendar Sync:** Fetch events, map to Appointments.
+
+* **Apple Integration (Client-Side)**
+  
+  * [ ] Implement Apple Sign-In.
+  * [ ] **Calendar Sync:** Fetch events, map to Appointments.
+
+* **Conflict Resolution**
+  
+  * [ ] Implement "Last Write Wins" logic for simple conflicts.
+  * [ ] Build UI for manual conflict resolution (User decides).
 
 ---
 

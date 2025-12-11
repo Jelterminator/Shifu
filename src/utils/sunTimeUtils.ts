@@ -50,7 +50,12 @@ const getSunTimes = (date: Date, coordinates: Coordinates): SunTimes => {
       throw new Error('Invalid coordinates provided');
     }
 
-    const sunData = SunCalc.getTimes(date, latitude, longitude);
+    // Use noon of the given date to avoid timezone issues shifting the date to the previous day
+    // (e.g. 00:00 Local -> 23:00 Previous Day UTC) which causes SunCalc to return the wrong day's times.
+    const noon = new Date(date);
+    noon.setHours(12, 0, 0, 0);
+
+    const sunData = SunCalc.getTimes(noon, latitude, longitude);
 
     // Handle edge cases for polar regions
     if (sunData.sunrise.getTime() === sunData.sunset.getTime()) {

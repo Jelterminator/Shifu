@@ -2,20 +2,19 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity } from 'react-native';
 
+import { useUserStore } from '../../stores/userStore';
 import type { RootStackParamList } from '../../types/navigation';
-// import { useUserStore } from '../../stores/userStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SleepHoursSetup'>;
 
 export const SleepHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [sleepStart, setSleepStart] = useState('22:00');
   const [sleepEnd, setSleepEnd] = useState('06:00');
-  // const setUser = useUserStore((state) => state.setUser);
-  // const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
+  const user = useUserStore((state) => state.user);
 
   const handleContinue = (): void => {
-    // setUser({ ...user }); // Would save sleep hours here if stored in UserStore
-    // For now we navigate
+    setUser({ ...user, sleepStart, sleepEnd });
     navigation.navigate('SpiritualPracticesSetup');
   };
 

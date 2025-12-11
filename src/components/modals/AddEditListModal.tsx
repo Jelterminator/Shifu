@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { BORDER_RADIUS, DAYS, KEYWORDS, PHASES, SPACING } from '../../constants';
 import { useListStore } from '../../stores/listStore';
 import { useThemeStore } from '../../stores/themeStore';
+import { ConfirmationModal } from './ConfirmationModal';
+
 
 interface AddEditListModalProps {
   visible: boolean;
@@ -27,7 +29,7 @@ export function AddEditListModal({
   initialListId,
 }: AddEditListModalProps): React.JSX.Element {
   const { colors, phaseColor } = useThemeStore();
-  const { addList, updateList } = useListStore();
+  const { addList, updateList, deleteList } = useListStore();
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('📝');
@@ -36,6 +38,23 @@ export function AddEditListModal({
   const [planOutsideWork, setPlanOutsideWork] = useState(true);
   const [allowedDays, setAllowedDays] = useState<string[]>(DAYS);
   const [allowedPhases, setAllowedPhases] = useState<string[]>([...PHASES]);
+  const [deleteConfVisible, setDeleteConfVisible] = useState(false);
+
+
+  const handleDelete = (): void => {
+    if (!initialListId) return;
+    setDeleteConfVisible(true);
+  };
+
+  const executeDelete = (): void => {
+     if (!initialListId) return;
+     deleteList(initialListId);
+     onSave?.(); // Refresh parent
+     onClose();
+     setDeleteConfVisible(false);
+     resetForm();
+  };
+
 
   const handleSave = (): void => {
     const listData = {
@@ -231,9 +250,32 @@ export function AddEditListModal({
           >
             <Text style={styles.saveButtonText}>Save List</Text>
           </TouchableOpacity>
+
+          {initialListId && (
+            <TouchableOpacity
+              style={[
+                styles.saveButton,
+                { backgroundColor: 'transparent', marginTop: SPACING.s, borderStartColor: 'transparent' },
+              ]}
+              onPress={handleDelete}
+            >
+              <Text style={{ color: '#FF3B30', fontWeight: '600' }}>Delete List</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
+
+      <ConfirmationModal
+        visible={deleteConfVisible}
+        title="Delete List"
+        message="Are you sure you want to delete this list? This cannot be undone."
+        onConfirm={executeDelete}
+        onCancel={() => setDeleteConfVisible(false)}
+        confirmLabel="Delete"
+        isDestructive
+      />
     </Modal>
+
   );
 }
 
@@ -305,7 +347,8 @@ const styles = StyleSheet.create({
     gap: SPACING.s,
   },
   keywordChip: {
-    width: '30%',
+    width: '31%',
+    flexGrow: 1,
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,
