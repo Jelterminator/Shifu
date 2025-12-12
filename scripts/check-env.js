@@ -62,4 +62,3 @@ if (missingVars.length > 0) {
 
 console.log('✅ Environment configuration valid.');
 console.log(`   APP_ENV: ${process.env.APP_ENV}`);
-

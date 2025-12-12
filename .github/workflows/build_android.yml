@@ -1,0 +1,116 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [master, develop]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Build profile'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Create .env.local
+        run: |
+          cat > .env.local << EOF
+          APP_ENV=production
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          APP_VERSION=${{ github.ref_name }}
+          BUILD_NUMBER=${{ github.run_number }}
+          EOF
+
+      - name: Determine build profile
+        id: profile
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "profile=${{ github.event.inputs.profile }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "profile=production" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "profile=preview" >> $GITHUB_OUTPUT
+          else
+            echo "profile=development" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build APK locally and wait
+        run: |
+          eas build --platform android \
+            --profile ${{ steps.profile.outputs.profile }} \
+            --local \
+            --non-interactive
+        # This command will wait until the APK is generated locally on the runner machine
+
+      # The upload-artifact step below will now find the file:
+      - name: Upload APK artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shifu-${{ steps.profile.outputs.profile }}-${{ github.run_number }}.apk
+          path: "*.apk"
+          retention-days: 30
+
+
+      - name: Upload APK artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shifu-${{ steps.profile.outputs.profile }}-${{ github.run_number }}.apk
+          path: "*.apk"
+          retention-days: 30
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "*.apk"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment PR with APK link
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Android APK built successfully! Check the Actions artifacts to download.'
+            })

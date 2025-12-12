@@ -61,7 +61,6 @@ export class SchedulerAI {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     await this.scheduleDay(userId, tomorrow, false, scheduledIds);
-
   }
 
   private async scheduleDay(
@@ -70,7 +69,6 @@ export class SchedulerAI {
     fromNow: boolean,
     externalScheduledIds: Set<string>
   ): Promise<void> {
-
     const schedulingStart = fromNow ? new Date() : new Date(date);
     if (!fromNow) schedulingStart.setHours(0, 0, 0, 0);
     const startTimeMs = schedulingStart.getTime();

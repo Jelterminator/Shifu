@@ -16,8 +16,6 @@ interface AppConfig {
   googleClientId: string | undefined;
   googleClientSecret: string | undefined;
 
-
-
   // App versioning
   appVersion: string;
   buildNumber: string;
@@ -57,8 +55,6 @@ function buildConfig(): AppConfig {
     // Google OAuth credentials
     googleClientId: getEnvVar('GOOGLE_CLIENT_ID'),
     googleClientSecret: getEnvVar('GOOGLE_CLIENT_SECRET'),
-
-
 
     // App versioning (from package.json or build system)
     appVersion: getEnvVar('APP_VERSION', '0.1.0'),
