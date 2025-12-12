@@ -311,7 +311,7 @@ Animations, Reanimated 2, Dynamic Styling.
   * [x] Linting
   * [x] Jest
   - [x] Clean up project
-  * [x] Get GitHub uploading clean
+  * [ ] Get it uploading to GitHub clean
 
 * **To Native Platform**
   
