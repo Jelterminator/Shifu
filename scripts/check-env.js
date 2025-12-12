@@ -49,7 +49,7 @@ function loadEnv(filePath) {
 loadEnv(path.join(__dirname, '..', '.env'));
 loadEnv(path.join(__dirname, '..', '.env.local'));
 
-const requiredVars = ['APP_ENV', 'GOOGLE_CLIENT_ID', 'API_BASE_URL', 'APP_VERSION', 'BUILD_NUMBER'];
+const requiredVars = ['APP_ENV', 'GOOGLE_CLIENT_ID', 'APP_VERSION', 'BUILD_NUMBER'];
 
 const missingVars = requiredVars.filter(key => !process.env[key]);
 
@@ -62,4 +62,4 @@ if (missingVars.length > 0) {
 
 console.log('✅ Environment configuration valid.');
 console.log(`   APP_ENV: ${process.env.APP_ENV}`);
-console.log(`   API_BASE_URL: ${process.env.API_BASE_URL}`);
+

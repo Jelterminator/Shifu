@@ -16,8 +16,7 @@ interface AppConfig {
   googleClientId: string | undefined;
   googleClientSecret: string | undefined;
 
-  // API Configuration
-  apiBaseUrl: string;
+
 
   // App versioning
   appVersion: string;
@@ -59,11 +58,7 @@ function buildConfig(): AppConfig {
     googleClientId: getEnvVar('GOOGLE_CLIENT_ID'),
     googleClientSecret: getEnvVar('GOOGLE_CLIENT_SECRET'),
 
-    // API endpoints
-    apiBaseUrl: getEnvVar(
-      'API_BASE_URL',
-      env === 'production' ? 'https://api.example.com' : 'http://localhost:3000'
-    ),
+
 
     // App versioning (from package.json or build system)
     appVersion: getEnvVar('APP_VERSION', '0.1.0'),
@@ -100,7 +95,7 @@ export function getSafeConfig(): Omit<AppConfig, 'googleClientSecret'> {
     isDevelopment: config.isDevelopment,
     isProduction: config.isProduction,
     googleClientId: config.googleClientId ? '[SET]' : '[NOT SET]',
-    apiBaseUrl: config.apiBaseUrl,
+
     appVersion: config.appVersion,
     buildNumber: config.buildNumber,
   };
@@ -114,7 +109,7 @@ export const {
   isDevelopment,
   isProduction,
   googleClientId,
-  apiBaseUrl,
+
   appVersion,
   buildNumber,
 } = config;

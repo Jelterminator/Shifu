@@ -50,8 +50,6 @@ export class SchedulerAI {
     const userId = useUserStore.getState().user.id;
     if (!userId) return;
 
-    // console.log(`🤖 SchedulerAI: Rescheduling everything from now until end of tomorrow`);
-
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     await planRepository.deleteFuturePendingPlans(userId, todayStart);
@@ -64,7 +62,6 @@ export class SchedulerAI {
     tomorrow.setDate(tomorrow.getDate() + 1);
     await this.scheduleDay(userId, tomorrow, false, scheduledIds);
 
-    // console.log(`🤖 SchedulerAI: Reschedule complete.`);
   }
 
   private async scheduleDay(
@@ -73,9 +70,7 @@ export class SchedulerAI {
     fromNow: boolean,
     externalScheduledIds: Set<string>
   ): Promise<void> {
-    // console.log(
-    //   `🤖 SchedulerAI: Scheduling day ${date.toISOString().slice(0, 10)} (fromNow=${fromNow})`
-    // );
+
     const schedulingStart = fromNow ? new Date() : new Date(date);
     if (!fromNow) schedulingStart.setHours(0, 0, 0, 0);
     const startTimeMs = schedulingStart.getTime();
@@ -193,8 +188,6 @@ export class SchedulerAI {
       ...habits.filter(h => isAllowed(h, 'outside')),
     ];
 
-    // console.log(`🤖 Pass 1: Outside Work. Items: ${outsideItems.length}`);
-
     await this.runSchedulingPass({
       userId,
       items: outsideItems,
@@ -232,8 +225,6 @@ export class SchedulerAI {
         // User requested ONLY tasks for work hours.
         // "Once with only the work hours and only tasks with the flag 'allowed during work'"
       ];
-
-      // console.log(`🤖 Pass 2: Work Hours. Items: ${workItems.length}`);
 
       await this.runSchedulingPass({
         userId,

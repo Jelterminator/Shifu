@@ -81,7 +81,7 @@ jobs:
           cat > .env.local << EOF
           APP_ENV=staging
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-          API_BASE_URL=${{ secrets.API_BASE_URL }}
+
           APP_VERSION=${{ github.ref_name }}-${{ github.run_number }}
           BUILD_NUMBER=${{ github.run_number }}
           EOF
