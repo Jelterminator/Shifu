@@ -77,7 +77,6 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
             useUserStore.getState().setUser(newUser);
             currentUser = newUser;
           }
-        } else {
         }
 
         // 3. One-time Onboarding Check
