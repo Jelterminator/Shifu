@@ -58,11 +58,7 @@ Object.defineProperty(global, 'localStorage', {
 
 // Import after mocks are set up
 import { vectorService } from '../src/db/vectors';
-import {
-    base64ToFloat32,
-    cosineSimilarity,
-    float32ToBase64,
-} from '../src/db/vectorStorage';
+import { base64ToFloat32, cosineSimilarity, float32ToBase64 } from '../src/db/vectorStorage';
 
 describe('VectorService', () => {
   beforeEach(async () => {
@@ -97,7 +93,7 @@ describe('VectorService', () => {
 
       expect(restored.length).toBe(original.length);
       for (let i = 0; i < original.length; i++) {
-        expect(restored[i]).toBeCloseTo(original[i], 5);
+        expect(restored[i]).toBeCloseTo(original[i]!, 5);
       }
     });
   });
@@ -168,7 +164,7 @@ describe('VectorService', () => {
       expect(results.length).toBeLessThanOrEqual(3);
       // Results should be sorted by similarity
       for (let i = 1; i < results.length; i++) {
-        expect(results[i - 1].similarity).toBeGreaterThanOrEqual(results[i].similarity);
+        expect(results[i - 1]!.similarity).toBeGreaterThanOrEqual(results[i]!.similarity);
       }
     });
 
@@ -179,7 +175,7 @@ describe('VectorService', () => {
         // Should not include user-2's tasks
         expect(result.entityId).not.toBe('task-4');
       }
-      
+
       // Should have found at least the tasks we added for user-1
       expect(results.length).toBeGreaterThan(0);
     });

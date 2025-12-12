@@ -133,36 +133,41 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
 
       // 3. Plans (AI Generated)
       if (user?.id) {
-          try {
-              const startOfDay = new Date(selectedDate);
-              startOfDay.setHours(0,0,0,0);
-              const endOfDay = new Date(selectedDate);
-              endOfDay.setHours(23,59,59,999);
-              
-              const plans = await planRepository.getForDateRange(user.id, startOfDay, endOfDay);
-              events = events.concat(plans
-                .filter(p => !(
-                  (p.sourceType === 'habit' && p.name === 'Habit Completion') ||
-                  (p.sourceType === 'task' && p.name === 'Task Completion')
-                ))
-                .map(p => {
-                  const duration = (p.endTime.getTime() - p.startTime.getTime()) / 60000;
-                  // Map source_type to EventType
-                  let type: EventType = 'task';
-                  if (p.sourceType === 'habit') type = 'habit';
-                  
-                  return {
-                      id: p.id,
-                      title: p.name,
-                      startTime: p.startTime,
-                      durationMinutes: Math.round(duration),
-                      type: type,
-                      completed: !!p.done
-                  };
-              }));
-          } catch (e) {
-              console.warn('Failed to load plans', e);
-          }
+        try {
+          const startOfDay = new Date(selectedDate);
+          startOfDay.setHours(0, 0, 0, 0);
+          const endOfDay = new Date(selectedDate);
+          endOfDay.setHours(23, 59, 59, 999);
+
+          const plans = await planRepository.getForDateRange(user.id, startOfDay, endOfDay);
+          events = events.concat(
+            plans
+              .filter(
+                p =>
+                  !(
+                    (p.sourceType === 'habit' && p.name === 'Habit Completion') ||
+                    (p.sourceType === 'task' && p.name === 'Task Completion')
+                  )
+              )
+              .map(p => {
+                const duration = (p.endTime.getTime() - p.startTime.getTime()) / 60000;
+                // Map source_type to EventType
+                let type: EventType = 'task';
+                if (p.sourceType === 'habit') type = 'habit';
+
+                return {
+                  id: p.id,
+                  title: p.name,
+                  startTime: p.startTime,
+                  durationMinutes: Math.round(duration),
+                  type: type,
+                  completed: !!p.done,
+                };
+              })
+          );
+        } catch (e) {
+          console.warn('Failed to load plans', e);
+        }
       }
 
       // Organize events by phase
@@ -181,26 +186,26 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    }, [selectedDate, user]);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDate, user]);
 
-  const handleGenerateSchedule = async () => {
+  const handleGenerateSchedule = async (): Promise<void> => {
     try {
       setLoading(true);
-      
+
       // 1. Force day to Today
       const today = new Date();
       setSelectedDate(today);
 
       // 2. Reschedule Everything (Future + Today + Tomorrow)
       await schedulerAI.rescheduleFromNowUntilNextDay();
-      
+
       // 3. Reload data
       // Note: If we switched dates, useEffect will also fire, but this ensures we see data if date didn't change.
       await loadData();
-      
+
       Alert.alert('Schedule Generated', 'Schedule updated for today and tomorrow.');
     } catch (e) {
       console.error(e);
@@ -256,9 +261,9 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
 
           // Update task
           const isTaskComplete = newEffort <= 0 && newDoneStatus;
-          await taskRepository.update(task.id, { 
+          await taskRepository.update(task.id, {
             effortMinutes: newEffort,
-            isCompleted: isTaskComplete 
+            isCompleted: isTaskComplete,
           });
         }
       }
@@ -274,7 +279,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
   const renderEventCard = (event: AgendaEvent): React.JSX.Element => {
     const isCheckable = event.type === 'task' || event.type === 'habit';
     const typeLabel = isCheckable ? 'PLAN' : getEventTypeLabel(event.type);
-    
+
     // Calculate end time
     const endTime = new Date(event.startTime.getTime() + event.durationMinutes * 60000);
     const timeRange = `${formatTime(event.startTime)} - ${formatTime(endTime)}`;
@@ -301,37 +306,37 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
 
         {/* Middle: [Label] Title */}
         <View style={styles.eventContent}>
-           {typeLabel && (
-              <Text
-                style={[styles.inlineBadge, { color: event.phaseColor || colors.textSecondary }]}
-              >
-                [{typeLabel}]
-              </Text>
-            )}
-            <Text style={[styles.eventTitle, { color: colors.text }]} numberOfLines={1}>
-                {event.title}
+          {typeLabel && (
+            <Text style={[styles.inlineBadge, { color: event.phaseColor || colors.textSecondary }]}>
+              [{typeLabel}]
             </Text>
+          )}
+          <Text style={[styles.eventTitle, { color: colors.text }]} numberOfLines={1}>
+            {event.title}
+          </Text>
         </View>
 
         {/* Right: Completion Button */}
         {isCheckable && (
-            <TouchableOpacity 
-                onPress={() => void handleToggleEvent(event)}
-                style={{ paddingLeft: 8 }}
+          <TouchableOpacity
+            onPress={() => void handleToggleEvent(event)}
+            style={{ paddingLeft: 8 }}
+          >
+            <View
+              style={[
+                styles.checkbox,
+                {
+                  backgroundColor: event.completed ? '#4CAF50' : 'transparent',
+                  borderColor: event.completed ? '#4CAF50' : colors.textSecondary,
+                  marginRight: 0, // Reset margin
+                },
+              ]}
             >
-                <View
-                style={[
-                    styles.checkbox,
-                    { 
-                        backgroundColor: event.completed ? '#4CAF50' : 'transparent',
-                        borderColor: event.completed ? '#4CAF50' : colors.textSecondary,
-                        marginRight: 0 // Reset margin
-                    },
-                ]}
-                >
-                    {event.completed && <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold' }}>✓</Text>}
-                </View>
-            </TouchableOpacity>
+              {event.completed && (
+                <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold' }}>✓</Text>
+              )}
+            </View>
+          </TouchableOpacity>
         )}
       </TouchableOpacity>
     );
@@ -371,14 +376,16 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
     <BaseScreen title="Agenda" showSettings={true} onSettingsPress={handleSettingsPress}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <CalendarView selectedDate={selectedDate} onSelectDate={setSelectedDate} />
-        
+
         <View style={styles.actionContainer}>
-            <TouchableOpacity 
-                style={[styles.generateButton, { backgroundColor: phaseColor + '20' }]} 
-                onPress={handleGenerateSchedule}
-            >
-                <Text style={[styles.generateButtonText, { color: phaseColor }]}>✨ Generate Schedule</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.generateButton, { backgroundColor: phaseColor + '20' }]}
+            onPress={() => void handleGenerateSchedule()}
+          >
+            <Text style={[styles.generateButtonText, { color: phaseColor }]}>
+              ✨ Generate Schedule
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {loading ? (
@@ -512,15 +519,15 @@ const styles = StyleSheet.create({
   resetButtonText: { fontSize: 12, color: '#666' },
   actionContainer: { padding: 16 },
   generateButton: {
-      paddingVertical: 12,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   generateButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
-  }
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
 
 export default AgendaScreen;

@@ -38,6 +38,7 @@ class StubEmbedder implements Embedder {
    * Same text always produces same vector (useful for testing)
    */
   async embed(text: string): Promise<Float32Array> {
+    await Promise.resolve(); // Simulate async work
     const vector = new Float32Array(this.dimensions);
 
     // Simple hash-based seeding for reproducibility
@@ -58,12 +59,12 @@ class StubEmbedder implements Embedder {
     // Normalize the vector to unit length (important for cosine similarity)
     let norm = 0;
     for (let i = 0; i < this.dimensions; i++) {
-      norm += vector[i] * vector[i];
+      norm += vector[i]! * vector[i]!;
     }
     norm = Math.sqrt(norm);
     if (norm > 0) {
       for (let i = 0; i < this.dimensions; i++) {
-        vector[i] /= norm;
+        vector[i]! /= norm;
       }
     }
 

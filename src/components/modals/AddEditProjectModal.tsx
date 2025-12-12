@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { BORDER_RADIUS, KEYWORDS, SHADOWS, SPACING } from '../../constants';
 // Note: imports adjusted to match existing file structure if needed, or assuming constants/index exports them.
@@ -19,7 +19,6 @@ import type { Project, Task } from '../../types/database';
 import { TaskCard } from '../TaskCard';
 import { AddEditTaskModal } from './AddEditTaskModal';
 import { ConfirmationModal } from './ConfirmationModal';
-
 
 interface AddEditProjectModalProps {
   visible: boolean;
@@ -45,7 +44,6 @@ export function AddEditProjectModal({
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [deleteConfVisible, setDeleteConfVisible] = useState(false);
-
 
   // Subtask logic
   const [currentProject, setCurrentProject] = useState<Project | undefined>(project);
@@ -98,14 +96,20 @@ export function AddEditProjectModal({
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
 
     // Swap
-    [newSubtasks[index], newSubtasks[targetIndex]] = [newSubtasks[targetIndex], newSubtasks[index]];
+    const itemToMove = newSubtasks[index];
+    const targetItem = newSubtasks[targetIndex];
+
+    if (itemToMove && targetItem) {
+      newSubtasks[index] = targetItem;
+      newSubtasks[targetIndex] = itemToMove;
+    }
 
     // Assign positions
     const updates = newSubtasks.map((t, i) => ({
       id: t.id,
       position: i,
     }));
-    
+
     // Optimistic update
     setSubtasks(newSubtasks);
 
@@ -113,9 +117,9 @@ export function AddEditProjectModal({
     try {
       await taskRepository.updatePositions(updates);
     } catch (error) {
-       console.error("Failed to reorder", error);
-       Alert.alert("Error", "Failed to save order");
-       void loadSubtasks(currentProject.id); // Revert
+      console.error('Failed to reorder', error);
+      Alert.alert('Error', 'Failed to save order');
+      void loadSubtasks(currentProject.id); // Revert
     }
   };
 
@@ -125,18 +129,17 @@ export function AddEditProjectModal({
   };
 
   const executeDelete = async (): Promise<void> => {
-     if (!currentProject) return;
-     try {
-         await projectRepository.delete(currentProject.id);
-         onSave?.();
-         onClose();
-         setDeleteConfVisible(false);
-     } catch (e) {
-         console.error(e);
-         Alert.alert('Error', 'Failed to delete project');
-     }
+    if (!currentProject) return;
+    try {
+      await projectRepository.delete(currentProject.id);
+      onSave?.();
+      onClose();
+      setDeleteConfVisible(false);
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Failed to delete project');
+    }
   };
-
 
   const handleSave = async (openTasksAfter = false): Promise<void> => {
     if (!user || !user.id || !title.trim()) {
@@ -305,8 +308,8 @@ export function AddEditProjectModal({
                 ) : (
                   subtasks.map((task, index) => (
                     <View key={task.id} style={{ marginBottom: SPACING.s }}>
-                      <TaskCard 
-                        task={task} 
+                      <TaskCard
+                        task={task}
                         mode="planning"
                         index={index}
                         isFirst={index === 0}
@@ -343,15 +346,15 @@ export function AddEditProjectModal({
             )}
 
             {currentProject && (
-                <TouchableOpacity
-                    style={[
-                        styles.saveButton,
-                        { backgroundColor: 'transparent', marginTop: SPACING.s },
-                    ]}
-                    onPress={handleDelete}
-                >
-                    <Text style={{ color: '#FF3B30', fontWeight: '600' }}>Delete Project</Text>
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  { backgroundColor: 'transparent', marginTop: SPACING.s },
+                ]}
+                onPress={handleDelete}
+              >
+                <Text style={{ color: '#FF3B30', fontWeight: '600' }}>Delete Project</Text>
+              </TouchableOpacity>
             )}
 
             {/* Creating new project -> Enforce adding tasks */}
@@ -383,7 +386,6 @@ export function AddEditProjectModal({
               if (currentProject) void loadSubtasks(currentProject.id);
             }}
           />
-
         </View>
       </View>
 
@@ -398,7 +400,6 @@ export function AddEditProjectModal({
       />
     </Modal>
   );
-
 }
 
 const styles = StyleSheet.create({

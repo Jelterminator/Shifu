@@ -34,20 +34,20 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
           <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
           <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>
-          
+
           <View style={styles.footer}>
-            <TouchableOpacity 
-              style={[styles.button, { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }]} 
+            <TouchableOpacity
+              style={[
+                styles.button,
+                { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border },
+              ]}
               onPress={onCancel}
             >
               <Text style={[styles.buttonText, { color: colors.text }]}>{cancelLabel}</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[
-                  styles.button, 
-                  { backgroundColor: isDestructive ? '#FF3B30' : phaseColor }
-              ]} 
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: isDestructive ? '#FF3B30' : phaseColor }]}
               onPress={onConfirm}
             >
               <Text style={[styles.buttonText, { color: '#FFF' }]}>{confirmLabel}</Text>

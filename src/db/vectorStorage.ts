@@ -5,10 +5,10 @@
 import { Platform } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import type {
-    LinkableEntityType,
-    VectorEmbedding,
-    VectorEmbeddingRow,
-    VectorQueryResult,
+  LinkableEntityType,
+  VectorEmbedding,
+  VectorEmbeddingRow,
+  VectorQueryResult,
 } from '../types/vectorTypes';
 
 // =============================================================================
@@ -29,9 +29,9 @@ export function cosineSimilarity(a: Float32Array, b: Float32Array): number {
   let normB = 0;
 
   for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+    dot += a[i]! * b[i]!;
+    normA += a[i]! * a[i]!;
+    normB += b[i]! * b[i]!;
   }
 
   const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
@@ -44,7 +44,7 @@ export function cosineSimilarity(a: Float32Array, b: Float32Array): number {
  * Convert Float32Array to ArrayBuffer for SQLite BLOB storage
  */
 export function float32ToBuffer(arr: Float32Array): ArrayBuffer {
-  return arr.buffer.slice(arr.byteOffset, arr.byteOffset + arr.byteLength);
+  return arr.buffer.slice(arr.byteOffset, arr.byteOffset + arr.byteLength) as ArrayBuffer;
 }
 
 /**
@@ -61,7 +61,7 @@ export function float32ToBase64(arr: Float32Array): string {
   const bytes = new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
   let binary = '';
   for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+    binary += String.fromCharCode(bytes[i]!);
   }
   return btoa(binary);
 }
@@ -92,11 +92,7 @@ export interface VectorStorageAdapter {
   ): Promise<string>;
 
   /** Query for similar vectors */
-  query(
-    userId: string,
-    queryVector: Float32Array,
-    nResults: number
-  ): Promise<VectorQueryResult[]>;
+  query(userId: string, queryVector: Float32Array, nResults: number): Promise<VectorQueryResult[]>;
 
   /** Get embedding for a specific entity */
   getByEntity(
@@ -105,10 +101,7 @@ export interface VectorStorageAdapter {
   ): Promise<VectorEmbedding | null>;
 
   /** Delete embedding for entity */
-  delete(
-    entityType: LinkableEntityType | 'summary',
-    entityId: string
-  ): Promise<void>;
+  delete(entityType: LinkableEntityType | 'summary', entityId: string): Promise<void>;
 
   /** Check if initialized */
   isInitialized(): boolean;
@@ -123,7 +116,6 @@ export interface VectorStorageAdapter {
 
 class SqliteVectorStorage implements VectorStorageAdapter {
   private initialized = false;
-  private db: import('expo-sqlite').SQLiteDatabase | null = null;
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -131,7 +123,6 @@ class SqliteVectorStorage implements VectorStorageAdapter {
     // Import db lazily to avoid issues on web
     const { db } = await import('./database');
     await db.initialize();
-    this.db = (db as unknown as { db: import('expo-sqlite').SQLiteDatabase }).db;
     this.initialized = true;
   }
 
@@ -164,14 +155,21 @@ class SqliteVectorStorage implements VectorStorageAdapter {
          WHERE entity_type = ? AND entity_id = ?`,
         [float32ToBuffer(vector) as unknown as string, vector.length, userId, entityType, entityId]
       );
-      return existing[0].id;
+      return existing[0]!.id;
     }
 
     // Insert new
     await dbService.execute(
       `INSERT INTO vector_embeddings (id, user_id, entity_type, entity_id, vector, dimensions)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, userId, entityType, entityId, float32ToBuffer(vector) as unknown as string, vector.length]
+      [
+        id,
+        userId,
+        entityType,
+        entityId,
+        float32ToBuffer(vector) as unknown as string,
+        vector.length,
+      ]
     );
 
     return id;
@@ -224,7 +222,7 @@ class SqliteVectorStorage implements VectorStorageAdapter {
 
     if (rows.length === 0) return null;
 
-    const row = rows[0];
+    const row = rows[0]!;
     return {
       id: row.id,
       userId: row.user_id,
@@ -237,10 +235,7 @@ class SqliteVectorStorage implements VectorStorageAdapter {
     };
   }
 
-  async delete(
-    entityType: LinkableEntityType | 'summary',
-    entityId: string
-  ): Promise<void> {
+  async delete(entityType: LinkableEntityType | 'summary', entityId: string): Promise<void> {
     if (!this.initialized) await this.initialize();
 
     const { db: dbService } = await import('./database');
@@ -274,12 +269,13 @@ class WebVectorStorage implements VectorStorageAdapter {
   private vectors: Map<string, WebVectorEntry> = new Map();
 
   async initialize(): Promise<void> {
+    await Promise.resolve(); // Satisfy require-await
     if (this.initialized) return;
 
     try {
       const stored = localStorage.getItem(WEB_STORAGE_KEY);
       if (stored) {
-        const entries: WebVectorEntry[] = JSON.parse(stored);
+        const entries = JSON.parse(stored) as WebVectorEntry[];
         for (const entry of entries) {
           const key = `${entry.entityType}:${entry.entityId}`;
           this.vectors.set(key, entry);
@@ -379,10 +375,7 @@ class WebVectorStorage implements VectorStorageAdapter {
     };
   }
 
-  async delete(
-    entityType: LinkableEntityType | 'summary',
-    entityId: string
-  ): Promise<void> {
+  async delete(entityType: LinkableEntityType | 'summary', entityId: string): Promise<void> {
     if (!this.initialized) await this.initialize();
 
     const key = `${entityType}:${entityId}`;

@@ -10,8 +10,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SleepHoursSetup'>;
 export const SleepHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [sleepStart, setSleepStart] = useState('22:00');
   const [sleepEnd, setSleepEnd] = useState('06:00');
-  const setUser = useUserStore((state) => state.setUser);
-  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore(state => state.setUser);
+  const user = useUserStore(state => state.user);
 
   const handleContinue = (): void => {
     setUser({ ...user, sleepStart, sleepEnd });

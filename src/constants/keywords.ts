@@ -4,74 +4,73 @@
 
 // Core 18 Keywords
 export const KEYWORDS = [
-  'Cultivate',
-  'Initiate',
-  'Expand',
-  'Direct',
-  'Ignite',
-  'Transform',
-  'Express',
-  'Radiate',
-  'Nourish',
-  'Stabilize',
-  'Ground',
-  'Connect',
-  'Refine',
-  'Discern',
-  'Systematize',
-  'Absorb',
-  'Flow',
-  'Regenerate',
+  'Initiation',
+  'Planning',
+  'Execution',
+  'Logic',
+  'Maintenance',
+  'Connection',
+  'Resolution',
+  'Exertion',
+  'Intake',
+  'Processing',
+  'Purge',
+  'Rest',
+  'Stillness',
+  'Creative',
+  'Learning',
+  'Devotion',
+  'Release',
+  'Important',
 ] as const;
 
 // Wu Xing Phases with Philosophical Alignment
 export const PHASE_KEYWORDS = {
   WOOD: [
-    'Initiate',  // Starting force, new beginnings
-    'Expand',    // Growing outward and exploring
-    'Direct',    // Providing vision and ethical direction
-    'Cultivate', // Nurturing growth and development
-    'Connect',   // Building networks and relationships
-    'Flow',      // Natural movement and flexibility of growth
+    'Initiation', // Starting force, new beginnings
+    'Stillness', // Receptive wisdom and intuition
+    'Planning', // Strategic growth and direction
+    'Creative', // Generative expansion and innovation
+    'Connection', // Building networks and relationships
+    'Devotion', // Heart-centered passion and commitment
+    'Intake', // Receiving and absorbing nourishment
   ] as const,
-  
+
   FIRE: [
-    'Ignite',    // Sparking inspiration and passion
-    'Express',   // Creative and emotional output
-    'Radiate',   // Sharing energy and influence
-    'Transform', // Alchemical change through energy
-    'Connect',   // Heart-centered relationships
-    'Expand',    // Reaching out and influencing others
-    'Direct',    // Leading through inspiration and charisma
+    'Exertion', // Energy output and passionate action
+    'Creative', // Expressive and transformative energy
+    'Execution', // Implementation and expression
+    'Devotion', // Heart-centered passion and commitment
+    'Initiation', // Starting force, new beginnings
+    'Important',
   ] as const,
-  
+
   EARTH: [
-    'Nourish',   // Providing sustenance and care
-    'Stabilize', // Creating balance and routine
-    'Ground',    // Making ideas practical and rooted
-    'Connect',   // Fostering community and integration
-    'Cultivate', // Nurturing relationships and systems
-    'Absorb',    // Receiving and integrating inputs
-    'Transform', // Converting energy into nourishment
+    'Intake', // Receiving and absorbing nourishment
+    'Processing', // Digesting and transforming inputs
+    'Maintenance', // Sustaining and stabilizing systems
+    'Connection', // Community integration and support
+    'Devotion', // Nurturing care and service
+    'Rest', // Take a nap
   ] as const,
-  
+
   METAL: [
-    'Refine',     // Paring down to essential quality
-    'Discern',    // Evaluating value and making judgments
-    'Systematize', // Creating order and structure
-    'Direct',     // Setting boundaries and frameworks
-    'Absorb',     // Taking in knowledge and principles
-    'Ground',     // Establishing firm foundations
-    'Stabilize',  // Maintaining consistency and standards
+    'Logic', // Structural thinking and analysis
+    'Processing', // Refining and distilling essence
+    'Resolution', // Decision-making and conclusion
+    'Important', // Discernment of value and priorities
+    'Learning', // Acquiring knowledge and principles
+    'Planning', // Strategic growth and direction
+    'Purge', // Letting go and flowing adaptation
   ] as const,
-  
+
   WATER: [
-    'Flow',       // Adapting and moving with circumstance
-    'Regenerate', // Deep rest and renewal
-    'Absorb',     // Receptive wisdom and intuition
-    'Discern',    // Insight and deep understanding
-    'Connect',    // Fluid relationships and adaptability
-    'Expand',     // Potential unfolding from within
-    'Transform',  // Change through integration and wisdom
+    'Rest', // Deep regeneration and renewal
+    'Stillness', // Receptive wisdom and intuition
+    'Learning', // Absorbing insights and understanding
+    'Release', // Letting go and flowing adaptation
+    'Processing', // Integration and transformation
+    'Connection', // Fluid adaptability in relationships
+    'Maintenance', // Sustaining and stabilizing systems
   ] as const,
 } as const;

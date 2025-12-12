@@ -14,9 +14,10 @@ class PlanRepository {
     const id = generateId();
     const now = new Date().toISOString();
     const linkedObjectIdsJson = safeStringify(data.linkedObjectIds || []);
-    
+
     // done defaults to null (pending) if not provided
-    const doneValue = data.done === undefined ? null : (data.done === null ? null : (data.done ? 1 : 0));
+    const doneValue =
+      data.done === undefined ? null : data.done === null ? null : data.done ? 1 : 0;
 
     await db.execute(
       `INSERT INTO plans (
@@ -62,7 +63,11 @@ class PlanRepository {
     return rows[0] ? mapPlanRowToPlan(rows[0]) : null;
   }
 
-  async getBySourceId(userId: string, sourceId: string, sourceType: 'task' | 'habit'): Promise<Plan[]> {
+  async getBySourceId(
+    userId: string,
+    sourceId: string,
+    sourceType: 'task' | 'habit'
+  ): Promise<Plan[]> {
     const rows = await db.query<PlanRow>(
       `SELECT * FROM plans 
        WHERE user_id = ? 
@@ -116,20 +121,20 @@ class PlanRepository {
       else params.push(data.done ? 1 : 0);
     }
     if (data.rating !== undefined) {
-        updates.push('rating = ?');
-        params.push(data.rating || null);
+      updates.push('rating = ?');
+      params.push(data.rating || null);
     }
     if (data.linkedObjectIds !== undefined) {
       updates.push('linked_object_ids = ?');
       params.push(safeStringify(data.linkedObjectIds));
     }
     if (data.completedAt !== undefined) {
-        updates.push('completed_at = ?');
-        params.push(data.completedAt ? data.completedAt.toISOString() : null);
+      updates.push('completed_at = ?');
+      params.push(data.completedAt ? data.completedAt.toISOString() : null);
     }
 
     if (updates.length === 0) return;
-    
+
     // Plans don't track updated_at usually, but we update the row
     params.push(id);
 

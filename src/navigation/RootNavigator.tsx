@@ -78,8 +78,6 @@ export function RootNavigator(): React.JSX.Element {
     return <></>; // Return empty fragment to satisfy JSX.Element return type
   }
 
-  // console.log('🧭 RootNavigator: Initial route:', initialRouteName);
-
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName={initialRouteName} screenOptions={{ headerShown: false }}>

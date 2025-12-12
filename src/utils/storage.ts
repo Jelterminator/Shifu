@@ -33,8 +33,6 @@ function createStorage(): StorageAdapter {
       clear: () => mmkv.clearAll(),
     };
   } catch (error) {
-    // console.log('⚠️ MMKV not available, falling back to localStorage (Web mode?)');
-
     if (typeof localStorage !== 'undefined') {
       return {
         get: key => localStorage.getItem(key),

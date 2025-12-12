@@ -239,14 +239,13 @@ enables a sync. No company-run servers process core features.
 - **App Scaffolding (React Native + Expo)**
   
   - [x] Initialize Expo project (Managed Workflow, latest SDK).
-  - [ ] Enable **Hermes Engine** and verify compilation.
+  - [x] Enable **Hermes Engine** and verify compilation.
   - [x] Setup **React Navigation v6** (Bottom Tabs + Stacks).
   - [x] Implement `BaseScreen` component structure per Architecture.
   - [x] Create placeholder screens: Setup, Agenda, Habits, Journal, Chat.
 
 - **State Management & Persistence**
   
-  - [ ] Install and configure **Zustand** stores (UserStore, UIStore).
   - [x] Install **MMKV** and wrap in a custom encryption adapter.
   - [x] Implement Theme Manager (Dark/Light/System) skeleton.
 
@@ -274,7 +273,7 @@ Encryption, and Schema Management.
   - [x] Build `HabitRepository` (CRUD + stats calculation).
   - [x] Build `TaskRepository` (CRUD + priority sorting).
   - [x] Build `JournalRepository`.
-  - [ ] **Optimization:** Create indices for frequent queries (date ranges, urgency).
+  - [x] **Optimization:** Create indices for frequent queries (date ranges, urgency).
 
 ---
 
@@ -303,38 +302,21 @@ Animations, Reanimated 2, Dynamic Styling.
 
 ---
 
-
-
----
-
-## 🧠 Phase 4: Cognition (AI Foundation) (Weeks 10-12)
-
-**Goal:** Enable on-device inference and the Chat interface. **Technical Focus:** Transformers.js,
-ONNX Runtime, WebAssembly.
-
-- **Inference Engine**
-  
-  - [ ] Integrate **Transformers.js (Xenova)**.
-  - [ ] Configure **ONNX Runtime** for React Native (Single-threaded WASM execution).
-  - [ ] Implement `ModelLoader`: Download/Cache quantized models on first run.
-    - _Target Models:_ `DistilGPT-2` (Chat), ??? (Embeddings), ??? (Scheduler Forest).
-
-- **The Coach (Chat UI)**
-  
-  - [x] Build Chat Interface: Message bubbles, typing indicators.
-  - [ ] **Prompt Engineering:** Create system prompts injected with current time/phase context.
-  - [ ] **Quick Actions:** Implement chip-based prompts ("Optimize Today", "Add Task").
-
-- **Performance Tuning**
-  
-  - [ ] Implement model lazy-loading and unloading to manage RAM.
-  - [ ] Add "Device Tier" detection to disable AI on low-end phones.
-
----
-
-## 🔌 Phase 5: Integrations & Synchronization (Weeks 8-9)
+## 🔌 Phase 4: Integrations & Synchronization (Weeks 8-9)
 
 **Goal:** Connect to the outside world without compromising privacy. **Technical Focus:** OAuth 2.0,API Client, Sync Logic.
+
+* **Round of Bugfixing**
+  
+  * [x] Linting
+  * [x] Jest
+  - [ ] Clean up project
+  * [ ] Get GitHub uploading clean
+
+* **To Native Platform**
+  
+  * [ ] Learn how to do it
+  * [ ] Create workflow for APK exports
 
 * **Auth & Permissions**
   
@@ -365,46 +347,356 @@ ONNX Runtime, WebAssembly.
 
 ---
 
+## 🧠 Phase 5: Cognition (AI Foundation) (Weeks 10-12)
+
+**Goal:** Enable on-device inference and the Chat interface. **Technical Focus:** Transformers.js,
+ONNX Runtime, WebAssembly.
+
+- **Inference Engine**
+  
+  - [ ] Integrate **Transformers.js (Xenova)**.
+  - [ ] Configure **ONNX Runtime** for React Native (Single-threaded WASM execution).
+  - [ ] Implement `ModelLoader`: Download/Cache quantized models on first run.
+    - _Target Models:_ `DistilGPT-2` (Chat), ??? (Embeddings), ??? (Scheduler Forest).
+
+- **The Coach (Chat UI)**
+  
+  - [x] Build Chat Interface: Message bubbles, typing indicators.
+  - [ ] **Prompt Engineering:** Create system prompts injected with current time/phase context.
+  - [ ] **Quick Actions:** Implement chip-based prompts ("Optimize Today", "Add Task").
+
+- **Performance Tuning**
+  
+  - [ ] Implement model lazy-loading and unloading to manage RAM.
+  - [ ] Add "Device Tier" detection to disable AI on low-end phones.
+
 ## 📚 Phase 6: Memory & RAG (Weeks 13-15)
 
-**Goal:** Give the AI long-term memory and context awareness. **Technical Focus:** Vector Database,
-Embeddings, Hierarchical Summarization.
+**Goal:** Give the AI long-term memory and context awareness. **Technical Focus:** Vector Database,Embeddings, Hierarchical Summarization.
 
-- **Vector Infrastructure**
+* **Vector Infrastructure**
   
-  - [ ] Implement embedding generation pipeline (Text -> Vector).
-  - [ ] Build **Custom ANN Index** (K-Means) on top of SQLite for fast retrieval.
+  * [ ] Implement embedding generation pipeline (Text -> Vector).
+  * [ ] Build **Custom ANN Index** (K-Means) on top of SQLite for fast retrieval.
 
-- **Hierarchical Summarization (The "Secret Sauce")**
+* **Hierarchical Summarization (The "Secret Sauce")**
   
-  - [ ] **Daily Summarizer:** Script to condense journal + tasks into a summary blob.
-  - [ ] **Roll-up Logic:** Weekly -> Monthly -> Quarterly aggregation.
-  - [ ] **Storage:** Store summary vectors separately for tiered retrieval.
+  * [ ] **Daily Summarizer:** Script to condense journal + tasks into a summary blob.
+  * [ ] **Roll-up Logic:** Weekly -> Monthly -> Quarterly aggregation.
+  * [ ] **Storage:** Store summary vectors separately for tiered retrieval.
 
-- **RAG Pipeline**
+* **RAG Pipeline**
   
-  - [ ] Implement `ContextRetriever`: Query -> Embed -> Search Vector DB.
-  - [ ] **Hybrid Search:** Combine semantic search (vectors) with keyword search (SQL).
-  - [ ] Connect RAG output to the Chat interface.
+  * [ ] Implement `ContextRetriever`: Query -> Embed -> Search Vector DB.
+  * [ ] **Hybrid Search:** Combine semantic search (vectors) with keyword search (SQL).
+  * [ ] Connect RAG output to the Chat interface.
 
 ---
 
-## 📅 Phase 7: Evolution (Adaptive Scheduler) (Weeks 16-18)
+📅 Phase 7: Scheduler Algorithm Implementation
+================================================
 
-**Goal:** The self-improving scheduling engine. **Technical Focus:** Decision Trees, Background
-Tasks, MLOps.
+**Goal**: Implement the Bio-Semantics Scheduler as described in the technical report, with graceful degradation for MVP.
+🧮 Phase 7.1: Core ODE Solver (Day 1-2)
 
-- **Hybrid Planner**
+------------------------------------------
+
+### Mathematical Foundation
+
+* [ ] **Create `/src/services/scheduler/ODESolver.ts`**
+  * [ ] Implement RK4 integrator (generic, reusable)
+  * [ ] Add state vector type: `PhysiologicalState = { x, xc, n, S, W, F, M }`
+  * [ ] Unit tests with known solutions (simple harmonic oscillator as test case)
+
+### JFK Circadian Model
+
+* [ ] **Create `/src/services/scheduler/CircadianModel.ts`**
+  * [ ] Implement Van der Pol equations (Equation 1)
+  * [ ] Add photic transduction (Equation 2: Process L)
+  * [ ] Parameter estimation from MEQ/MCTQ scores (Section 1.3.1)
+  * [ ] DLMO phase calculation (Section 1.3.2)
+  * [ ] Integration with existing `PhaseManager` (use for initial phase guess)
+
+### Homeostatic Sleep Pressure
+
+* [ ] **Create `/src/services/scheduler/SleepModel.ts`**
+  * [ ] Implement exponential saturation (Equation 3)
+  * [ ] Track sleep/wake transitions (hook into app state)
+  * [ ] Persist `S(t)` to SQLite for multi-day tracking
+  * [ ] Calculate `S_resid` on wake-up
+
+### Ultradian Rhythm
+
+* [ ] **Add to `CircadianModel.ts`**
+  * [ ] Implement 90-minute BRAC oscillator (Section 1.5)
+  * [ ] Phase reset logic (at wake time)
+
+### Global Alertness Function
+
+* [ ] **Create `/src/services/scheduler/AlertnessCalculator.ts`**
+  * [ ] Combine C, S, U into `A_bio(t)` (Section 1.6)
+  * [ ] Normalization functions
+  * [ ] Export as time-series for visualization
+
+### Testing & Validation
+
+* [ ] **Validation against literature**
+  * [ ] Verify CBT_min aligns with typical wake-up time
+  * [ ] Check PRC (Phase Response Curve) behavior with light pulses
+  * [ ] Compare sleep pressure accumulation with Borbély's data
+
+* * *
+
+🧠 Phase 7.2: Energy Vector Dynamics (Day 3-4)
+-------------------------------------------------
+
+### Willpower Reservoir
+
+* [ ] **Create `/src/services/scheduler/WillpowerModel.ts`**
+  * [ ] Implement depletion equation (Section 2.1.1)
+  * [ ] Calculate `κ_load` from task properties:
+    * [ ] Keyword-based estimation ("review" → high conflict)
+    * [ ] User explicit ratings (optional input)
+  * [ ] Implement `Auto(task)` calculation:
+    * [ ] Source-based (user-created vs external)
+    * [ ] Deadline pressure adjustment
+  * [ ] Recovery modeling (`R_rec`, `Q_rest`)
+  * [ ] **Critical**: Implement discontinuity check (`W < W_crit` → force break)
+
+### Focus Decay Model
+
+* [ ] **Create `/src/services/scheduler/FocusModel.ts`**
+  * [ ] Leaky integrator implementation (Section 2.2.1)
+  * [ ] Dynamic `λ_decay` based on `S(t)`
+  * [ ] Track time-on-task for decay calculation
+  * [ ] `F_min` coupling to `A_bio(t)`
+
+### Motivation Model (TMT)
+
+* [ ] **Create `/src/services/scheduler/MotivationModel.ts`**
+  * [ ] Implement hyperbolic discounting (Section 2.3.1)
+  * [ ] Expectancy `E` calculation:
+    * [ ] Query historical completion rates by keyword
+    * [ ] Fallback to population defaults
+  * [ ] Value `V` estimation:
+    * [ ] User priority ratings (if available)
+    * [ ] Keyword-based priors
+  * [ ] Impulsiveness `Γ` from MEQ score
+  * [ ] **Phase 2 feature** (defer): Dopamine RPE integration (Section 2.3.2)
+
+### Integrated Energy Vector
+
+* [ ] **Create `/src/services/scheduler/EnergyVector.ts`**
+  * [ ] Combine W, F, M into `E(t)` vector
+  * [ ] Simulate forward during task execution
+  * [ ] Export as `predictEnergy(schedule) → E(t) trajectory`
+
+* * *
+
+🌿 Phase 7.3: Semantic Layers (Day 5)
+----------------------------------------
+
+### Wu Xing Compatibility
+
+* [ ] **Create `/src/services/scheduler/WuXingScorer.ts`**
+  * [ ] Implement compatibility matrix (Table 1)
+  * [ ] Map keywords to Wu Xing categories
+  * [ ] Calculate `S_wis(task, t)` function
+  * [ ] Integration with Roman hours from `PhaseManager`
+
+### Ayurvedic Modulation
+
+* [ ] **Create `/src/services/scheduler/AyurvedaModulator.ts`**
+  * [ ] Implement Dosha cycle detection (Table 2)
+  * [ ] Equation modifiers:
+    * [ ] Kapha: `κ_load *= 1.2`
+    * [ ] Pitta: `V *= 1.5`, `F_max` boost
+    * [ ] Vata: `λ_decay *= 1.3`
+  * [ ] Apply modifiers during ODE integration
+
+* * *
+
+🧬 Phase 7.4: Genetic Algorithm Scheduler (Week 6-8)
+------------------------------------------------------
+
+### NSGA-II Core
+
+* [ ] **Create `/src/services/scheduler/GeneticScheduler.ts`**
+  * [ ] Population initialization (random valid schedules)
+  * [ ] Fitness evaluation pipeline:
+    * [ ] For each candidate schedule:
+    * [ ] Simulate ODE system forward
+    * [ ] Track energy depletion
+    * [ ] Calculate objective vector `[J_bio, J_wis, J_will, J_flow]`
+  * [ ] Non-dominated sorting algorithm
+  * [ ] Crowding distance calculation
+  * [ ] Tournament selection
+
+### Genetic Operators
+
+* [ ] **Crossover**:
+  * [ ] Time-window exchange (swap morning blocks)
+  * [ ] Preserve hard constraints (disjointness)
+* [ ] **Mutation**:
+  * [ ] Move task to different slot
+  * [ ] Swap two tasks
+  * [ ] Ensure validity after mutation
+* [ ] **Elitism**: Preserve top 10% each generation
+
+### Objective Functions
+
+* [ ] **Create `/src/services/scheduler/ObjectiveFunctions.ts`**
+  * [ ] `J_bio`: Sum of `A_bio(t) × task_effort` products
+  * [ ] `J_wis`: Sum of `S_wis(task, t)` scores
+  * [ ] `J_will`: Total willpower cost (integral of `D_dep`)
+  * [ ] `J_flow`: Count context switches + penalty
+
+### Performance Optimization
+
+* [ ] **Lazy evaluation**: Only re-simulate changed segments
+* [ ] **Memoization**: Cache ODE solutions for common states
+* [ ] **Early termination**: Stop if Pareto frontier converges early
+* [ ] **Progressive rendering**: Show draft schedule after 10 generations
+
+* * *
+
+🎨 Phase 7.5: User Interface & Agency (Week 9-10)
+---------------------------------------------------
+
+### Schedule Presentation
+
+* [ ] **Create `/src/screens/ScheduleScreen.tsx`** (new screen)
+  * [ ] Display Pareto frontier as 3 options:
+    * [ ] "Flow" schedule
+    * [ ] "Resilience" schedule
+    * [ ] "Recovery" schedule
+  * [ ] Visual comparison table (total work time, breaks, finish time)
+  * [ ] User selection mechanism
+
+### Energy Visualization
+
+* [ ] **Create `/src/components/EnergyChart.tsx`**
+  * [ ] Line chart of `W(t)`, `F(t)`, `M(t)` over 24h
+  * [ ] Color-coded zones (safe, caution, critical)
+  * [ ] Overlay task blocks on timeline
+  * [ ] Explanation tooltips ("Why is my focus low at 3 PM?")
+
+### Polyvagal Safety System
+
+* [ ] **Create `/src/services/scheduler/SafetyMonitor.ts`**
+  * [ ] Monitor `dW/dt` during task execution
+  * [ ] Detect threshold violation
+  * [ ] Trigger circuit breaker:
+    * [ ] Show modal: "Your nervous system needs regulation"
+    * [ ] Offer guided exercises (breathing, walk)
+    * [ ] **Block** further scheduling until complete
+  * [ ] Log safety interventions for analysis
+
+### Settings Integration
+
+* [ ] **Add to `SettingsScreen.tsx`**:
+  * [ ] MEQ questionnaire (embed or link)
+  * [ ] MCTQ inputs (sleep times on free days)
+  * [ ] Willpower recovery preferences
+  * [ ] Ayurveda acknowledgment toggle
+
+* * *
+
+🧪 Phase 7.6: Calibration & Feedback Loop (Week 11-12)
+--------------------------------------------------------
+
+### Kalman Filter for State Estimation
+
+* [ ] **Create `/src/services/scheduler/KalmanFilter.ts`**
+  * [ ] Implement level-set Kalman filter (Section 6.2)
+  * [ ] User subjective inputs ("I feel groggy" → update phase)
+  * [ ] Correction step for `τ_c`, `ϕ`, `μ`
+  * [ ] Store refined parameters to DB
+
+### Historical Data Collection
+
+* [ ] **Extend `TaskRepository`**:
+  * [ ] Track actual completion time vs. estimated
+  * [ ] Log post-task energy rating (1-5 scale)
+  * [ ] Store context features (time of day, preceding tasks)
+* [ ] **Extend `HabitRepository`**:
+  * [ ] Record break quality scores
+  * [ ] Track recovery duration
+
+### Parameter Refinement
+
+* [ ] **Bayesian update pipeline**:
+  * [ ] Weekly recalibration of `τ_c` (intrinsic period)
+  * [ ] Refine `κ_load` estimates per task keyword
+  * [ ] Adjust `Auto` coefficients based on completion patterns
+
+* * *
+
+🚀 Phase 7.7: MVP Integration & Polish (Week 13-14)
+-----------------------------------------------------
+
+### Integration with Existing App
+
+* [ ] **Hook scheduler into `TasksScreen`**:
+  * [ ] "Generate Schedule" button
+  * [ ] Show loading state during NSGA-II
+  * [ ] Display Pareto options in modal
+* [ ] **Add to `AgendaScreen`**:
+  * [ ] Show scheduled blocks with energy overlay
+  * [ ] Allow manual overrides (drag-and-drop)
+  * [ ] Real-time energy forecast
+
+### Graceful Degradation
+
+* [ ] **Tier detection**:
+  * [ ] Check for location, sleep data, task history
+  * [ ] Fall back to simpler algorithms if missing
+* [ ] **Rule-based fallback**:
+  * [ ] Wu Xing + fixed schedule if GA times out
+  * [ ] Notify user of limited functionality
+
+### Error Handling
+
+* [ ] **Validation**:
+  * [ ] Check for impossible schedules (more work than hours)
+  * [ ] Detect conflicting constraints (two deadlines today)
+  * [ ] Graceful failure messages
+* [ ] **Logging**:
+  * [ ] Track scheduler performance (GA convergence time)
+  * [ ] Log safety interventions
+  * [ ] Anonymous telemetry for refinement
+
+### Documentation
+
+* [ ] **Create `/docs/SCHEDULER.md`**:
+  * [ ] Explain algorithm to users (simplified)
+  * [ ] Parameter meanings (MEQ, MCTQ)
+  * [ ] Interpretation guide for energy charts
+* [ ] **Create `/docs/ARCHITECTURE_SCHEDULER.md`** (technical):
+  * [ ] ODE solver details
+  * [ ] NSGA-II implementation
+  * [ ] Calibration process
+  * [ ] Future enhancements (Dopamine model, etc.)
+
+### Testing
+
+* [ ] **Unit tests**:
   
-  - [ ] **Rule Engine:** Implement Wu Xing rules (e.g., "Creativity in Fire Phase").
-  - [ ] **Constraint Solver:** Fit tasks into free slots around fixed calendar events.
+  * [ ] ODE solver accuracy (vs analytical solutions)
+  * [ ] NSGA-II convergence (synthetic problems)
+  * [ ] Objective function correctness
 
-- **On-Device Training (MLOps)**
+* [ ] **Integration tests**:
   
-  - [ ] **Data Collection:** Log task completions/failures with context features.
-  - [ ] **Nightly Pipeline:** Configure `expo-task-manager` for background execution.
-  - [ ] **Training:** Implement lightweight Decision Tree training (TensorFlow.js or custom JS implementation).
-  - [ ] **A/B Testing:** Compare new model vs. old model locally before swapping.
+  * [ ] End-to-end schedule generation
+  * [ ] Kalman filter updates
+  * [ ] Safety system triggers
+
+* [ ] **User testing**:
+  
+  * [ ] Beta test with 5-10 users
+  * [ ] Collect feedback on schedule quality
+  * [ ] Refine parameter priors 
 
 ---
 
@@ -422,6 +714,7 @@ Profiling, Battery Optimization, Accessibility.
 - **Battery & Resource Management**
   
   - [ ] Audit background tasks: Ensure they only run when charging.
+  
   - [ ] Implement "Low Power Mode" (Disable animations, pause AI training).
 
 - **Accessibility & UX**
@@ -429,7 +722,7 @@ Profiling, Battery Optimization, Accessibility.
   - [ ] Audit colors for WCAG AA contrast.
   - [ ] Implement Screen Reader labels.
   - [ ] Add "Reduced Motion" support.
-  - [ ] Create "Empty States" and "Error States" (Offline, Sync failed).
+  - [ ] Create "Empty States" and "Error States" (Offline, Sync failed.
 
 ---
 

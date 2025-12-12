@@ -320,12 +320,17 @@ export const HabitModal: React.FC<HabitModalProps> = ({
             </TouchableOpacity>
 
             {initialHabit && onDelete && (
-                <TouchableOpacity 
-                    style={[styles.saveButton, { backgroundColor: 'transparent', marginTop: SPACING.s }]} 
-                    onPress={onDelete}
-                >
-                    <Text style={{ color: '#FF3B30', fontWeight: '600', fontSize: 16 }}>Delete Habit</Text>
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  { backgroundColor: 'transparent', marginTop: SPACING.s },
+                ]}
+                onPress={onDelete}
+              >
+                <Text style={{ color: '#FF3B30', fontWeight: '600', fontSize: 16 }}>
+                  Delete Habit
+                </Text>
+              </TouchableOpacity>
             )}
           </View>
         </View>

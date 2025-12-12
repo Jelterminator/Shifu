@@ -79,7 +79,7 @@ class TaskRepository {
         return urgencyB - urgencyA; // Higher urgency first
       }
       // Same urgency (e.g. both 0/no deadline) -> Oldest first
-      return b.createdAt.getTime() - a.createdAt.getTime();
+      return a.createdAt.getTime() - b.createdAt.getTime();
     });
 
     return tasks.slice(0, limit);

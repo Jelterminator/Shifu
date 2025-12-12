@@ -41,7 +41,6 @@ class AnchorsService {
         // we need to refresh to ensure the full current week is available/correct.
         if (lastCalc < startOfCurrentWeek) {
           shouldCalculate = true;
-          // console.log('📅 AnchorsService: New week started, recalculating...');
         } else {
           // 2. Saturday Night Logic (Schedule Next Week)
           // If it is Saturday Night (>= 18:00) AND we haven't calculated since Sat 18:00
@@ -56,7 +55,6 @@ class AnchorsService {
 
             if (lastCalc < satNightStart) {
               shouldCalculate = true;
-              // console.log('📅 AnchorsService: Saturday Night! Scheduling next batch...');
             }
           }
         }
@@ -79,7 +77,6 @@ class AnchorsService {
    */
   recalculateFutureAnchors(latitude: number, longitude: number): void {
     try {
-      // console.log('🔄 AnchorsService: Recalculating future anchors due to settings change...');
       const now = new Date();
 
       // 1. Generate fresh anchors for the standard window (Current Week + Next Week)
@@ -97,7 +94,6 @@ class AnchorsService {
 
       // 4. Store
       this.saveAnchors(merged);
-      // console.log(`✅ AnchorsService: Updated. Preserved ${pastAnchors.length} past, Added ${futureAnchors.length} future.`);
     } catch (error) {
       console.error('❌ AnchorsService: Failed to recalculate future anchors:', error);
     }
@@ -241,7 +237,6 @@ class AnchorsService {
   getAnchorsForDate(date: Date): AnchorEvent[] {
     if (!this.initialized) {
       // Try to return something if checks pass? No, just warn.
-      // console.warn('⚠️ AnchorsService: Not initialized');
     }
 
     try {

@@ -19,9 +19,6 @@ class VectorService {
 
     await vectorStorage.initialize();
     this.isInitialized = true;
-
-    // eslint-disable-next-line no-console
-    console.log('✅ VectorService initialized');
   }
 
   /**
@@ -100,10 +97,7 @@ class VectorService {
   /**
    * Delete embedding for an entity
    */
-  async delete(
-    entityType: LinkableEntityType | 'summary',
-    entityId: string
-  ): Promise<void> {
+  async delete(entityType: LinkableEntityType | 'summary', entityId: string): Promise<void> {
     if (!this.isInitialized) await this.initialize();
 
     return vectorStorage.delete(entityType, entityId);

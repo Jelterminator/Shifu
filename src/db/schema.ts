@@ -225,4 +225,14 @@ export const MIGRATIONS: Migration[] = [
     CREATE INDEX idx_clusters_user ON vector_clusters(user_id);
     `,
   },
+  {
+    version: 12,
+    sql: `
+    -- Performance Indices (Date ranges & Urgency)
+    CREATE INDEX idx_plans_user_start_time ON plans(user_id, start_time);
+    CREATE INDEX idx_plans_source_done_date ON plans(source_id, source_type, done, start_time);
+    CREATE INDEX idx_tasks_user_completed_dt ON tasks(user_id, completed_at) WHERE is_completed = 1;
+    CREATE INDEX idx_tasks_user_incomplete_deadline ON tasks(user_id, is_completed, deadline) WHERE is_completed = 0;
+    `,
+  },
 ];

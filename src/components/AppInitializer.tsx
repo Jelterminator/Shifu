@@ -19,17 +19,12 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
   useEffect(() => {
     const initialize = async (): Promise<void> => {
       try {
-        console.log('🚀 AppInitializer: Starting initialization...');
-
         // 1. Initialize database FIRST
         await db.initialize();
-        console.log('✅ Database initialized');
 
         // 2. Ensure User Identity exists (Self-Healing)
         let currentUser = user;
         if (!currentUser?.id) {
-          console.log('👤 No user found in store. Checking storage or generating new identity...');
-
           // Check if we have a user in DB (maybe store was cleared but DB persists)
           // Simple query to get the first user
           const users = await db.query<{
@@ -39,7 +34,6 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
           }>('SELECT * FROM users LIMIT 1');
 
           if (users.length > 0 && users[0]) {
-            console.log('🔄 Found existing user in DB, rehydrating store:', users[0].id);
             // Rehydrate store from DB (simplified for now, just ID and defaults)
             // Ideally we load full profile
             const dbUser = users[0];
@@ -64,7 +58,7 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
             currentUser = fullUser;
           } else {
             // truly new or broken state -> Create new User
-            console.log('✨ Creating brand new user identity...');
+
             const newId = crypto.randomUUID();
             const defaultTimezone = 'Europe/Amsterdam'; // Fallback
 
@@ -82,18 +76,14 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
             };
             useUserStore.getState().setUser(newUser);
             currentUser = newUser;
-            console.log('✅ Created and persisted new user:', newId);
           }
         } else {
-          console.log('👤 User already loaded:', currentUser.id);
         }
 
         // 3. One-time Onboarding Check
         const valBool = storage.getBoolean('onboarding_complete') ?? false;
         const valString = storage.getString('onboarding_complete');
         const visitedOnboarding = valBool || valString === 'true';
-
-        console.log(`📋 Onboarding complete: ${visitedOnboarding}`);
 
         if (visitedOnboarding && currentUser?.id) {
           // Initialize services
@@ -102,19 +92,16 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
           const timezone = currentUser.timezone || 'Europe/Amsterdam';
 
           phaseManager.initialize(latitude, longitude, timezone);
-          // console.log('✅ PhaseManager initialized');
 
           // Initialize Anchors Service (Works on Web now via localStorage fallback)
           try {
             anchorsService.initialize(latitude, longitude);
-            // console.log('✅ AnchorsService initialized');
           } catch (e) {
             console.warn('⚠️ AnchorsService init warning:', e);
           }
         }
 
         setIsReady(true);
-        console.log('✅ AppInitializer: Initialization complete');
       } catch (error) {
         // ... err handling
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

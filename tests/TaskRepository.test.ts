@@ -79,11 +79,7 @@ describe('TaskRepository', () => {
         created_at: newer.toISOString(),
       };
 
-      mockDb.query.mockResolvedValue([
-        newTaskNoDeadline,
-        oldTaskNoDeadline,
-        taskWithDeadline,
-      ]);
+      mockDb.query.mockResolvedValue([newTaskNoDeadline, oldTaskNoDeadline, taskWithDeadline]);
 
       const result = await taskRepository.getUrgentTasks('user-1', 3);
 

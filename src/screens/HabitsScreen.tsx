@@ -33,16 +33,15 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
     { habit: Habit; history: boolean[]; streak: number; weeklyProgress: number }[]
   >([]);
   // State to hold today's plans for smart toggling and filtering
-  const [todayPlans, setTodayPlans] = useState<Plan[]>([]); 
+  const [todayPlans, setTodayPlans] = useState<Plan[]>([]);
 
   // Modals state
   const [habitModalVisible, setHabitModalVisible] = useState(false);
-// ...
+  // ...
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [statsHabit, setStatsHabit] = useState<Habit | null>(null);
   const [deleteConfirmationVisible, setDeleteConfirmationVisible] = useState(false);
   const [habitToDelete, setHabitToDelete] = useState<Habit | null>(null);
-
 
   const userId = useUserStore(state => state.user.id);
   const { colors, phaseColor } = useThemeStore();
@@ -54,7 +53,7 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
     }
     try {
       setLoading(true);
-      
+
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date();
@@ -63,7 +62,7 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
       const [weekly, dashboardData, todaysPlansData] = await Promise.all([
         habitRepository.getWeeklyOverallProgress(userId),
         habitRepository.getHabitsWithDashboardData(userId),
-        planRepository.getForDateRange(userId, startOfDay, endOfDay)
+        planRepository.getForDateRange(userId, startOfDay, endOfDay),
       ]);
       setWeeklyProgress(weekly);
       setHabitsWithHistory(dashboardData);
@@ -79,18 +78,16 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
     void loadData();
   }, [loadData]);
 
-
-
   const handleToggleCompletion = async (habit: Habit, dateDate?: Date): Promise<void> => {
     if (!userId) return;
     const date = dateDate || new Date();
-    
+
     // Only use plan-based toggle for "Today" interactions
     const isToday = !dateDate || dateDate.toDateString() === new Date().toDateString();
 
     try {
       // Determine current completion state from history
-      let isCurrentlyCompleted = false; 
+      let isCurrentlyCompleted = false;
       const habitEntry = habitsWithHistory.find(h => h.habit.id === habit.id);
       if (habitEntry) {
         const today = new Date();
@@ -106,7 +103,7 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
       if (isToday) {
         // Find today's plan for this habit (at most 1)
         const todayPlan = todayPlans.find(p => p.sourceId === habit.id && p.sourceType === 'habit');
-        
+
         if (todayPlan) {
           // Plan exists: just toggle its done status
           await planRepository.update(todayPlan.id, { done: shouldComplete });
@@ -183,9 +180,9 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
 
   // Today's Habits: Filter habits that have a corresponding plan for today
   const todaysHabits = habitsWithHistory.filter(h => {
-     // Check if there is a plan for this habit in todayPlans
-     // Typed as any temporarily
-     return todayPlans.some(p => p.sourceId === h.habit.id && p.sourceType === 'habit');
+    // Check if there is a plan for this habit in todayPlans
+    // Typed as any temporarily
+    return todayPlans.some(p => p.sourceId === h.habit.id && p.sourceType === 'habit');
   });
 
   const renderProgressBar = (): React.JSX.Element => (
@@ -387,10 +384,9 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
       setHabitToDelete(null);
       void loadData();
     } catch (error) {
-       Alert.alert('Error', 'Failed to delete habit');
+      Alert.alert('Error', 'Failed to delete habit');
     }
   };
-
 
   return (
     <BaseScreen navigation={navigation} title="Habits" footer={null}>
@@ -430,7 +426,6 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
         isDestructive
       />
     </BaseScreen>
-
   );
 }
 

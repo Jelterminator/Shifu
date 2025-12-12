@@ -11,12 +11,12 @@ export const WorkHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
   const [workStart, setWorkStart] = useState('09:00');
   const [workEnd, setWorkEnd] = useState('17:00');
 
-  const setUser = useUserStore((state) => state.setUser);
-  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore(state => state.setUser);
+  const user = useUserStore(state => state.user);
 
   const handleContinue = (): void => {
-      setUser({ ...user, workStart, workEnd });
-      navigation.navigate('SleepHoursSetup');
+    setUser({ ...user, workStart, workEnd });
+    navigation.navigate('SleepHoursSetup');
   };
 
   return (

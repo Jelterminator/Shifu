@@ -80,7 +80,13 @@ export function AppointmentModal({
     if (!match) return null;
 
     const [_, y, m, d, h, min] = match;
-    const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), parseInt(h), parseInt(min));
+    const date = new Date(
+      parseInt(y!),
+      parseInt(m!) - 1,
+      parseInt(d!),
+      parseInt(h!),
+      parseInt(min!)
+    );
     return isNaN(date.getTime()) ? null : date;
   }
 

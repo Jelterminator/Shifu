@@ -44,12 +44,13 @@ export function TaskCard({
   // Urgency logic
   const deadlineDate = typeof task.deadline === 'string' ? new Date(task.deadline) : task.deadline;
   const urgencyTier = determineUrgency(deadlineDate, task.effortMinutes).urgencyLevel; // Defaulting for visual
-  
+
   // If urgency is T6 or CHORE, use the current phase color (standard color of the moment)
   const isLowUrgency = urgencyTier === 'T6' || urgencyTier === 'CHORE';
-  const tierColor = (useDefaultColor || isLowUrgency) 
-    ? colors.primary 
-    : URGENCY_COLORS[urgencyTier as keyof typeof URGENCY_COLORS];
+  const tierColor =
+    useDefaultColor || isLowUrgency
+      ? colors.primary
+      : URGENCY_COLORS[urgencyTier as keyof typeof URGENCY_COLORS];
 
   const handlePress = (): void => {
     setIsExpanded(!isExpanded);
@@ -112,9 +113,7 @@ export function TaskCard({
               onPress={onToggleComplete}
               style={[styles.checkbox, { borderColor: colors.textSecondary }]}
             >
-              {completed && (
-                <View style={[styles.checked, { backgroundColor: colors.primary }]} />
-              )}
+              {completed && <View style={[styles.checked, { backgroundColor: colors.primary }]} />}
             </TouchableOpacity>
           )}
         </View>

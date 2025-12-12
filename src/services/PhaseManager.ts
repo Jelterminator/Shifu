@@ -35,9 +35,8 @@ class PhaseManager {
     try {
       this.userLocation = { latitude, longitude, timezone };
       this.isInitialized = true;
-      // console.log(
-      // `✅ PhaseManager initialized: ${latitude.toFixed(2)}, ${longitude.toFixed(2)}, ${timezone}`
-      // );
+      this.userLocation = { latitude, longitude, timezone };
+      this.isInitialized = true;
     } catch (error) {
       console.error('❌ PhaseManager initialization failed:', error);
       throw error;
@@ -62,9 +61,6 @@ class PhaseManager {
    */
   private ensureLocation(): { latitude: number; longitude: number; timezone: string } {
     if (!this.userLocation) {
-      // console.info(
-      //   `ℹ️  PhaseManager not initialized. Using default location (${DEFAULT_LOCATION.latitude}, ${DEFAULT_LOCATION.longitude})`
-      // );
       return DEFAULT_LOCATION;
     }
     return this.userLocation;
@@ -94,7 +90,7 @@ class PhaseManager {
     // Helper to find phase name for a given hour
     const getPhaseName = (hour: number): keyof typeof PHASE_CONFIG | null => {
       for (const [name, config] of Object.entries(PHASE_CONFIG)) {
-        if (config.romanHours.includes(hour)) return name as keyof typeof PHASE_CONFIG;
+        if (config.romanHours.includes(hour)) return name;
       }
       return null;
     };
@@ -143,7 +139,7 @@ class PhaseManager {
     if (!first || !last) return;
 
     phases.push({
-      name: name as any, // Cast to match WuXingPhase (strict union vs string key)
+      name: name as WuXingPhase['name'],
       startTime: first.startTime,
       endTime: last.endTime,
       color: config.color,
@@ -263,9 +259,6 @@ class PhaseManager {
       // Fallback to last phase if nothing found
       const lastPhase = phases[phases.length - 1];
       if (lastPhase) {
-        // console.warn(
-        // `⚠️  Current time not in any phase range. Using last phase: ${lastPhase.name}`
-        // );
         return lastPhase;
       }
 

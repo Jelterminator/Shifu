@@ -302,13 +302,13 @@ export function mapPlanToRow(plan: Plan): PlanRow {
     description: plan.description || null,
     start_time: plan.startTime.toISOString(),
     end_time: plan.endTime.toISOString(),
-    done: plan.done === null ? null : toInt(plan.done as boolean),
+    done: plan.done === null ? null : toInt(plan.done),
     source_id: plan.sourceId || null,
     source_type: plan.sourceType || null,
     rating: plan.rating || null,
     linked_object_ids: safeStringify(plan.linkedObjectIds),
     created_at: plan.createdAt.toISOString(),
-    updated_at: plan.createdAt.toISOString(), // Plans are append-only mostly, but row needs it 
+    updated_at: plan.createdAt.toISOString(), // Plans are append-only mostly, but row needs it
     completed_at: plan.completedAt ? plan.completedAt.toISOString() : null,
   };
 }

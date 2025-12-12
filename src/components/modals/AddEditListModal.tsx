@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { BORDER_RADIUS, DAYS, KEYWORDS, PHASES, SPACING } from '../../constants';
 import { useListStore } from '../../stores/listStore';
 import { useThemeStore } from '../../stores/themeStore';
 import { ConfirmationModal } from './ConfirmationModal';
-
 
 interface AddEditListModalProps {
   visible: boolean;
@@ -40,21 +39,19 @@ export function AddEditListModal({
   const [allowedPhases, setAllowedPhases] = useState<string[]>([...PHASES]);
   const [deleteConfVisible, setDeleteConfVisible] = useState(false);
 
-
   const handleDelete = (): void => {
     if (!initialListId) return;
     setDeleteConfVisible(true);
   };
 
   const executeDelete = (): void => {
-     if (!initialListId) return;
-     deleteList(initialListId);
-     onSave?.(); // Refresh parent
-     onClose();
-     setDeleteConfVisible(false);
-     resetForm();
+    if (!initialListId) return;
+    deleteList(initialListId);
+    onSave?.(); // Refresh parent
+    onClose();
+    setDeleteConfVisible(false);
+    resetForm();
   };
-
 
   const handleSave = (): void => {
     const listData = {
@@ -255,7 +252,11 @@ export function AddEditListModal({
             <TouchableOpacity
               style={[
                 styles.saveButton,
-                { backgroundColor: 'transparent', marginTop: SPACING.s, borderStartColor: 'transparent' },
+                {
+                  backgroundColor: 'transparent',
+                  marginTop: SPACING.s,
+                  borderStartColor: 'transparent',
+                },
               ]}
               onPress={handleDelete}
             >
@@ -275,7 +276,6 @@ export function AddEditListModal({
         isDestructive
       />
     </Modal>
-
   );
 }
 

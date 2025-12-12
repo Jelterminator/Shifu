@@ -88,8 +88,6 @@ export function validateConfig(): void {
   if (errors.length > 0) {
     throw new Error(`Configuration validation failed:\n${errors.join('\n')}`);
   }
-
-  // __DEV__ && console.log('✅ Configuration validated');
 }
 
 /**

@@ -101,7 +101,7 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
     if (!user) return;
     try {
       const newCompleted = !task.isCompleted;
-      
+
       // 1. Mark task complete
       await taskRepository.update(task.id, { isCompleted: newCompleted });
 
@@ -113,14 +113,14 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
           // Unplanned completion: Create a hidden "Task Completion" plan
           // This ensures stats (if any) could track it, but Agenda hides it
           await planRepository.create(user.id!, {
-             name: 'Task Completion',
-             description: 'Unplanned completion',
-             startTime: new Date(),
-             endTime: new Date(new Date().getTime() + (task.effortMinutes || 30) * 60000),
-             done: true,
-             sourceId: task.id,
-             sourceType: 'task',
-             linkedObjectIds: []
+            name: 'Task Completion',
+            description: 'Unplanned completion',
+            startTime: new Date(),
+            endTime: new Date(new Date().getTime() + (task.effortMinutes || 30) * 60000),
+            done: true,
+            sourceId: task.id,
+            sourceType: 'task',
+            linkedObjectIds: [],
           });
         } else {
           // Scheduled: Mark all existing plans as done
@@ -131,12 +131,12 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
       } else {
         // Uncompleting
         for (const plan of allPlansForTask) {
-           if (plan.name === 'Task Completion') {
-             // If it was an unplanned completion plan, delete it (clean up)
-             await planRepository.delete(plan.id);
-           } else {
-             await planRepository.update(plan.id, { done: false });
-           }
+          if (plan.name === 'Task Completion') {
+            // If it was an unplanned completion plan, delete it (clean up)
+            await planRepository.delete(plan.id);
+          } else {
+            await planRepository.update(plan.id, { done: false });
+          }
         }
       }
 
@@ -243,7 +243,9 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
               scrollEnabled={false}
             />
           ) : (
-            <Text style={{ color: colors.textSecondary, fontStyle: 'italic', marginBottom: SPACING.m }}>
+            <Text
+              style={{ color: colors.textSecondary, fontStyle: 'italic', marginBottom: SPACING.m }}
+            >
               No tasks scheduled for today.
             </Text>
           )}

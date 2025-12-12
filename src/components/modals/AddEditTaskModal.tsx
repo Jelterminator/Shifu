@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { BORDER_RADIUS, KEYWORDS, SHADOWS, SPACING } from '../../constants';
 import { taskRepository } from '../../db/repositories/TaskRepository';
@@ -16,7 +16,6 @@ import { useThemeStore } from '../../stores/themeStore';
 import { useUserStore } from '../../stores/userStore';
 import type { Task } from '../../types/database';
 import { ConfirmationModal } from './ConfirmationModal';
-
 
 interface AddEditTaskModalProps {
   visible: boolean;
@@ -52,7 +51,6 @@ export function AddEditTaskModal({
   const [deadlineText, setDeadlineText] = useState('');
   const [loading, setLoading] = useState(false);
   const [deleteConfVisible, setDeleteConfVisible] = useState(false);
-
 
   useEffect(() => {
     if (visible && task) {
@@ -142,19 +140,18 @@ export function AddEditTaskModal({
   };
 
   const executeDelete = async (): Promise<void> => {
-     if (!task) return;
-     try {
-         await taskRepository.delete(task.id);
-         setDeleteConfVisible(false);
-         onSave?.();
-         onClose();
-     } catch (e) {
-         console.error(e);
-         Alert.alert('Error', 'Failed to delete task');
-     }
+    if (!task) return;
+    try {
+      await taskRepository.delete(task.id);
+      setDeleteConfVisible(false);
+      onSave?.();
+      onClose();
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Failed to delete task');
+    }
   };
 
-    
   return (
     <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
@@ -373,10 +370,7 @@ export function AddEditTaskModal({
 
           {task && (
             <TouchableOpacity
-              style={[
-                styles.saveButton,
-                { backgroundColor: 'transparent', marginTop: SPACING.s },
-              ]}
+              style={[styles.saveButton, { backgroundColor: 'transparent', marginTop: SPACING.s }]}
               onPress={handleDelete}
             >
               <Text style={{ color: '#FF3B30', fontWeight: '600' }}>Delete Task</Text>
@@ -384,7 +378,7 @@ export function AddEditTaskModal({
           )}
         </View>
       </View>
-      
+
       <ConfirmationModal
         visible={deleteConfVisible}
         title="Delete Task"
@@ -396,7 +390,6 @@ export function AddEditTaskModal({
       />
     </Modal>
   );
-
 }
 
 const styles = StyleSheet.create({

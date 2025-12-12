@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    FlatList,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
 import { ConfirmationModal } from '../components/modals/ConfirmationModal';
@@ -17,7 +17,6 @@ import { useThemeStore } from '../stores/themeStore';
 import { useUserStore } from '../stores/userStore';
 import type { JournalEntry } from '../types/database';
 import type { MainTabScreenProps } from '../types/navigation';
-
 
 /**
  * Props for the JournalScreen component
@@ -97,7 +96,6 @@ export function JournalScreen(_props: JournalScreenProps): React.JSX.Element {
   const [isSaving, setIsSaving] = useState(false);
   const [deleteConfVisible, setDeleteConfVisible] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<JournalEntry | null>(null);
-
 
   const userId = useUserStore(state => state.user.id);
   const { colors, phaseColor } = useThemeStore();
@@ -240,17 +238,16 @@ export function JournalScreen(_props: JournalScreenProps): React.JSX.Element {
   };
 
   const executeDeleteEntry = async (): Promise<void> => {
-     if (!entryToDelete) return;
-     try {
-         await journalRepository.delete(entryToDelete.id);
-         setDeleteConfVisible(false);
-         setEntryToDelete(null);
-         await loadEntries();
-     } catch (e) {
-         Alert.alert('Error', 'Failed to delete entry');
-     }
+    if (!entryToDelete) return;
+    try {
+      await journalRepository.delete(entryToDelete.id);
+      setDeleteConfVisible(false);
+      setEntryToDelete(null);
+      await loadEntries();
+    } catch (e) {
+      Alert.alert('Error', 'Failed to delete entry');
+    }
   };
-
 
   const renderEntry = ({ item }: { item: JournalEntry }): React.JSX.Element => {
     const mood = extractMoodFromContent(item.content);
@@ -263,14 +260,11 @@ export function JournalScreen(_props: JournalScreenProps): React.JSX.Element {
         <View style={styles.entryHeader}>
           <View>
             <Text style={[styles.entryDate, { color: colors.textSecondary }]}>
-                {formatListDate(new Date(item.entryDate))}
+              {formatListDate(new Date(item.entryDate))}
             </Text>
             <Text style={[styles.entryMood, { color: moodColor }]}>{stars}</Text>
           </View>
-          <TouchableOpacity 
-            onPress={() => handleDeleteEntry(item)}
-            style={{ padding: 8 }}
-          >
+          <TouchableOpacity onPress={() => handleDeleteEntry(item)} style={{ padding: 8 }}>
             <Text style={{ fontSize: 16 }}>🗑️</Text>
           </TouchableOpacity>
         </View>
@@ -329,21 +323,19 @@ export function JournalScreen(_props: JournalScreenProps): React.JSX.Element {
         {renderAIInsights()}
       </ScrollView>
 
-
       <ConfirmationModal
         visible={deleteConfVisible}
         title="Delete Entry"
         message="Are you sure you want to delete this journal entry?"
         onConfirm={() => void executeDeleteEntry()}
         onCancel={() => {
-            setDeleteConfVisible(false);
-            setEntryToDelete(null);
+          setDeleteConfVisible(false);
+          setEntryToDelete(null);
         }}
         confirmLabel="Delete"
         isDestructive
       />
     </BaseScreen>
-
   );
 }
 
