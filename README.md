@@ -5,9 +5,9 @@
 A React Native application with offline AI capabilities and intelligent scheduling, rooted in the Wu
 Xing (Five Elements) philosophy.
 
-**Status:** 🚧 Phase 2 In Progress - Onboarding & Wu Xing Integration
+**Status:** 🚧 Phase 4 In Progress - Next up: moving to native and API integrations (v0.1.1)
 
-**Note:** Safe for Web & Native (Custom Store Implementation)
+**Note:** Safe and tested for Web (Custom Store Implementation)
 
 ---
 
@@ -47,6 +47,10 @@ cd shifu
 
 # Install dependencies
 npm install
+
+# Validate environment configuration
+# Note: Ensure .env.local is set up. This script checks for required variables.
+node scripts/check-env.js
 ```
 
 ### Development
@@ -90,6 +94,8 @@ shifu/
 │   │   ├── storage.native.ts   # Native MMKV storage
 │   │   └── storage.web.ts      # Web localStorage
 │   └── ...
+├── scripts/
+│   └── check-env.js            # Environment validation script (CI & Local)
 ```
 
 ---
@@ -139,6 +145,8 @@ organize your day:
 
 ## Recent Updates
 
+- **CI/CD Repair:** Restored `check-env.js` and fixed linting pipeline for robust builds.
+- **Code Cleanup:** Removed unused files and debug logs for a cleaner codebase.
 - **SchedulerAI Implementation:** Advanced heuristic scheduling with phase awareness.
 - **Wu Xing Constants:** Centralized logic for Elements, Colors, and Keywords.
 - **Scheduling Fixes:** Resolved user ID segregation and added future-plan clearing.

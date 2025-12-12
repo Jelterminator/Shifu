@@ -310,8 +310,8 @@ Animations, Reanimated 2, Dynamic Styling.
   
   * [x] Linting
   * [x] Jest
-  - [ ] Clean up project
-  * [ ] Get GitHub uploading clean
+  - [x] Clean up project
+  * [x] Get GitHub uploading clean
 
 * **To Native Platform**
   
