@@ -1,3 +1,6 @@
+// Polyfill crypto.getRandomValues for uuid on native platforms
+import 'expo-crypto';
+
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
