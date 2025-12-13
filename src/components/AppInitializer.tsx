@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db/database';
 import { phaseManager } from '../services/PhaseManager';
 import { anchorsService } from '../services/data/Anchors';
@@ -59,7 +60,7 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
           } else {
             // truly new or broken state -> Create new User
 
-            const newId = crypto.randomUUID();
+            const newId = uuidv4();
             const defaultTimezone = 'Europe/Amsterdam'; // Fallback
 
             await db.execute('INSERT INTO users (id, timezone, created_at) VALUES (?, ?, ?)', [

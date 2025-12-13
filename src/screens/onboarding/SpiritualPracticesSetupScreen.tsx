@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { SafeAreaView, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { RELIGIOUS_PRACTICES, type PracticeCategory } from '../../data/practices';
+import { anchorsService } from '../../services/data/Anchors';
 import { useUserStore } from '../../stores/userStore';
 import type { RootStackParamList } from '../../types/navigation';
 
@@ -33,12 +34,7 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation, rou
     const lat = user.latitude ?? 52.3676;
     const long = user.longitude ?? 4.9041;
 
-    // Import dynamically or use the imported instance
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { anchorsService } = require('../../services/data/Anchors') as {
-      anchorsService: typeof import('../../services/data/Anchors').anchorsService;
-    };
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    // Recalculate anchors based on new settings (Future Only)
     anchorsService.recalculateFutureAnchors(lat, long);
 
     if (isEditing) {
