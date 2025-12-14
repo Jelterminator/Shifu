@@ -1,5 +1,11 @@
 // Polyfill crypto.getRandomValues for uuid on native platforms
-import 'expo-crypto';
+import * as Crypto from 'expo-crypto';
+
+if (!global.crypto) {
+  (global as any).crypto = {
+    getRandomValues: (array: any) => Crypto.getRandomValues(array),
+  };
+}
 
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
