@@ -1,17 +1,62 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { SafeAreaView, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RELIGIOUS_PRACTICES, type PracticeCategory } from '../../data/practices';
 import { anchorsService } from '../../services/data/Anchors';
+import { useThemeStore } from '../../stores/themeStore';
 import { useUserStore } from '../../stores/userStore';
 import type { RootStackParamList } from '../../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SpiritualPracticesSetup'>;
 
+/**
+ * Converts a Roman hour (0-23) to an approximate Gregorian time description.
+ * Roman hours 0-11 are daytime hours (sunrise to sunset).
+ * Roman hours 12-23 are nighttime hours (sunset to next sunrise).
+ *
+ * This provides an approximate time assuming ~6AM sunrise and ~6PM sunset.
+ */
+const romanHourToTimeDescription = (romanHour: number): string => {
+  // Approximate mapping based on a 6AM sunrise and 6PM sunset
+  // Daytime hours (0-11): Each hour is ~1h of the 12h day
+  // Nighttime hours (12-23): Each hour is ~1h of the 12h night
+  const timeMap: Record<number, string> = {
+    0: '~6:00 AM (Sunrise)',
+    1: '~7:00 AM',
+    2: '~8:00 AM',
+    3: '~9:00 AM',
+    4: '~10:00 AM',
+    5: '~11:00 AM',
+    6: '~12:00 PM (Midday)',
+    7: '~1:00 PM',
+    8: '~2:00 PM',
+    9: '~3:00 PM',
+    10: '~4:00 PM',
+    11: '~5:00 PM',
+    12: '~6:00 PM (Sunset)',
+    13: '~7:00 PM',
+    14: '~8:00 PM',
+    15: '~9:00 PM',
+    16: '~10:00 PM',
+    17: '~11:00 PM',
+    18: '~12:00 AM (Midnight)',
+    19: '~1:00 AM',
+    20: '~2:00 AM',
+    21: '~3:00 AM',
+    22: '~4:00 AM',
+    23: '~5:00 AM',
+  };
+  return timeMap[romanHour] ?? `Hour ${romanHour}`;
+};
+
 export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation, route }) => {
   const user = useUserStore(state => state.user);
   const setUser = useUserStore(state => state.setUser);
+  const colors = useThemeStore(state => state.colors);
+  const isDark = useThemeStore(state => state.isDark);
+
   const [selectedPractices, setSelectedPractices] = useState<string[]>(
     user.spiritualPractices || []
   );
@@ -60,17 +105,41 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation, rou
       <TouchableOpacity
         key={practice.id}
         onPress={() => handleTogglePractice(practice.id)}
-        style={[styles.practiceItem, isSelected && styles.practiceItemSelected]}
+        style={[
+          styles.practiceItem,
+          {
+            backgroundColor: isSelected
+              ? isDark
+                ? colors.surface
+                : '#EDF7ED'
+              : colors.surface,
+            borderColor: isSelected ? colors.primary : 'transparent',
+          },
+        ]}
       >
-        <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+        <View
+          style={[
+            styles.checkbox,
+            {
+              borderColor: isSelected ? colors.primary : colors.border,
+              backgroundColor: isSelected ? colors.primary : 'transparent',
+            },
+          ]}
+        >
           {isSelected && <Text style={styles.checkmark}>✓</Text>}
         </View>
         <View style={styles.practiceInfo}>
-          <Text style={[styles.practiceName, isSelected && styles.practiceNameSelected]}>
+          <Text
+            style={[
+              styles.practiceName,
+              isSelected && styles.practiceNameSelected,
+              { color: colors.text },
+            ]}
+          >
             {practice.name}
           </Text>
-          <Text style={styles.practiceDetail}>
-            Hour {practice.romanHour} • {practice.durationMinutes}m
+          <Text style={[styles.practiceDetail, { color: colors.textSecondary }]}>
+            {romanHourToTimeDescription(practice.romanHour)} • {practice.durationMinutes}m
           </Text>
         </View>
       </TouchableOpacity>
@@ -79,7 +148,7 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation, rou
 
   const renderCategory = ({ item }: { item: PracticeCategory }): React.JSX.Element => (
     <View style={styles.categoryContainer}>
-      <Text style={styles.categoryTitle}>{item.name}</Text>
+      <Text style={[styles.categoryTitle, { color: colors.textSecondary }]}>{item.name}</Text>
       {item.practices.map(renderPracticeItem)}
     </View>
   );
@@ -90,12 +159,17 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation, rou
   }));
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.background, borderBottomColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.title, { color: colors.text }]}>
           {isEditing ? '🙏 Update Disciplines' : '🙏 Spiritual Anchors'}
         </Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           {isEditing
             ? 'Reconfigure your daily practices.'
             : 'Select daily practices to anchor your rhythm.'}
@@ -107,16 +181,24 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation, rou
         keyExtractor={(item, index) => item.name + index}
         renderItem={renderCategory}
         renderSectionHeader={({ section: { title } }) => (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{title}</Text>
+          <View style={[styles.sectionHeader, { borderBottomColor: colors.primary }]}>
+            <Text style={[styles.sectionTitle, { color: colors.primary }]}>{title}</Text>
           </View>
         )}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={styles.listContent}
       />
 
-      <View style={styles.footer}>
-        <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
+      <View
+        style={[
+          styles.footer,
+          { backgroundColor: colors.background, borderTopColor: colors.border },
+        ]}
+      >
+        <TouchableOpacity
+          onPress={handleContinue}
+          style={[styles.continueButton, { backgroundColor: colors.primary }]}
+        >
           <Text style={styles.continueButtonText}>
             {isEditing ? 'Save Changes' : `Continue (${selectedPractices.length}) →`}
           </Text>
@@ -129,24 +211,19 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation, rou
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     padding: 16,
     paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#1A1A1A',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666666',
   },
   listContent: {
     padding: 16,
@@ -156,13 +233,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 12,
     borderBottomWidth: 2,
-    borderBottomColor: '#4A7C59',
     alignSelf: 'flex-start',
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#4A7C59',
     marginBottom: 4,
   },
   categoryContainer: {
@@ -171,40 +246,26 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#888',
     marginBottom: 8,
-    marginLeft: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   practiceItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: '#F9F9F9',
     borderRadius: 8,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: 'transparent',
-  },
-  practiceItemSelected: {
-    backgroundColor: '#EDF7ED', // Light green
-    borderColor: '#4A7C59',
   },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#C0C0C0',
     marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
-  },
-  checkboxSelected: {
-    borderColor: '#4A7C59',
-    backgroundColor: '#4A7C59',
   },
   checkmark: {
     color: '#FFFFFF',
@@ -217,25 +278,19 @@ const styles = StyleSheet.create({
   practiceName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333333',
   },
   practiceNameSelected: {
     fontWeight: '700',
-    color: '#1A1A1A',
   },
   practiceDetail: {
     fontSize: 13,
-    color: '#888888',
     marginTop: 2,
   },
   footer: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    backgroundColor: '#FFFFFF',
   },
   continueButton: {
-    backgroundColor: '#4A7C59',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',

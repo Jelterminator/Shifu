@@ -1,8 +1,10 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect } from 'react';
-import { ActivityIndicator, Alert, SafeAreaView, Text } from 'react-native';
+import { ActivityIndicator, Alert, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { phaseManager } from '../../services/PhaseManager';
+import { anchorsService } from '../../services/data/Anchors';
 import { useThemeStore } from '../../stores/themeStore';
 import { useUserStore } from '../../stores/userStore';
 import type { RootStackParamList } from '../../types/navigation';
@@ -24,6 +26,9 @@ export const LoadingSetupScreen: React.FC<Props> = ({ navigation }) => {
         const timezone = user.timezone || 'Europe/Amsterdam';
 
         phaseManager.initialize(latitude, longitude, timezone);
+
+        // Initialize Anchors Service to generate anchors based on user's location and practices
+        anchorsService.initialize(latitude, longitude);
 
         // Calculate phases
         const currentPhase = phaseManager.getCurrentPhase();
