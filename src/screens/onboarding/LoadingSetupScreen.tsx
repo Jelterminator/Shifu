@@ -30,6 +30,19 @@ export const LoadingSetupScreen: React.FC<Props> = ({ navigation }) => {
         // Initialize Anchors Service to generate anchors based on user's location and practices
         anchorsService.initialize(latitude, longitude);
 
+        // Pre-fetch anchors for today and remaining days of the week
+        const today = new Date();
+        const currentDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        // Calculate days until Sunday (end of week)
+        const daysUntilEndOfWeek = currentDayOfWeek === 0 ? 0 : 7 - currentDayOfWeek;
+
+        for (let i = 0; i <= daysUntilEndOfWeek; i++) {
+          const date = new Date(today);
+          date.setDate(today.getDate() + i);
+          // This triggers retrieval/caching of anchors for each day
+          anchorsService.getAnchorsForDate(date);
+        }
+
         // Calculate phases
         const currentPhase = phaseManager.getCurrentPhase();
 

@@ -28,10 +28,13 @@ class AnchorsService {
       }
 
       const lastCalcStr = storage.get(LAST_CALCULATION_KEY);
+      const existingAnchors = this.getStoredAnchors();
       const now = new Date();
       let shouldCalculate = false;
 
-      if (!lastCalcStr) {
+      // FIX #2: Always calculate if no anchors exist, regardless of timing
+      if (!lastCalcStr || existingAnchors.length === 0) {
+        console.log('📍 AnchorsService: First-time initialization or empty anchors, generating...');
         shouldCalculate = true;
       } else {
         const lastCalc = new Date(lastCalcStr);
@@ -40,6 +43,7 @@ class AnchorsService {
         // 1. If last calculation was before the start of the current week,
         // we need to refresh to ensure the full current week is available/correct.
         if (lastCalc < startOfCurrentWeek) {
+          console.log('📍 AnchorsService: Week changed, refreshing anchors...');
           shouldCalculate = true;
         } else {
           // 2. Saturday Night Logic (Schedule Next Week)
@@ -54,6 +58,7 @@ class AnchorsService {
             satNightStart.setHours(18, 0, 0, 0);
 
             if (lastCalc < satNightStart) {
+              console.log('📍 AnchorsService: Saturday evening, generating next week...');
               shouldCalculate = true;
             }
           }
@@ -61,10 +66,15 @@ class AnchorsService {
       }
 
       if (shouldCalculate) {
-        this.calculateAndStoreAnchors(latitude, longitude);
+        // FIX #3: Use recalculateFutureAnchors for consistent behavior
+        // This preserves past anchors while ensuring future ones are fresh
+        this.recalculateFutureAnchors(latitude, longitude);
+      } else {
+        console.log('📍 AnchorsService: Anchors up to date, skipping calculation');
       }
 
       this.initialized = true;
+      console.log(`✅ AnchorsService: Initialized with ${this.getStoredAnchors().length} anchors`);
     } catch (error) {
       console.error('❌ AnchorsService: Initialization failed:', error);
       this.initialized = false;
@@ -235,8 +245,9 @@ class AnchorsService {
   }
 
   getAnchorsForDate(date: Date): AnchorEvent[] {
+    // FIX #1: Add proper warning when not initialized
     if (!this.initialized) {
-      // Try to return something if checks pass? No, just warn.
+      console.warn('⚠️ AnchorsService: getAnchorsForDate called before initialization. Returning stored anchors if available.');
     }
 
     try {
