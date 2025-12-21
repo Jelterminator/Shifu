@@ -11,8 +11,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
   const colors = useThemeStore(state => state.colors);
 
-  const handleGetStarted = (): void => {
-    navigation.navigate('LocationSetup');
+  const handleContinue = (): void => {
+    navigation.navigate('StartupConfig');
   };
 
   return (
@@ -39,7 +39,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         AI-Powered Daily Planning Aligned with Natural Rhythms
       </Text>
       <TouchableOpacity
-        onPress={handleGetStarted}
+        onPress={handleContinue}
         style={{
           backgroundColor: colors.primary,
           paddingHorizontal: 32,

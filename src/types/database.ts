@@ -136,6 +136,8 @@ export interface JournalSegment {
 }
 
 // Appointments
+export type AppointmentSource = 'manual' | 'google' | 'apple' | 'microsoft' | 'device';
+
 export interface AppointmentRow extends BaseEntity {
   user_id: string;
   name: string;
@@ -143,7 +145,7 @@ export interface AppointmentRow extends BaseEntity {
   start_time: string;
   end_time: string;
   external_id: string | null;
-  source: 'manual' | 'google' | 'apple';
+  source: AppointmentSource;
   linked_object_ids: string | null;
 }
 
@@ -155,7 +157,7 @@ export interface Appointment {
   startTime: Date;
   endTime: Date;
   externalId?: string;
-  source: 'manual' | 'google' | 'apple';
+  source: AppointmentSource;
   linkedObjectIds: string[];
   createdAt: Date;
   updatedAt: Date;

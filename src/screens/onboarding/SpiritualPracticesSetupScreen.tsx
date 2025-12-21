@@ -108,11 +108,7 @@ export const SpiritualPracticesSetupScreen: React.FC<Props> = ({ navigation, rou
         style={[
           styles.practiceItem,
           {
-            backgroundColor: isSelected
-              ? isDark
-                ? colors.surface
-                : '#EDF7ED'
-              : colors.surface,
+            backgroundColor: isSelected ? (isDark ? colors.surface : '#EDF7ED') : colors.surface,
             borderColor: isSelected ? colors.primary : 'transparent',
           },
         ]}

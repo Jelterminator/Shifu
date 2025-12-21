@@ -58,6 +58,15 @@ class AppointmentRepository {
     return rows.map(mapAppointmentRowToAppointment);
   }
 
+  async getByExternalId(externalId: string): Promise<Appointment | null> {
+    const rows = await db.query<AppointmentRow>(
+      'SELECT * FROM appointments WHERE external_id = ?',
+      [externalId]
+    );
+    if (!rows[0]) return null;
+    return mapAppointmentRowToAppointment(rows[0]);
+  }
+
   async update(id: string, data: Partial<Appointment>): Promise<void> {
     const updates: string[] = [];
     const params: (string | number | null)[] = [];

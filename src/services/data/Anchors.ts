@@ -23,6 +23,7 @@ class AnchorsService {
   initialize(latitude: number, longitude: number): void {
     try {
       if (!storage) {
+        // eslint-disable-next-line no-console
         console.warn('⚠️ AnchorsService: Storage not available, skipping initialization');
         return;
       }
@@ -36,6 +37,7 @@ class AnchorsService {
       const hasPractices = (userStoreState.user.spiritualPractices || []).length > 0;
 
       // Debug logging for Android troubleshooting
+      // eslint-disable-next-line no-console
       console.log('🔍 AnchorsService Diagnositcs:', {
         lastCalcStr,
         existingAnchorsCount: existingAnchors.length,
@@ -49,7 +51,10 @@ class AnchorsService {
       // B) We have no anchors BUT we DO have practices selected (implies data loss or previous failed init)
       // This respects the valid "No Anchors Selected" state.
       if (!lastCalcStr || (existingAnchors.length === 0 && hasPractices)) {
-        console.log('📍 AnchorsService: First-time initialization or missing anchors (with practices), generating...');
+        // eslint-disable-next-line no-console
+        console.log(
+          '📍 AnchorsService: First-time initialization or missing anchors (with practices), generating...'
+        );
         shouldCalculate = true;
       } else {
         const lastCalc = new Date(lastCalcStr);
@@ -58,6 +63,7 @@ class AnchorsService {
         // 1. If last calculation was before the start of the current week,
         // we need to refresh to ensure the full current week is available/correct.
         if (lastCalc < startOfCurrentWeek) {
+          // eslint-disable-next-line no-console
           console.log('📍 AnchorsService: Week changed, refreshing anchors...');
           shouldCalculate = true;
         } else {
@@ -73,6 +79,7 @@ class AnchorsService {
             satNightStart.setHours(18, 0, 0, 0);
 
             if (lastCalc < satNightStart) {
+              // eslint-disable-next-line no-console
               console.log('📍 AnchorsService: Saturday evening, generating next week...');
               shouldCalculate = true;
             }
@@ -85,12 +92,15 @@ class AnchorsService {
         // (unlike merge logic in recalculateFutureAnchors which might skip past days of current week)
         this.calculateAndStoreAnchors(latitude, longitude);
       } else {
+        // eslint-disable-next-line no-console
         console.log('📍 AnchorsService: Anchors up to date, skipping calculation');
       }
 
       this.initialized = true;
+      // eslint-disable-next-line no-console
       console.log(`✅ AnchorsService: Initialized with ${this.getStoredAnchors().length} anchors`);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('❌ AnchorsService: Initialization failed:', error);
       this.initialized = false;
     }
@@ -120,6 +130,7 @@ class AnchorsService {
       // 4. Store
       this.saveAnchors(merged);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('❌ AnchorsService: Failed to recalculate future anchors:', error);
     }
   }
@@ -150,6 +161,7 @@ class AnchorsService {
 
       this.saveAnchors(merged);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('❌ AnchorsService: Failed to calculate and store anchors:', error);
       throw error;
     }
@@ -209,6 +221,7 @@ class AnchorsService {
           }
         }
       } catch (dayError) {
+        // eslint-disable-next-line no-console
         console.warn(`⚠️ Failed to calculate Roman hours for ${dateStr}:`, dayError);
       }
     }
@@ -254,6 +267,7 @@ class AnchorsService {
         startTime: new Date(item.startTime),
       }));
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('❌ Failed to parse stored anchors:', error);
       return [];
     }
@@ -262,7 +276,10 @@ class AnchorsService {
   getAnchorsForDate(date: Date): AnchorEvent[] {
     // FIX #1: Add proper warning when not initialized
     if (!this.initialized) {
-      console.warn('⚠️ AnchorsService: getAnchorsForDate called before initialization. Returning stored anchors if available.');
+      // eslint-disable-next-line no-console
+      console.warn(
+        '⚠️ AnchorsService: getAnchorsForDate called before initialization. Returning stored anchors if available.'
+      );
     }
 
     try {
@@ -280,6 +297,7 @@ class AnchorsService {
         return a.startTime >= startOfDay && a.startTime <= endOfDay;
       });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('❌ Failed to get anchors for date:', error);
       return [];
     }

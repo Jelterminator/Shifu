@@ -1,4 +1,5 @@
 import { MMKV } from 'react-native-mmkv';
+import type { DatabaseService } from '../db/database';
 
 export interface StorageAdapter {
   get(key: string): string | null;
@@ -12,7 +13,7 @@ export interface StorageAdapter {
    * Preload data from SQLite if MMKV is unavailable.
    * Call this during app initialization.
    */
-  preload(db: any): Promise<void>;
+  preload(db: DatabaseService): Promise<void>;
 }
 
 /**
@@ -22,7 +23,7 @@ function createStorage(): StorageAdapter {
   let mmkv: MMKV | null = null;
   let useFallback = false;
   const memoryCache = new Map<string, string>();
-  let dbRef: any = null;
+  let dbRef: DatabaseService | null = null;
 
   // Try to initialize MMKV
   try {
@@ -30,22 +31,25 @@ function createStorage(): StorageAdapter {
   } catch (e) {
     // MMKV failed (likely Expo Go)
     useFallback = true;
-    
+
     // Check for web backup
     if (typeof localStorage !== 'undefined') {
-       // On web, we don't need the complex SQLite fallback because localStorage works fine.
-       // We can just proxy to localStorage.
+      // On web, we don't need the complex SQLite fallback because localStorage works fine.
+      // We can just proxy to localStorage.
     }
   }
 
   // Helper to persist to SQLite if in fallback mode
-  const persistToSqlite = async (key: string, value: string | null) => {
+  const persistToSqlite = async (key: string, value: string | null): Promise<void> => {
     if (!dbRef || !useFallback) return;
     try {
       if (value === null) {
         await dbRef.execute('DELETE FROM kv_store WHERE key = ?', [key]);
       } else {
-        await dbRef.execute('INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)', [key, value]);
+        await dbRef.execute('INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)', [
+          key,
+          value,
+        ]);
       }
     } catch (e) {
       console.warn('Checking storage persistence failed:', e);
@@ -66,8 +70,8 @@ function createStorage(): StorageAdapter {
     getBoolean: key => {
       if (mmkv) return mmkv.getBoolean(key);
       if (typeof localStorage !== 'undefined') {
-          const v = localStorage.getItem(key);
-          return v === 'true' ? true : v === 'false' ? false : undefined;
+        const v = localStorage.getItem(key);
+        return v === 'true' ? true : v === 'false' ? false : undefined;
       }
       const val = memoryCache.get(key);
       return val === 'true' ? true : val === 'false' ? false : undefined;
@@ -75,8 +79,8 @@ function createStorage(): StorageAdapter {
     getNumber: key => {
       if (mmkv) return mmkv.getNumber(key);
       if (typeof localStorage !== 'undefined') {
-          const v = localStorage.getItem(key);
-          return v ? Number(v) : undefined;
+        const v = localStorage.getItem(key);
+        return v ? Number(v) : undefined;
       }
       const val = memoryCache.get(key);
       return val ? Number(val) : undefined;
@@ -90,12 +94,12 @@ function createStorage(): StorageAdapter {
         localStorage.setItem(key, String(value));
         return;
       }
-      
+
       // Fallback Mode (Expo Go)
       const strVal = String(value);
       memoryCache.set(key, strVal);
       // Fire and forget persistence
-      persistToSqlite(key, strVal);
+      void persistToSqlite(key, strVal);
     },
     delete: key => {
       if (mmkv) {
@@ -108,7 +112,7 @@ function createStorage(): StorageAdapter {
       }
 
       memoryCache.delete(key);
-      persistToSqlite(key, null);
+      void persistToSqlite(key, null);
     },
     clear: () => {
       if (mmkv) {
@@ -119,36 +123,43 @@ function createStorage(): StorageAdapter {
         localStorage.clear();
         return;
       }
-      
+
       memoryCache.clear();
       if (dbRef) {
-         dbRef.execute('DELETE FROM kv_store').catch(() => {});
+        void dbRef.execute('DELETE FROM kv_store').catch(() => {});
       }
     },
-    preload: async (db: any) => {
+    preload: async (db: DatabaseService) => {
       if (mmkv) return; // MMKV works, no need to preload
       if (typeof localStorage !== 'undefined') return; // Web works
-      
+
+      if (typeof localStorage !== 'undefined') return; // Web works
+
+      // eslint-disable-next-line no-console
       console.log('⚠️ Storage: MMKV missing, initializing SQLite fallback...');
       dbRef = db;
       useFallback = true;
-      
+
       try {
         // Init table
         await db.execute('CREATE TABLE IF NOT EXISTS kv_store (key TEXT PRIMARY KEY, value TEXT)');
-        
+
         // Load all keys
-        const rows = await db.query('SELECT key, value FROM kv_store');
-        rows.forEach((row: any) => {
+        const rows = await db.query<{ key: string; value: string }>(
+          'SELECT key, value FROM kv_store'
+        );
+        rows.forEach(row => {
           if (row.key && row.value) {
             memoryCache.set(row.key, row.value);
           }
         });
+        // eslint-disable-next-line no-console
         console.log(`✅ Storage: Loaded ${memoryCache.size} keys from SQLite fallback`);
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('❌ Storage: Failed to initialize SQLite fallback:', e);
       }
-    }
+    },
   };
 }
 

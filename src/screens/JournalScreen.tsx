@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: SPACING.m,
+    paddingHorizontal: SPACING.m,
     paddingBottom: SPACING.xxl,
   },
   centered: {

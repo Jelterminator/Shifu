@@ -1,3 +1,5 @@
+import type { DatabaseService } from '../db/database';
+
 export interface StorageAdapter {
   get(key: string): string | null;
   getString(key: string): string | undefined;
@@ -6,6 +8,7 @@ export interface StorageAdapter {
   set(key: string, value: string | boolean | number): void;
   delete(key: string): void;
   clear(): void;
+  preload(db: DatabaseService): Promise<void>;
 }
 
 /**
@@ -52,6 +55,10 @@ const webStorage: StorageAdapter = {
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.clear();
     }
+  },
+  preload: async (_db: DatabaseService) => {
+    // No-op for web as we use localStorage directly
+    return Promise.resolve();
   },
 };
 

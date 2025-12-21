@@ -28,6 +28,7 @@ export type RootStackParamList = {
   WorkHoursSetup: undefined;
   SpiritualPracticesSetup: { isEditing?: boolean } | undefined;
   LoadingSetup: undefined;
+  StartupConfig: undefined;
   Settings: undefined;
 };
 

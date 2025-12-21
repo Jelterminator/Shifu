@@ -129,7 +129,7 @@ export const MIGRATIONS: Migration[] = [
       start_time TEXT NOT NULL,
       end_time TEXT NOT NULL,
       external_id TEXT,
-      source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'google', 'apple')),
+      source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'google', 'apple', 'microsoft', 'device')),
       linked_object_ids TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))

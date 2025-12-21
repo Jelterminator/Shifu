@@ -18,7 +18,13 @@ export interface User {
 export interface UserStoreState {
   user: User;
   isAuthenticated: boolean;
+  googleConnected: boolean;
+  microsoftConnected: boolean; // Track if connected
+  deviceConnected: boolean;
   setUser: (user: User) => void;
+  setGoogleConnected: (connected: boolean) => void;
+  setMicrosoftConnected: (connected: boolean) => void;
+  setDeviceConnected: (connected: boolean) => void;
   clearUser: () => void;
 }
 
@@ -26,25 +32,32 @@ const STORAGE_KEY = 'user-storage';
 const DEFAULT_USER: User = { id: null, name: null, email: null, timezone: 'UTC' };
 
 // Load initial state
-const loadInitialState = (): { user: User; isAuthenticated: boolean } => {
+const loadInitialState = (): { user: User; isAuthenticated: boolean; deviceConnected: boolean } => {
   try {
     const json = storage.get(STORAGE_KEY);
     if (json) {
       const parsed = JSON.parse(json) as
-        | { state?: { user: User; isAuthenticated: boolean } }
-        | { user: User; isAuthenticated: boolean };
-      // Handle zestand persist structure if migration needed: { state: { ... }, version: 0 }
-      // Assuming our custom store just saves the object directly or we migrated
-      // For now, let's assume standard object structure
+        | { state?: { user: User; isAuthenticated: boolean; deviceConnected?: boolean } }
+        | { user: User; isAuthenticated: boolean; deviceConnected?: boolean };
+
+      // Handle zestand persist structure if migration needed
       if ('state' in parsed && parsed.state) {
-        return parsed.state; // ZUSTAND COMPAT
+        return {
+          user: parsed.state.user || DEFAULT_USER,
+          isAuthenticated: parsed.state.isAuthenticated || false,
+          deviceConnected: parsed.state.deviceConnected || false,
+        };
       }
-      return parsed as { user: User; isAuthenticated: boolean };
+      return {
+        user: (parsed as { user?: User }).user || DEFAULT_USER,
+        isAuthenticated: (parsed as { isAuthenticated?: boolean }).isAuthenticated || false,
+        deviceConnected: (parsed as { deviceConnected?: boolean }).deviceConnected || false,
+      };
     }
   } catch (e) {
     console.error('Failed to load user state', e);
   }
-  return { user: DEFAULT_USER, isAuthenticated: false };
+  return { user: DEFAULT_USER, isAuthenticated: false, deviceConnected: false };
 };
 
 export const useUserStore = createStore<UserStoreState>(set => {
@@ -53,17 +66,68 @@ export const useUserStore = createStore<UserStoreState>(set => {
   return {
     user: initial.user,
     isAuthenticated: initial.isAuthenticated,
+    googleConnected: false,
+    microsoftConnected: false,
+    deviceConnected: initial.deviceConnected,
 
     setUser: user => {
-      const newState = { user, isAuthenticated: true };
-      set(newState);
-      storage.set(STORAGE_KEY, JSON.stringify({ state: newState })); // Mimic zustand structure for compat
+      // Reset connection states when a new user is set
+      set(prev => ({
+        ...prev,
+        user,
+        isAuthenticated: true,
+        googleConnected: false,
+        microsoftConnected: false,
+        deviceConnected: false,
+      }));
+      storage.set(
+        STORAGE_KEY,
+        JSON.stringify({ state: { user, isAuthenticated: true, deviceConnected: false } })
+      );
+    },
+
+    setGoogleConnected: connected => {
+      set({ googleConnected: connected });
+    },
+
+    setMicrosoftConnected: connected => {
+      set({ microsoftConnected: connected });
+    },
+
+    setDeviceConnected: connected => {
+      set({ deviceConnected: connected });
+      storage.set(
+        STORAGE_KEY,
+        JSON.stringify({
+          state: {
+            user: useUserStore.getState().user,
+            isAuthenticated: useUserStore.getState().isAuthenticated,
+            deviceConnected: connected,
+          },
+        })
+      );
     },
 
     clearUser: () => {
-      const newState = { user: DEFAULT_USER, isAuthenticated: false };
-      set(newState);
-      storage.set(STORAGE_KEY, JSON.stringify({ state: newState }));
+      set({
+        user: DEFAULT_USER,
+        isAuthenticated: false,
+        googleConnected: false,
+        microsoftConnected: false,
+        deviceConnected: false,
+      });
+      storage.set(
+        STORAGE_KEY,
+        JSON.stringify({
+          state: {
+            user: DEFAULT_USER,
+            isAuthenticated: false,
+            googleConnected: false,
+            microsoftConnected: false,
+            deviceConnected: false,
+          },
+        })
+      );
     },
   };
 });

@@ -52,7 +52,10 @@ export function BaseScreen({
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top', 'left', 'right']}
+    >
       <StatusBar
         barStyle={colors.text === '#FFFFFF' ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}
@@ -107,7 +110,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 16,
   },
 });
 

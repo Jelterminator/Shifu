@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: SPACING.m,
+    paddingHorizontal: SPACING.m,
     paddingBottom: SPACING.xxl + 80, // Space for FAB
   },
   section: {

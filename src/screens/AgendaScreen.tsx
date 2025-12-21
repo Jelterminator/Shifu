@@ -415,7 +415,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
         style={[styles.fab, { backgroundColor: phaseColor }]}
         onPress={handleFabPress}
       >
-        <Text style={[styles.fabIcon, { marginTop: -8 }]}>+</Text>
+        <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>
 
       <AppointmentModal
@@ -514,7 +514,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     boxShadow: '0px 3px 6px rgba(0, 0, 0, 0.3)',
   },
-  fabIcon: { color: 'white', fontSize: 32 },
+  fabIcon: {
+    color: 'white',
+    fontSize: 36,
+    lineHeight: 36,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+    marginBottom: Platform.OS === 'android' ? 4 : 2, // Fine tune visual centering
+  },
   resetButton: { alignSelf: 'center', padding: 10, opacity: 0.5, marginBottom: 20 },
   resetButtonText: { fontSize: 12, color: '#666' },
   actionContainer: { padding: 16 },

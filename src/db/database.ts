@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { MIGRATIONS } from './schema';
 
-class DatabaseService {
+export class DatabaseService {
   private db: SQLite.SQLiteDatabase | null = null;
   private isInitialized = false;
   private initPromise: Promise<void> | null = null;

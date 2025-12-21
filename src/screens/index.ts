@@ -14,6 +14,7 @@ export { LoadingSetupScreen } from './onboarding/LoadingSetupScreen';
 export { LocationSetupScreen } from './onboarding/LocationSetupScreen';
 export { SleepHoursSetupScreen } from './onboarding/SleepHoursSetupScreen';
 export { SpiritualPracticesSetupScreen } from './onboarding/SpiritualPracticesSetupScreen';
+export { StartupConfigScreen } from './onboarding/StartupConfigScreen';
 export { WelcomeScreen } from './onboarding/WelcomeScreen';
 export { WorkHoursSetupScreen } from './onboarding/WorkHoursSetupScreen';
 
