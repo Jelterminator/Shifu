@@ -5,7 +5,7 @@
 A React Native application with offline AI capabilities and intelligent scheduling, rooted in the Wu
 Xing (Five Elements) philosophy.
 
-**Status:** 🚧 Phase 4 In Progress - Next up: moving to native and API integrations (v0.1.1)
+**Status:** 🚧 Phase 4 In Progress - Next up: moving to native and API integrations (v0.1.3)
 
 **Note:** Safe and tested for Web (Custom Store Implementation)
 
@@ -151,6 +151,7 @@ organize your day:
 - **Wu Xing Constants:** Centralized logic for Elements, Colors, and Keywords.
 - **Scheduling Fixes:** Resolved user ID segregation and added future-plan clearing.
 - **Performance:** Optimized database queries for task retrieval.
+- **Native Persistence Fix:** Implemented Hybrid Storage (SQLite fallback for MMKV) to resolve restart configuration bugs on native builds (v0.1.3).
 
 ## License
 

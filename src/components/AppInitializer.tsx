@@ -23,6 +23,10 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
         // 1. Initialize database FIRST
         await db.initialize();
 
+        // 1b. Initialize Storage Fallback (if needed)
+        // This acts as a polyfill for MMKV on Expo Go using SQLite as backing store
+        await storage.preload(db);
+
         // 2. Ensure User Identity exists (Self-Healing)
         let currentUser = user;
         if (!currentUser?.id) {

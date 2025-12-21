@@ -2,7 +2,7 @@
   "expo": {
     "name": "Shifu",
     "slug": "shifu",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,10 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.shifu.app"
+      "bundleIdentifier": "com.shifu.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Shifu needs your location to determine your local phase of the day (Morning, Afternoon, Evening) based on sun position."
+      }
     },
     "android": {
       "adaptiveIcon": {

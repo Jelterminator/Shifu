@@ -1,3 +1,5 @@
+import { version } from '../../package.json';
+
 /**
  * Centralized configuration and environment variable management
  * Loads secrets safely at build time and runtime
@@ -57,7 +59,7 @@ function buildConfig(): AppConfig {
     googleClientSecret: getEnvVar('GOOGLE_CLIENT_SECRET'),
 
     // App versioning (from package.json or build system)
-    appVersion: getEnvVar('APP_VERSION', '0.1.0'),
+    appVersion: getEnvVar('APP_VERSION', version),
     buildNumber: getEnvVar('BUILD_NUMBER', '1'),
   };
 }

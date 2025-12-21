@@ -32,9 +32,24 @@ class AnchorsService {
       const now = new Date();
       let shouldCalculate = false;
 
-      // FIX #2: Always calculate if no anchors exist, regardless of timing
-      if (!lastCalcStr || existingAnchors.length === 0) {
-        console.log('📍 AnchorsService: First-time initialization or empty anchors, generating...');
+      const userStoreState = useUserStore.getState();
+      const hasPractices = (userStoreState.user.spiritualPractices || []).length > 0;
+
+      // Debug logging for Android troubleshooting
+      console.log('🔍 AnchorsService Diagnositcs:', {
+        lastCalcStr,
+        existingAnchorsCount: existingAnchors.length,
+        hasPractices,
+        practiceCount: (userStoreState.user.spiritualPractices || []).length,
+        now: now.toISOString(),
+      });
+
+      // FIX #2: Refined Logic - Only force calc if:
+      // A) Never calculated before (!lastCalcStr)
+      // B) We have no anchors BUT we DO have practices selected (implies data loss or previous failed init)
+      // This respects the valid "No Anchors Selected" state.
+      if (!lastCalcStr || (existingAnchors.length === 0 && hasPractices)) {
+        console.log('📍 AnchorsService: First-time initialization or missing anchors (with practices), generating...');
         shouldCalculate = true;
       } else {
         const lastCalc = new Date(lastCalcStr);
@@ -66,9 +81,9 @@ class AnchorsService {
       }
 
       if (shouldCalculate) {
-        // FIX #3: Use recalculateFutureAnchors for consistent behavior
-        // This preserves past anchors while ensuring future ones are fresh
-        this.recalculateFutureAnchors(latitude, longitude);
+        // FIX #3: Use calculateAndStoreAnchors allows generating the FULL current week on first run
+        // (unlike merge logic in recalculateFutureAnchors which might skip past days of current week)
+        this.calculateAndStoreAnchors(latitude, longitude);
       } else {
         console.log('📍 AnchorsService: Anchors up to date, skipping calculation');
       }

@@ -8,61 +8,148 @@ export interface StorageAdapter {
   set(key: string, value: string | boolean | number): void;
   delete(key: string): void;
   clear(): void;
+  /**
+   * Preload data from SQLite if MMKV is unavailable.
+   * Call this during app initialization.
+   */
+  preload(db: any): Promise<void>;
 }
 
 /**
- * Native storage implementation using MMKV
+ * Native storage implementation using MMKV with SQLite Fallback for Expo Go
  */
 function createStorage(): StorageAdapter {
+  let mmkv: MMKV | null = null;
+  let useFallback = false;
+  const memoryCache = new Map<string, string>();
+  let dbRef: any = null;
+
+  // Try to initialize MMKV
   try {
-    // Check if running in a browser environment with localStorage available
-    // (This helps if we want to explicitly prefer localStorage on web without crashing MMKV first)
-    // However, react-native-mmkv might crash on import in some web setups if not handled,
-    // but here we are inside the function.
-
-    // If we are strictly on standard React Native Web, MMKV new() might throw.
-    const mmkv = new MMKV();
-
-    return {
-      get: key => mmkv.getString(key) ?? null,
-      getString: key => mmkv.getString(key),
-      getBoolean: key => mmkv.getBoolean(key),
-      getNumber: key => mmkv.getNumber(key),
-      set: (key, value) => mmkv.set(key, value),
-      delete: key => mmkv.delete(key),
-      clear: () => mmkv.clearAll(),
-    };
-  } catch (error) {
+    mmkv = new MMKV();
+  } catch (e) {
+    // MMKV failed (likely Expo Go)
+    useFallback = true;
+    
+    // Check for web backup
     if (typeof localStorage !== 'undefined') {
-      return {
-        get: key => localStorage.getItem(key),
-        getString: key => localStorage.getItem(key) ?? undefined,
-        getBoolean: key => {
-          const val = localStorage.getItem(key);
-          return val === 'true' ? true : val === 'false' ? false : undefined;
-        },
-        getNumber: key => {
-          const val = localStorage.getItem(key);
-          return val ? Number(val) : undefined;
-        },
-        set: (key, value) => localStorage.setItem(key, String(value)),
-        delete: key => localStorage.removeItem(key),
-        clear: () => localStorage.clear(),
-      };
+       // On web, we don't need the complex SQLite fallback because localStorage works fine.
+       // We can just proxy to localStorage.
     }
-
-    console.error('❌ Failed to initialize MMKV and localStorage not available:', error);
-    // Fallback object that does nothing/logs errors to prevent crashes
-    return {
-      get: () => null,
-      getString: () => undefined,
-      getBoolean: () => undefined,
-      getNumber: () => undefined,
-      set: () => {},
-      delete: () => {},
-      clear: () => {},
-    };
   }
+
+  // Helper to persist to SQLite if in fallback mode
+  const persistToSqlite = async (key: string, value: string | null) => {
+    if (!dbRef || !useFallback) return;
+    try {
+      if (value === null) {
+        await dbRef.execute('DELETE FROM kv_store WHERE key = ?', [key]);
+      } else {
+        await dbRef.execute('INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)', [key, value]);
+      }
+    } catch (e) {
+      console.warn('Checking storage persistence failed:', e);
+    }
+  };
+
+  return {
+    get: key => {
+      if (mmkv) return mmkv.getString(key) ?? null;
+      if (typeof localStorage !== 'undefined') return localStorage.getItem(key);
+      return memoryCache.get(key) ?? null;
+    },
+    getString: key => {
+      if (mmkv) return mmkv.getString(key);
+      if (typeof localStorage !== 'undefined') return localStorage.getItem(key) ?? undefined;
+      return memoryCache.get(key);
+    },
+    getBoolean: key => {
+      if (mmkv) return mmkv.getBoolean(key);
+      if (typeof localStorage !== 'undefined') {
+          const v = localStorage.getItem(key);
+          return v === 'true' ? true : v === 'false' ? false : undefined;
+      }
+      const val = memoryCache.get(key);
+      return val === 'true' ? true : val === 'false' ? false : undefined;
+    },
+    getNumber: key => {
+      if (mmkv) return mmkv.getNumber(key);
+      if (typeof localStorage !== 'undefined') {
+          const v = localStorage.getItem(key);
+          return v ? Number(v) : undefined;
+      }
+      const val = memoryCache.get(key);
+      return val ? Number(val) : undefined;
+    },
+    set: (key, value) => {
+      if (mmkv) {
+        mmkv.set(key, value);
+        return;
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(key, String(value));
+        return;
+      }
+      
+      // Fallback Mode (Expo Go)
+      const strVal = String(value);
+      memoryCache.set(key, strVal);
+      // Fire and forget persistence
+      persistToSqlite(key, strVal);
+    },
+    delete: key => {
+      if (mmkv) {
+        mmkv.delete(key);
+        return;
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(key);
+        return;
+      }
+
+      memoryCache.delete(key);
+      persistToSqlite(key, null);
+    },
+    clear: () => {
+      if (mmkv) {
+        mmkv.clearAll();
+        return;
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.clear();
+        return;
+      }
+      
+      memoryCache.clear();
+      if (dbRef) {
+         dbRef.execute('DELETE FROM kv_store').catch(() => {});
+      }
+    },
+    preload: async (db: any) => {
+      if (mmkv) return; // MMKV works, no need to preload
+      if (typeof localStorage !== 'undefined') return; // Web works
+      
+      console.log('⚠️ Storage: MMKV missing, initializing SQLite fallback...');
+      dbRef = db;
+      useFallback = true;
+      
+      try {
+        // Init table
+        await db.execute('CREATE TABLE IF NOT EXISTS kv_store (key TEXT PRIMARY KEY, value TEXT)');
+        
+        // Load all keys
+        const rows = await db.query('SELECT key, value FROM kv_store');
+        rows.forEach((row: any) => {
+          if (row.key && row.value) {
+            memoryCache.set(row.key, row.value);
+          }
+        });
+        console.log(`✅ Storage: Loaded ${memoryCache.size} keys from SQLite fallback`);
+      } catch (e) {
+        console.error('❌ Storage: Failed to initialize SQLite fallback:', e);
+      }
+    }
+  };
 }
 
 export const storage = createStorage();

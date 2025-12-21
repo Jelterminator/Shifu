@@ -78,7 +78,7 @@ describe('AnchorsService', () => {
       // Last Calc: Sun May 12 (Last Week)
       (storage.get as jest.Mock).mockImplementation(key => {
         if (key === 'shifu_anchors_last_calc') return '2024-05-12T10:00:00Z';
-        return JSON.stringify([]); // anchors
+        return JSON.stringify([{ id: 'old', startTime: '2024-05-12T12:00:00Z' }]); // anchors
       });
 
       anchorsService.initialize(LAT, LON);
@@ -91,7 +91,7 @@ describe('AnchorsService', () => {
       // Last Calc: Tue May 14
       (storage.get as jest.Mock).mockImplementation(key => {
         if (key === 'shifu_anchors_last_calc') return '2024-05-14T10:00:00Z';
-        return JSON.stringify([]);
+        return JSON.stringify([{ id: 'recent', startTime: '2024-05-14T12:00:00Z' }]);
       });
 
       anchorsService.initialize(LAT, LON);
@@ -110,7 +110,7 @@ describe('AnchorsService', () => {
       // Last calc: Sat Morning
       (storage.get as jest.Mock).mockImplementation(key => {
         if (key === 'shifu_anchors_last_calc') return '2024-05-18T10:00:00Z';
-        return JSON.stringify([]);
+        return JSON.stringify([{ id: 'sat-morning', startTime: '2024-05-18T10:00:00Z' }]);
       });
 
       anchorsService.initialize(LAT, LON);

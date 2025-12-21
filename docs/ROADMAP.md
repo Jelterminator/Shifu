@@ -315,14 +315,8 @@ Animations, Reanimated 2, Dynamic Styling.
 
 * **To Native Platform**
   
-  * [ ] Learn how to do it
-  * [ ] Create workflow for APK exports
-
-* **Auth & Permissions**
-  
-  * [x] Implement Onboarding Flow (Location, Sleep Hours, Spiritual preferences).
-  * [x] Request permissions: Location (Coarse)
-  * [ ] Notifications.
+  * [x] Learn how to do it
+  * [x] Create workflow for APK exports
 
 * **Google Integration (Client-Side)**
   
@@ -344,6 +338,12 @@ Animations, Reanimated 2, Dynamic Styling.
   
   * [ ] Implement "Last Write Wins" logic for simple conflicts.
   * [ ] Build UI for manual conflict resolution (User decides).
+
+* **Auth & Permissions**
+  
+  * [x] Implement Onboarding Flow (Location, Sleep Hours, Spiritual preferences).
+  * [x] Request permissions: Location (Coarse)
+  * [ ] Notifications.
 
 ---
 

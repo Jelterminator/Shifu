@@ -6,6 +6,7 @@ import { db } from '../db/database';
 import { useThemeStore } from '../stores/themeStore';
 import { useUserStore } from '../stores/userStore';
 import type { RootStackScreenProps } from '../types/navigation';
+import { config } from '../utils/config';
 import { storage } from '../utils/storage';
 
 export function SettingsScreen({
@@ -111,7 +112,9 @@ export function SettingsScreen({
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.versionText, { color: colors.textSecondary }]}>Shifu v0.1.0</Text>
+        <Text style={[styles.versionText, { color: colors.textSecondary }]}>
+          Shifu v{config.appVersion}
+        </Text>
       </View>
 
       <ConfirmationModal
