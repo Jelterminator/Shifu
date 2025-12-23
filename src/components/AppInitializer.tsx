@@ -28,10 +28,29 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
         await storage.preload(db);
 
         // 2. Ensure User Identity exists (Self-Healing)
+        // 2. Ensure User Identity exists (Self-Healing)
+        // CRITICAL FIX: Always verify the user exists in the SQLite DB, even if we have it in the Store.
+        // This prevents Foreign Key errors if the DB was cleared but LocalStorage wasn't.
         let currentUser = user;
-        if (!currentUser?.id) {
+
+        if (currentUser?.id) {
+          // Verify existence in DB
+          const userExists = await db.query('SELECT 1 FROM users WHERE id = ?', [currentUser.id]);
+          if (userExists.length === 0) {
+            console.log('⚠️ User ID found in Store but missing in DB. Re-creating user record...');
+            await db.execute(
+              'INSERT INTO users (id, timezone, spiritual_practices, created_at) VALUES (?, ?, ?, ?)',
+              [
+                currentUser.id,
+                currentUser.timezone || 'UTC',
+                JSON.stringify(currentUser.spiritualPractices || []),
+                new Date().toISOString(),
+              ]
+            );
+          }
+        } else {
+          // No user in Store. Check DB or create new.
           // Check if we have a user in DB (maybe store was cleared but DB persists)
-          // Simple query to get the first user
           const users = await db.query<{
             id: string;
             timezone: string;
@@ -39,11 +58,9 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
           }>('SELECT * FROM users LIMIT 1');
 
           if (users.length > 0 && users[0]) {
-            // Rehydrate store from DB (simplified for now, just ID and defaults)
-            // Ideally we load full profile
+            // Rehydrate store from DB
             const dbUser = users[0];
             let practices: string[] = [];
-
             try {
               if (dbUser.spiritual_practices) {
                 practices = JSON.parse(dbUser.spiritual_practices) as string[];
@@ -62,10 +79,9 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
             useUserStore.getState().setUser(fullUser);
             currentUser = fullUser;
           } else {
-            // truly new or broken state -> Create new User
-
+            // Truly new or broken state -> Create new User
             const newId = uuidv4();
-            const defaultTimezone = 'Europe/Amsterdam'; // Fallback
+            const defaultTimezone = 'Europe/Amsterdam';
 
             await db.execute('INSERT INTO users (id, timezone, created_at) VALUES (?, ?, ?)', [
               newId,

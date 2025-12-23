@@ -75,14 +75,16 @@ export function StartupConfigScreen({ navigation }: Props): React.JSX.Element {
                 await import('../../services/sync/MicrosoftCalendarSync');
               await microsoftCalendarSync.sync();
               Alert.alert('Success', 'Microsoft Calendar connected and synced!');
-            } catch (syncError) {
+            } catch (syncError: unknown) {
+              const errorMessage = syncError instanceof Error ? syncError.message : String(syncError);
               console.error('Sync error', syncError);
-              Alert.alert('Connected', 'Connected, but initial sync failed.');
+              Alert.alert('Connected', `Connected, but initial sync failed: ${errorMessage}`);
             }
           }
-        } catch (error) {
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
           console.error('Token Exchange Failed', error);
-          Alert.alert('Error', 'Failed to connect to Microsoft.');
+          Alert.alert('Error', `Failed to connect to Microsoft: ${errorMessage}`);
         }
       };
 
@@ -102,8 +104,10 @@ export function StartupConfigScreen({ navigation }: Props): React.JSX.Element {
         const { googleCalendarSync } = await import('../../services/sync/GoogleCalendarSync');
         await googleCalendarSync.sync();
         Alert.alert('Success', 'Google Calendar connected and synced!');
-      } catch (e) {
+      } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
         console.error('Sync failed', e);
+        Alert.alert('Error', `Google Sync failed: ${errorMessage}`);
       }
     } else {
       console.error('Google Sign in failed', result.error);
@@ -171,9 +175,10 @@ export function StartupConfigScreen({ navigation }: Props): React.JSX.Element {
                       'Please enable calendar permissions in settings.'
                     );
                   }
-                } catch (e) {
+                } catch (e: unknown) {
+                  const errorMessage = e instanceof Error ? e.message : String(e);
                   console.error('Device sync failed', e);
-                  Alert.alert('Error', 'Failed to sync device calendar.');
+                  Alert.alert('Error', `Failed to sync device calendar: ${errorMessage}`);
                 }
               })();
             }}

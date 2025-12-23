@@ -5,7 +5,7 @@
 A React Native application with offline AI capabilities and intelligent scheduling, rooted in the Wu
 Xing (Five Elements) philosophy.
 
-**Status:** 🚧 Phase 4 In Progress - Next up: moving to native and API integrations (v0.1.3)
+**Status:** 🚀 Beta / Dogfooding (v0.1.4) - Native Integrations & Sync Enabled
 
 **Note:** Safe and tested for Web (Custom Store Implementation)
 
@@ -22,11 +22,13 @@ device. No company servers. No data collection. Just you, your habits, and an in
 - 📍 **Location-Based Solar Calculus** - Accurate Roman hour calculations using sunrise/sunset
 - 🧠 **SchedulerAI** - Intelligent "Best Fit & Spill" algorithm that generates daily plans
   respecting your energy phases
+- 📅 **Unified Calendar Sync** - Read-only sync for Google, Microsoft, and Device (iOS/Android) calendars
+- 🔐 **Native Authentication** - Secure OAuth2 sign-in flows (Google & Microsoft) with local token storage
 - 🙏 **Spiritual Practice Integration** - Multi-tradition daily practice scheduler
 - 🛡️ **Respectful Planning** - Automatically avoids scheduling tasks during your defining Sleep and
   Work blocks
 - 🌓 **Onboarding Flow** - Comprehensive setup for location, practices, and preferences
-- 📅 **Agenda Landing** - Quick access to your daily schedule
+- 📄 **Agenda Landing** - Quick access to your daily schedule
 
 ---
 
@@ -84,7 +86,10 @@ shifu/
 │   │   └── ...
 │   ├── services/
 │   │   ├── ai/                 # SchedulerAI Logic
+│   │   ├── sync/               # Calendar Sync Adapters (Google, Microsoft, Device)
 │   │   ├── PhaseManager.ts     # Wu Xing phase calculations
+│   │   ├── AuthService.ts      # Google Auth
+│   │   ├── MicrosoftAuthService.ts # Microsoft Auth
 │   │   └── data/               # Anchors & Practices
 │   ├── stores/                 # State management
 │   │   ├── userStore.ts        # User state (using custom store)
@@ -151,6 +156,9 @@ organize your day:
 - **Wu Xing Constants:** Centralized logic for Elements, Colors, and Keywords.
 - **Scheduling Fixes:** Resolved user ID segregation and added future-plan clearing.
 - **Performance:** Optimized database queries for task retrieval.
+- **Unified Calendar Sync:** Implemented read-only sync for Google, Microsoft, and Device calendars (v0.1.4).
+- **Native Authentication:** Added secure OAuth2 flows for Google and Microsoft (v0.1.4).
+- **Stability Fixes:** Enhanced `AppInitializer` to self-heal missing user records and prevent foreign key crashes.
 - **Native Persistence Fix:** Implemented Hybrid Storage (SQLite fallback for MMKV) to resolve restart configuration bugs on native builds (v0.1.3).
 
 ## License

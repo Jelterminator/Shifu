@@ -36,25 +36,11 @@ class AnchorsService {
       const userStoreState = useUserStore.getState();
       const hasPractices = (userStoreState.user.spiritualPractices || []).length > 0;
 
-      // Debug logging for Android troubleshooting
-      // eslint-disable-next-line no-console
-      console.log('🔍 AnchorsService Diagnositcs:', {
-        lastCalcStr,
-        existingAnchorsCount: existingAnchors.length,
-        hasPractices,
-        practiceCount: (userStoreState.user.spiritualPractices || []).length,
-        now: now.toISOString(),
-      });
-
       // FIX #2: Refined Logic - Only force calc if:
       // A) Never calculated before (!lastCalcStr)
       // B) We have no anchors BUT we DO have practices selected (implies data loss or previous failed init)
       // This respects the valid "No Anchors Selected" state.
       if (!lastCalcStr || (existingAnchors.length === 0 && hasPractices)) {
-        // eslint-disable-next-line no-console
-        console.log(
-          '📍 AnchorsService: First-time initialization or missing anchors (with practices), generating...'
-        );
         shouldCalculate = true;
       } else {
         const lastCalc = new Date(lastCalcStr);
@@ -63,8 +49,6 @@ class AnchorsService {
         // 1. If last calculation was before the start of the current week,
         // we need to refresh to ensure the full current week is available/correct.
         if (lastCalc < startOfCurrentWeek) {
-          // eslint-disable-next-line no-console
-          console.log('📍 AnchorsService: Week changed, refreshing anchors...');
           shouldCalculate = true;
         } else {
           // 2. Saturday Night Logic (Schedule Next Week)
@@ -79,8 +63,6 @@ class AnchorsService {
             satNightStart.setHours(18, 0, 0, 0);
 
             if (lastCalc < satNightStart) {
-              // eslint-disable-next-line no-console
-              console.log('📍 AnchorsService: Saturday evening, generating next week...');
               shouldCalculate = true;
             }
           }
@@ -88,20 +70,11 @@ class AnchorsService {
       }
 
       if (shouldCalculate) {
-        // FIX #3: Use calculateAndStoreAnchors allows generating the FULL current week on first run
-        // (unlike merge logic in recalculateFutureAnchors which might skip past days of current week)
         this.calculateAndStoreAnchors(latitude, longitude);
-      } else {
-        // eslint-disable-next-line no-console
-        console.log('📍 AnchorsService: Anchors up to date, skipping calculation');
-      }
+      } 
 
       this.initialized = true;
-      // eslint-disable-next-line no-console
-      console.log(`✅ AnchorsService: Initialized with ${this.getStoredAnchors().length} anchors`);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('❌ AnchorsService: Initialization failed:', error);
       this.initialized = false;
     }
   }
