@@ -18,12 +18,8 @@ export interface User {
 export interface UserStoreState {
   user: User;
   isAuthenticated: boolean;
-  googleConnected: boolean;
-  microsoftConnected: boolean; // Track if connected
   deviceConnected: boolean;
   setUser: (user: User) => void;
-  setGoogleConnected: (connected: boolean) => void;
-  setMicrosoftConnected: (connected: boolean) => void;
   setDeviceConnected: (connected: boolean) => void;
   clearUser: () => void;
 }
@@ -66,32 +62,19 @@ export const useUserStore = createStore<UserStoreState>(set => {
   return {
     user: initial.user,
     isAuthenticated: initial.isAuthenticated,
-    googleConnected: false,
-    microsoftConnected: false,
     deviceConnected: initial.deviceConnected,
 
     setUser: user => {
-      // Reset connection states when a new user is set
       set(prev => ({
         ...prev,
         user,
         isAuthenticated: true,
-        googleConnected: false,
-        microsoftConnected: false,
         deviceConnected: false,
       }));
       storage.set(
         STORAGE_KEY,
         JSON.stringify({ state: { user, isAuthenticated: true, deviceConnected: false } })
       );
-    },
-
-    setGoogleConnected: connected => {
-      set({ googleConnected: connected });
-    },
-
-    setMicrosoftConnected: connected => {
-      set({ microsoftConnected: connected });
     },
 
     setDeviceConnected: connected => {
@@ -112,8 +95,6 @@ export const useUserStore = createStore<UserStoreState>(set => {
       set({
         user: DEFAULT_USER,
         isAuthenticated: false,
-        googleConnected: false,
-        microsoftConnected: false,
         deviceConnected: false,
       });
       storage.set(
@@ -122,8 +103,6 @@ export const useUserStore = createStore<UserStoreState>(set => {
           state: {
             user: DEFAULT_USER,
             isAuthenticated: false,
-            googleConnected: false,
-            microsoftConnected: false,
             deviceConnected: false,
           },
         })

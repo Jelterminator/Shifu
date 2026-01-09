@@ -3,87 +3,19 @@ import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react
 import { BaseScreen } from '../components/BaseScreen';
 import { ConfirmationModal } from '../components/modals/ConfirmationModal';
 import { db } from '../db/database';
-import { authService } from '../services/AuthService';
 import { useThemeStore } from '../stores/themeStore';
 import { useUserStore } from '../stores/userStore';
 import type { RootStackScreenProps } from '../types/navigation';
 import { config } from '../utils/config';
 import { storage } from '../utils/storage';
 
-import {
-  exchangeCodeAsync,
-  makeRedirectUri,
-  ResponseType,
-  useAuthRequest,
-} from 'expo-auth-session';
-import { authConfig } from '../config/authConfig';
-
-const discovery = {
-  authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-  tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-};
-
 export function SettingsScreen({
   navigation,
 }: RootStackScreenProps<'Settings'>): React.JSX.Element {
   const { colors } = useThemeStore();
-  const setMicrosoftConnected = useUserStore(state => state.setMicrosoftConnected);
-
-  // Microsoft Auth Hook
-  const [request, response, promptAsync] = useAuthRequest(
-    {
-      clientId: authConfig.microsoft.clientId,
-      scopes: authConfig.microsoft.scopes,
-      redirectUri: makeRedirectUri({ scheme: 'shifu', path: 'auth' }),
-      responseType: ResponseType.Code,
-    },
-    discovery
-  );
-
-  React.useEffect(() => {
-    if (response?.type === 'success') {
-      const { code } = response.params;
-      void (async () => {
-        try {
-          const tokenResult = await exchangeCodeAsync(
-            {
-              clientId: authConfig.microsoft.clientId,
-              code: code || '',
-              redirectUri: makeRedirectUri({ scheme: 'shifu', path: 'auth' }),
-              extraParams: {
-                code_verifier: request?.codeVerifier || '',
-              },
-            },
-            discovery
-          );
-
-          if (tokenResult.accessToken) {
-            // Import dynamically to avoid circular deps or heavy load if not needed?
-            // Better to just use the service singleton.
-            // We need to ensure we can access the service instance.
-            const { microsoftAuthService } = await import('../services/MicrosoftAuthService');
-            const { microsoftCalendarSync } =
-              await import('../services/sync/MicrosoftCalendarSync');
-
-            microsoftAuthService.setAccessToken(
-              tokenResult.accessToken,
-              tokenResult.expiresIn || 3600
-            );
-            setMicrosoftConnected(true);
-
-            // Initial Sync
-            await microsoftCalendarSync.sync();
-            Alert.alert('Connected', 'Microsoft Calendar connected and synced!');
-          }
-        } catch (e) {
-          console.error('Microsoft Sync Failed', e);
-          Alert.alert('Error', 'Failed to connect/sync Microsoft.');
-        }
-      })();
-    }
-  }, [response, request?.codeVerifier, setMicrosoftConnected]);
-
   const clearUser = useUserStore(state => state.clearUser);
+  const deviceConnected = useUserStore(state => state.deviceConnected);
+  const setDeviceConnected = useUserStore(state => state.setDeviceConnected);
 
   const [confirmConfig, setConfirmConfig] = React.useState<{
     visible: boolean;
@@ -165,9 +97,63 @@ export function SettingsScreen({
     });
   };
 
+  const handleDeviceCalendarSync = async (): Promise<void> => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Not Available', 'Device calendar sync is only available on mobile devices.');
+      return;
+    }
+
+    if (deviceConnected) {
+      // Disconnect
+      setDeviceConnected(false);
+      return;
+    }
+
+    try {
+      const { deviceCalendarSync } = await import('../services/DeviceCalendarSync');
+      const granted = await deviceCalendarSync.requestPermissions();
+
+      if (!granted) {
+        Alert.alert('Permission Denied', 'Please enable calendar permissions in settings.');
+        return;
+      }
+
+      const count = await deviceCalendarSync.sync();
+      setDeviceConnected(true);
+      Alert.alert('Synced', `Successfully synced ${count} events from your device calendar.`);
+    } catch (e) {
+      console.error('Device calendar sync failed', e);
+      Alert.alert('Error', 'Failed to sync device calendar. Please try again.');
+    }
+  };
+
   return (
     <BaseScreen title="Settings">
       <View style={styles.container}>
+        {/* Calendar Sync Section */}
+        <View style={[styles.section, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Calendar Sync</Text>
+          <View style={styles.separator} />
+
+          <View style={styles.syncRow}>
+            <Text style={{ color: colors.text, fontSize: 16 }}>Device Calendar</Text>
+            <TouchableOpacity
+              onPress={() => void handleDeviceCalendarSync()}
+              style={[
+                styles.syncButton,
+                {
+                  backgroundColor: deviceConnected ? '#FF3B30' : '#34C759',
+                },
+              ]}
+            >
+              <Text style={{ color: '#FFF', fontWeight: '600' }}>
+                {deviceConnected ? 'Disconnect' : 'Sync'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Data & Storage Section */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Data & Storage</Text>
           <View style={styles.separator} />
@@ -179,133 +165,6 @@ export function SettingsScreen({
           <TouchableOpacity onPress={handleWipeData} style={styles.dangerButton}>
             <Text style={styles.dangerButtonText}>Wipe Data</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* Syncronisations Section */}
-        <View style={[styles.section, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Syncronisations</Text>
-          <View style={styles.separator} />
-
-          <View style={styles.syncRow}>
-            <Text style={{ color: colors.text, fontSize: 16 }}>Google Calendar</Text>
-            <TouchableOpacity
-              onPress={() => {
-                void (async () => {
-                  const connected = useUserStore.getState().googleConnected;
-                  if (connected) {
-                    await authService.signOut();
-                    useUserStore.getState().setGoogleConnected(false);
-                  } else {
-                    const result = await authService.signInWithGoogle();
-                    if (result.success) {
-                      useUserStore.getState().setGoogleConnected(true);
-                      // Trigger initial sync
-                      try {
-                        const { googleCalendarSync } =
-                          await import('../services/sync/GoogleCalendarSync');
-                        await googleCalendarSync.sync();
-                        Alert.alert('Connected', 'Google Calendar connected and synced!');
-                      } catch (e) {
-                        console.error('Sync failed', e);
-                        Alert.alert('Connected', 'Connected, but initial sync failed.');
-                      }
-                    } else {
-                      Alert.alert('Error', 'Failed to connect Google: ' + result.error);
-                    }
-                  }
-                })();
-              }}
-              style={[
-                styles.syncButton,
-                {
-                  backgroundColor: useUserStore.getState().googleConnected ? '#FF3B30' : '#34C759',
-                },
-              ]}
-            >
-              <Text style={{ color: '#FFF', fontWeight: '600' }}>
-                {useUserStore(state => state.googleConnected) ? 'Disconnect' : 'Connect'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Microsoft Sync Row */}
-          <View style={styles.syncRow}>
-            <Text style={{ color: colors.text, fontSize: 16 }}>Microsoft Calendar</Text>
-            <TouchableOpacity
-              onPress={() => {
-                const connected = useUserStore.getState().microsoftConnected;
-                if (connected) {
-                  useUserStore.getState().setMicrosoftConnected(false);
-                } else {
-                  if (request) {
-                    void promptAsync();
-                  } else {
-                    Alert.alert(
-                      'Configuration Error',
-                      'Microsoft Auth request is not ready. Check Client ID.'
-                    );
-                  }
-                }
-              }}
-              // disabled={!request} // Let user click so we can show error if request is missing
-              style={[
-                styles.syncButton,
-                {
-                  backgroundColor: useUserStore.getState().microsoftConnected
-                    ? '#FF3B30'
-                    : '#34C759',
-                  opacity: !request ? 0.5 : 1,
-                },
-              ]}
-            >
-              <Text style={{ color: '#FFF', fontWeight: '600' }}>
-                {useUserStore(state => state.microsoftConnected) ? 'Disconnect' : 'Connect'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Device Calendar Row */}
-          <View style={styles.syncRow}>
-            <Text style={{ color: colors.text, fontSize: 16 }}>Device Calendar</Text>
-            <TouchableOpacity
-              onPress={() => {
-                void (async () => {
-                  const connected = useUserStore.getState().deviceConnected;
-                  if (connected) {
-                    // Logic to "disconnect" or stop syncing?
-                    // For now, just set state to false
-                    useUserStore.getState().setDeviceConnected(false);
-                  } else {
-                    try {
-                      const { deviceCalendarSync } =
-                        await import('../services/sync/DeviceCalendarSync');
-                      const granted = await deviceCalendarSync.requestPermissions();
-                      if (granted) {
-                        await deviceCalendarSync.sync();
-                        useUserStore.getState().setDeviceConnected(true);
-                        Alert.alert('Connected', 'Device Calendar synced!');
-                      } else {
-                        Alert.alert('Permission Denied', 'Please enable calendar permissions.');
-                      }
-                    } catch (e) {
-                      console.error(e);
-                      Alert.alert('Error', 'Failed to sync device calendar.');
-                    }
-                  }
-                })();
-              }}
-              style={[
-                styles.syncButton,
-                {
-                  backgroundColor: useUserStore.getState().deviceConnected ? '#FF3B30' : '#34C759',
-                },
-              ]}
-            >
-              <Text style={{ color: '#FFF', fontWeight: '600' }}>
-                {useUserStore(state => state.deviceConnected) ? 'Disconnect' : 'Sync'}
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         <Text style={[styles.versionText, { color: colors.textSecondary }]}>
@@ -350,7 +209,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dangerButtonText: {
-    color: '#FF3B30', // System Red
+    color: '#FF3B30',
     fontSize: 16,
     fontWeight: '500',
   },
@@ -362,7 +221,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   syncButton: {
     paddingHorizontal: 16,

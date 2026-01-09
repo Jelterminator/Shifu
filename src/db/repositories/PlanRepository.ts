@@ -1,3 +1,4 @@
+import { notificationService } from '../../services/NotificationService';
 import type { Plan, PlanRow } from '../../types/database';
 import { generateId } from '../../utils/id';
 import { db } from '../database';
@@ -39,6 +40,15 @@ class PlanRepository {
         now,
       ]
     );
+
+    // Schedule notification if pending
+    if (!data.done) {
+      await notificationService.schedulePlanReminder({
+        id,
+        title: data.name,
+        startTime: data.startTime,
+      });
+    }
 
     const rows = await db.query<PlanRow>('SELECT * FROM plans WHERE id = ?', [id]);
     if (!rows[0]) throw new Error('Failed to create plan: Row not found');
@@ -85,6 +95,20 @@ class PlanRepository {
    * NOTE: Only deletes PENDING plans (done IS NULL or done = 0), not COMPLETED ones.
    */
   async deleteFuturePendingPlans(userId: string, fromDate: Date): Promise<void> {
+    // First get the IDs to cancel notifications
+    const rows = await db.query<{ id: string }>(
+      `SELECT id FROM plans 
+       WHERE user_id = ? 
+       AND start_time >= ? 
+       AND (done IS NULL OR done = 0)`,
+      [userId, fromDate.toISOString()]
+    );
+
+    // Cancel notifications
+    for (const row of rows) {
+      await notificationService.cancelPlanReminder(row.id);
+    }
+
     await db.execute(
       `DELETE FROM plans 
        WHERE user_id = ? 
@@ -139,8 +163,50 @@ class PlanRepository {
     params.push(id);
 
     await db.execute(`UPDATE plans SET ${updates.join(', ')} WHERE id = ?`, params);
+
+    // Handle Notifications
+    if (data.done) {
+      // If marked done, cancel notification
+      await notificationService.cancelPlanReminder(id);
+    } else if (data.startTime) {
+      // If time changed (and not explicitly marking done), handle rescheduling
+
+      // We need to know if the plan is currently pending
+      // If data.done is false (uncompleting), we treat it as pending
+      // If data.done is undefined, we must check existing status
+      let isPending = data.done === false;
+
+      let title = data.name;
+      let existing: Plan | null = null;
+
+      if (data.done === undefined || !title) {
+        existing = await this.getById(id);
+      }
+
+      if (data.done === undefined && existing) {
+        isPending = !existing.done;
+      }
+
+      if (!title && existing) {
+        title = existing.name;
+      }
+
+      // Always cancel old one first to be safe
+      await notificationService.cancelPlanReminder(id);
+
+      // Only schedule if it ends up being pending
+      if (isPending && title) {
+        await notificationService.schedulePlanReminder({
+          id,
+          title,
+          startTime: data.startTime,
+        });
+      }
+    }
   }
+
   async delete(id: string): Promise<void> {
+    await notificationService.cancelPlanReminder(id);
     await db.execute('DELETE FROM plans WHERE id = ?', [id]);
   }
 }

@@ -14,7 +14,6 @@ import {
   SettingsScreen,
   SleepHoursSetupScreen,
   SpiritualPracticesSetupScreen,
-  StartupConfigScreen,
   TasksScreen,
   WelcomeScreen,
   WorkHoursSetupScreen,
@@ -84,7 +83,6 @@ export function RootNavigator(): React.JSX.Element {
       <Stack.Navigator initialRouteName={initialRouteName} screenOptions={{ headerShown: false }}>
         {/* Onboarding Flow */}
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
-        <Stack.Screen name="StartupConfig" component={StartupConfigScreen} />
         <Stack.Screen name="LocationSetup" component={LocationSetupScreen} />
         <Stack.Screen name="SleepHoursSetup" component={SleepHoursSetupScreen} />
         <Stack.Screen name="WorkHoursSetup" component={WorkHoursSetupScreen} />

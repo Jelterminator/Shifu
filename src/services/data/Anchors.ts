@@ -2,6 +2,7 @@ import { RELIGIOUS_PRACTICES } from '../../data/practices';
 import { useUserStore } from '../../stores/userStore';
 import { storage } from '../../utils/storage';
 import { calculateRomanHours } from '../../utils/sunTimeUtils';
+import { notificationService } from '../NotificationService';
 
 export interface AnchorEvent {
   id: string;
@@ -71,7 +72,7 @@ class AnchorsService {
 
       if (shouldCalculate) {
         this.calculateAndStoreAnchors(latitude, longitude);
-      } 
+      }
 
       this.initialized = true;
     } catch (error) {
@@ -209,6 +210,9 @@ class AnchorsService {
 
     storage.set(ANCHORS_STORAGE_KEY, JSON.stringify(unique));
     storage.set(LAST_CALCULATION_KEY, new Date().toISOString());
+
+    // Sync notifications for future anchors
+    void notificationService.syncAnchorNotifications(unique);
   }
 
   private getStartOfWeek(date: Date): Date {

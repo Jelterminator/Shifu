@@ -253,8 +253,7 @@ enables a sync. No company-run servers process core features.
 
 ## 💾 Phase 2: The Cortex (Data Layer) (Weeks 3-4)
 
-**Goal:** Build the secure, offline-first data persistence layer. **Technical Focus:** SQLite,
-Encryption, and Schema Management.
+**Goal:** Build the secure, offline-first data persistence layer. **Technical Focus:** SQLite and Schema Management.
 
 - **Database Engine**
   
@@ -304,46 +303,25 @@ Animations, Reanimated 2, Dynamic Styling.
 
 ## 🔌 Phase 4: Integrations & Synchronization (Weeks 8-9)
 
-**Goal:** Connect to the outside world without compromising privacy. **Technical Focus:** OAuth 2.0,API Client, Sync Logic.
+**Goal:** Connect to the outside world without compromising privacy. **Technical Focus:** Sync Logic.
 
 * **Round of Bugfixing**
   
   * [x] Linting
   * [x] Jest
   - [x] Clean up project
-  * [ ] Get it uploading to GitHub clean
+  * [x] Get it uploading to GitHub clean
 
 * **To Native Platform**
   
   * [x] Learn how to do it
   * [x] Create workflow for APK exports
 
-* **Google Integration (Client-Side)**
-  
-  * [ ] Implement Google Sign-In (OAuth2).
-  * [ ] **Calendar Sync:** Fetch events, map to Appointments.
-  * [ ] **Tasks Sync:** Two-way sync with Google Tasks (optional).
-
-* **Microsoft Integration (Client-Side)**
-  
-  * [ ] Implement Microsoft Sign-In.
-  * [ ] **Calendar Sync:** Fetch events, map to Appointments.
-
-* **Apple Integration (Client-Side)**
-  
-  * [ ] Implement Apple Sign-In.
-  * [ ] **Calendar Sync:** Fetch events, map to Appointments.
-
-* **Conflict Resolution**
-  
-  * [ ] Implement "Last Write Wins" logic for simple conflicts.
-  * [ ] Build UI for manual conflict resolution (User decides).
-
 * **Auth & Permissions**
   
   * [x] Implement Onboarding Flow (Location, Sleep Hours, Spiritual preferences).
   * [x] Request permissions: Location (Coarse)
-  * [ ] Notifications.
+  * [x] Notifications.
 
 ---
 
@@ -372,7 +350,7 @@ ONNX Runtime, WebAssembly.
 
 ## 📚 Phase 6: Memory & RAG (Weeks 13-15)
 
-**Goal:** Give the AI long-term memory and context awareness. **Technical Focus:** Vector Database,Embeddings, Hierarchical Summarization.
+**Goal:** Give the AI long-term memory and context awareness. **Technical Focus:** Vector Database, Embeddings, Hierarchical Summarization.
 
 * **Vector Infrastructure**
   
@@ -397,9 +375,10 @@ ONNX Runtime, WebAssembly.
 ================================================
 
 **Goal**: Implement the Bio-Semantics Scheduler as described in the technical report, with graceful degradation for MVP.
-🧮 Phase 7.1: Core ODE Solver (Day 1-2)
 
-------------------------------------------
+---
+
+## 🧮 Phase 7.1: Core ODE Solver (Day 1-2)
 
 ### Mathematical Foundation
 

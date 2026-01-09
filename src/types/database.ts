@@ -136,7 +136,7 @@ export interface JournalSegment {
 }
 
 // Appointments
-export type AppointmentSource = 'manual' | 'google' | 'apple' | 'microsoft' | 'device';
+export type AppointmentSource = 'manual' | 'device';
 
 export interface AppointmentRow extends BaseEntity {
   user_id: string;

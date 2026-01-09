@@ -3,8 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db/database';
-import { phaseManager } from '../services/PhaseManager';
 import { anchorsService } from '../services/data/Anchors';
+import { notificationService } from '../services/NotificationService';
+import { phaseManager } from '../services/PhaseManager';
 import { useUserStore } from '../stores/userStore';
 import { storage } from '../utils/storage';
 
@@ -118,6 +119,16 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
             anchorsService.initialize(latitude, longitude);
           } catch (e) {
             console.warn('⚠️ AnchorsService init warning:', e);
+          }
+
+          // Request Notification Permissions
+          try {
+            const hasPermission = await notificationService.requestPermissions();
+            if (!hasPermission) {
+              console.log('⚠️ Notification permissions denied');
+            }
+          } catch (e) {
+            console.warn('⚠️ Notification permission request failed', e);
           }
         }
 

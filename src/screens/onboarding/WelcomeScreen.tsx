@@ -12,7 +12,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
   const colors = useThemeStore(state => state.colors);
 
   const handleContinue = (): void => {
-    navigation.navigate('StartupConfig');
+    navigation.navigate('LocationSetup');
   };
 
   return (
