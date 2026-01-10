@@ -1,5 +1,5 @@
 import * as Calendar from 'expo-calendar';
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { appointmentRepository } from '../db/repositories/AppointmentRepository';
 import { useUserStore } from '../stores/userStore';
 
@@ -13,8 +13,7 @@ class DeviceCalendarSync {
    */
   async requestPermissions(): Promise<boolean> {
     if (Platform.OS === 'web') {
-      // eslint-disable-next-line no-console
-      console.warn('Device calendar sync is not available on web');
+      Alert.alert('Warning', 'Device calendar sync is not available on web');
       return false;
     }
 
@@ -42,8 +41,7 @@ class DeviceCalendarSync {
    */
   async sync(daysToSync: number = 30): Promise<number> {
     if (Platform.OS === 'web') {
-      // eslint-disable-next-line no-console
-      console.warn('Device calendar sync is not available on web');
+      Alert.alert('Warning', 'Device calendar sync is not available on web');
       return 0;
     }
 
@@ -54,10 +52,10 @@ class DeviceCalendarSync {
 
     // Get all calendars
     const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+    Alert.alert('Debug', `[DeviceCalendarSync] Found ${calendars.length} calendars`);
 
     if (calendars.length === 0) {
-      // eslint-disable-next-line no-console
-      console.warn('No device calendars found');
+      Alert.alert('Warning', 'No device calendars found');
       return 0;
     }
 
@@ -71,10 +69,14 @@ class DeviceCalendarSync {
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + daysToSync);
+    Alert.alert('Debug', `[DeviceCalendarSync] Syncing from ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
     // Get events from all calendars
     const calendarIds = calendars.map(cal => cal.id);
+    Alert.alert('Debug', `[DeviceCalendarSync] Querying calendars: ${calendarIds.join(', ')}`);
+    
     const events = await Calendar.getEventsAsync(calendarIds, startDate, endDate);
+    Alert.alert('Debug', `[DeviceCalendarSync] Found ${events.length} events`);
 
     let syncedCount = 0;
 
@@ -104,8 +106,8 @@ class DeviceCalendarSync {
           });
         }
         syncedCount++;
-      } catch {
-        // Skip events that fail to sync
+      } catch (error) {
+        Alert.alert('Error', `[DeviceCalendarSync] Failed to sync event ${event.id}: ${JSON.stringify(error)}`);
       }
     }
 

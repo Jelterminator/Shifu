@@ -123,7 +123,8 @@ export function SettingsScreen({
       Alert.alert('Synced', `Successfully synced ${count} events from your device calendar.`);
     } catch (e) {
       console.error('Device calendar sync failed', e);
-      Alert.alert('Error', 'Failed to sync device calendar. Please try again.');
+      const errorMessage = e instanceof Error ? e.message : JSON.stringify(e);
+      Alert.alert('Error', `Failed to sync device calendar: ${errorMessage}`);
     }
   };
 

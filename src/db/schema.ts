@@ -231,8 +231,36 @@ export const MIGRATIONS: Migration[] = [
     -- Performance Indices (Date ranges & Urgency)
     CREATE INDEX idx_plans_user_start_time ON plans(user_id, start_time);
     CREATE INDEX idx_plans_source_done_date ON plans(source_id, source_type, done, start_time);
-    CREATE INDEX idx_tasks_user_completed_dt ON tasks(user_id, completed_at) WHERE is_completed = 1;
     CREATE INDEX idx_tasks_user_incomplete_deadline ON tasks(user_id, is_completed, deadline) WHERE is_completed = 0;
+    `,
+  },
+  {
+    version: 13,
+    sql: `
+    -- Fix appointments table CHECK constraint to include 'device'
+    -- (SQLite doesn't support modifying constraints, so we valid recreate the table)
+    CREATE TABLE IF NOT EXISTS appointments_new (
+      id TEXT PRIMARY KEY NOT NULL,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      description TEXT,
+      start_time TEXT NOT NULL,
+      end_time TEXT NOT NULL,
+      external_id TEXT,
+      source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'device')),
+      linked_object_ids TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    INSERT INTO appointments_new SELECT * FROM appointments;
+
+    DROP TABLE appointments;
+
+    ALTER TABLE appointments_new RENAME TO appointments;
+
+    CREATE INDEX idx_appointments_user_date ON appointments(user_id, date(start_time));
+    CREATE INDEX idx_appointments_external ON appointments(external_id);
     `,
   },
 ];
