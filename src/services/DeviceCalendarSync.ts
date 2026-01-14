@@ -69,12 +69,15 @@ class DeviceCalendarSync {
     const startDate = new Date();
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + daysToSync);
-    Alert.alert('Debug', `[DeviceCalendarSync] Syncing from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+    Alert.alert(
+      'Debug',
+      `[DeviceCalendarSync] Syncing from ${startDate.toISOString()} to ${endDate.toISOString()}`
+    );
 
     // Get events from all calendars
     const calendarIds = calendars.map(cal => cal.id);
     Alert.alert('Debug', `[DeviceCalendarSync] Querying calendars: ${calendarIds.join(', ')}`);
-    
+
     const events = await Calendar.getEventsAsync(calendarIds, startDate, endDate);
     Alert.alert('Debug', `[DeviceCalendarSync] Found ${events.length} events`);
 
@@ -107,7 +110,10 @@ class DeviceCalendarSync {
         }
         syncedCount++;
       } catch (error) {
-        Alert.alert('Error', `[DeviceCalendarSync] Failed to sync event ${event.id}: ${JSON.stringify(error)}`);
+        Alert.alert(
+          'Error',
+          `[DeviceCalendarSync] Failed to sync event ${event.id}: ${JSON.stringify(error)}`
+        );
       }
     }
 

@@ -34,7 +34,7 @@ export class NotificationService {
         identifier: ACTION_DONE,
         buttonTitle: 'Done',
         options: {
-          opensAppToForeground: true,
+          opensAppToForeground: false,
         },
       },
       {
@@ -42,6 +42,7 @@ export class NotificationService {
         buttonTitle: 'Skip',
         options: {
           isDestructive: true,
+          opensAppToForeground: false,
         },
       },
     ]);
@@ -52,6 +53,7 @@ export class NotificationService {
         buttonTitle: 'OK',
         options: {
           isDestructive: false,
+          opensAppToForeground: false,
         },
       },
     ]);
