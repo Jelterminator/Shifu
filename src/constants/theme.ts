@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 /**
  * Theme constants for the Shifu app
  * Based on DESIGN.md specifications
@@ -97,42 +99,51 @@ export const SPACING = {
 
 /**
  * Shadow levels for elevation
+ * Using Platform.select to avoid deprecation warnings on web
  */
 export const SHADOWS = {
   level0: {},
-  level1: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.06)',
-  },
-  level2: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.08)',
-  },
-  level3: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
-    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.12)',
-  },
-  level4: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.16,
-    shadowRadius: 32,
-    elevation: 16,
-    boxShadow: '0px 16px 32px rgba(0, 0, 0, 0.16)',
-  },
-} as const;
+  level1: Platform.select({
+    web: { boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.06)' },
+    default: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+  }),
+  level2: Platform.select({
+    web: { boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.08)' },
+    default: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+  }),
+  level3: Platform.select({
+    web: { boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.12)' },
+    default: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.12,
+      shadowRadius: 16,
+      elevation: 8,
+    },
+  }),
+  level4: Platform.select({
+    web: { boxShadow: '0px 16px 32px rgba(0, 0, 0, 0.16)' },
+    default: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 16 },
+      shadowOpacity: 0.16,
+      shadowRadius: 32,
+      elevation: 16,
+    },
+  }),
+};
 
 /**
  * Border radius values

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { BORDER_RADIUS, SEMANTIC_COLORS, SPACING } from '../constants/theme';
+import { BORDER_RADIUS, SEMANTIC_COLORS, SHADOWS, SPACING } from '../constants/theme';
 import { taskRepository } from '../db/repositories/TaskRepository';
 import { useThemeStore } from '../stores/themeStore';
 import type { Project, Task } from '../types/database';
@@ -161,12 +161,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.m,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    // Shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    // Use centralized shadows to avoid web deprecation warnings
+    ...SHADOWS.level1,
   },
   header: {},
   headerTop: {

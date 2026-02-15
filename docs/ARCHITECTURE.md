@@ -1,4 +1,4 @@
-# 🌟 Shifu : Architecture
+# 🌟 Shifu : Architecture [OUTDATED]
 
 Thisdocument serves as the single source of truth for the **HarmoniousDay** project, defining a
 definitive architecture that meets the core mandate: **100% On-Device Functionality with Zero

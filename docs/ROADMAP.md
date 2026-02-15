@@ -325,49 +325,52 @@ Animations, Reanimated 2, Dynamic Styling.
 
 ---
 
-## 🧠 Phase 5: Cognition (AI Foundation) (Weeks 10-12)
+## 🧠 Phase 5: Cognition (The Dual-Model Agent & Orchestration) (Weeks 10-12)
 
-**Goal:** Enable on-device inference and the Chat interface. **Technical Focus:** Transformers.js,
-ONNX Runtime, WebAssembly.
+**Goal:** Replace standard chat loops with a highly optimized, battery-efficient "Plan-and-Execute" orchestration loop using a dual-model setup.
 
-- **Inference Engine**
-  
-  - [ ] Integrate **Transformers.js (Xenova)**.
-  - [ ] Configure **ONNX Runtime** for React Native (Single-threaded WASM execution).
-  - [ ] Implement `ModelLoader`: Download/Cache quantized models on first run.
-    - _Target Models:_ `DistilGPT-2` (Chat), ??? (Embeddings), ??? (Scheduler Forest).
+**Technical Focus:** ONNX Runtime, Transformers.js, JSON Schema Routing, TypeScript Orchestration, Memory Lifecycle Management.
 
-- **The Coach (Chat UI)**
-  
-  - [x] Build Chat Interface: Message bubbles, typing indicators.
-  - [ ] **Prompt Engineering:** Create system prompts injected with current time/phase context.
-  - [ ] **Quick Actions:** Implement chip-based prompts ("Optimize Today", "Add Task").
+### The Dual-Model Engine Initialization
 
-- **Performance Tuning**
-  
-  - [ ] Implement model lazy-loading and unloading to manage RAM.
-  - [ ] Add "Device Tier" detection to disable AI on low-end phones.
+- [x] Integrate Transformers.js (Xenova) and configure ONNX Runtime for React Native.
+- [x] Implement ModelLoader with local caching.
+- [x] The Brain: Load onnx-community/Qwen2.5-0.5B-Instruct (4-bit quantized, ~350MB) exclusively for JSON planning and final synthesis.
+- [x] The Instinct: Load Xenova/all-MiniLM-L6-v2 (~22MB) for semantic routing and fast vector generation.
 
-## 📚 Phase 6: Memory & RAG (Weeks 13-15)
+### The TypeScript Orchestrator (The Manager)
 
-**Goal:** Give the AI long-term memory and context awareness. **Technical Focus:** Vector Database, Embeddings, Hierarchical Summarization.
+- [x] Build the core AgentLoop: A TypeScript orchestrator that handles the exact sequence of: Route Tools -> Inject Context -> Generate Plan -> Execute Native -> Synthesize.
+- [x] Memory Lifecycle: Implement aggressive RAM management. Explicitly load the Qwen ONNX session only during the planning and synthesis steps, releasing it from memory while native TypeScript operations run.
+- [x] Fault Tolerance: Integrate a library like jsonrepair to wrap all Qwen outputs, guaranteeing the Orchestrator never crashes due to a dropped bracket in the generated JSON Master Plan.
 
-* **Vector Infrastructure**
-  
-  * [ ] Implement embedding generation pipeline (Text -> Vector).
-  * [ ] Build **Custom ANN Index** (K-Means) on top of SQLite for fast retrieval.
+### The Skills Ecosystem (The Hands)
 
-* **Hierarchical Summarization (The "Secret Sauce")**
-  
-  * [ ] **Daily Summarizer:** Script to condense journal + tasks into a summary blob.
-  * [ ] **Roll-up Logic:** Weekly -> Monthly -> Quarterly aggregation.
-  * [ ] **Storage:** Store summary vectors separately for tiered retrieval.
+- [x] Define strict TypeScript interfaces and JSON schemas (e.g., using zod and zod-to-json-schema) for all database operations (e.g., fetch_journal, reschedule_task, delete_task).
+- [x] Wire these tools directly to the respective SQLite repositories (TaskRepository, JournalRepository) for instant, zero-AI execution.
 
-* **RAG Pipeline**
-  
-  * [ ] Implement `ContextRetriever`: Query -> Embed -> Search Vector DB.
-  * [ ] **Hybrid Search:** Combine semantic search (vectors) with keyword search (SQL).
-  * [ ] Connect RAG output to the Chat interface.
+## 📚 Phase 6: Instinct, Memory & The Heartbeat (Weeks 13-15)
+
+**Goal:** Give the AI instant tool selection, long-term memory retrieval, and autonomous background maintenance without draining the battery.
+
+**Technical Focus:** Vector Storage, Cosine Similarity, RAG, Background Tasks.
+
+### Semantic Tool Routing (Fast & Cheap RAG)
+
+- [x] Pre-compute and store vectors for all Shifu Skills using the MiniLM model.
+- [x] Implement the routing logic: Embed the user's prompt using MiniLM, run cosine similarity against the Skill vectors, and select only the most relevant tools to inject into Qwen's system prompt.
+
+### Hierarchical Memory & RAG Pipeline
+
+- [ ] Vector Database: Finalize the SqliteVectorStorage implementation to securely store Float32Array embeddings as ArrayBuffers.
+- [ ] Context Compression: Implement an aggressive context-window guard. If a user's conversation exceeds threshold, use Qwen to invisibly summarize the history and truncate the active array.
+- [ ] Summarization Roll-ups: Implement the Daily -> Weekly -> Monthly summarization pipeline, storing compressed summary embeddings for fast retrieval via MiniLM.
+
+### The Heartbeat (Autonomous Maintenance)
+
+- [ ] Set up an expo-task-manager background loop that hooks into Android WorkManager / iOS BGTaskScheduler.
+- [ ] Define stateless, NoHistory background maintenance prompts (e.g., "Summarize today and prepare tomorrow's schedule based on Wu Xing phases").
+- [ ] Battery & OS Guard: Ensure the heavy Qwen model only wakes up for Heartbeat tasks when the device is actively charging and idle, to prevent the OS from killing the Shifu process.
 
 ---
 

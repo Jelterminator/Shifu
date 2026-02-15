@@ -3,15 +3,15 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
 import { BORDER_RADIUS, SHADOWS, SPACING } from '../constants/theme';
+import { AgentLoop } from '../services/ai/AgentLoop';
 import { useThemeStore } from '../stores/themeStore';
 import type { MainTabScreenProps } from '../types/navigation';
 
@@ -35,14 +35,6 @@ interface ChatMessage {
   timestamp: Date;
 }
 
-/**
- * Quick action interface
- */
-interface QuickAction {
-  id: string;
-  label: string;
-  prompt: string;
-}
 
 /**
  * Format time for display
@@ -55,15 +47,6 @@ const formatTime = (date: Date): string => {
   });
 };
 
-/**
- * Quick actions for common requests
- */
-const QUICK_ACTIONS: QuickAction[] = [
-  { id: '1', label: 'Optimize Today', prompt: 'Can you regenerate my schedule for today?' },
-  { id: '2', label: 'Schedule Habit', prompt: 'Add a new habit to my routine' },
-  { id: '3', label: 'Add Tasks', prompt: 'I need to add multiple tasks...' },
-  { id: '4', label: "What's Next?", prompt: 'What should I focus on now?' },
-];
 
 /**
  * Welcome message for empty chat
@@ -87,7 +70,7 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
 
   const { colors, phaseColor } = useThemeStore();
 
-  const sendMessage = (text: string): void => {
+  const sendMessage = async (text: string): Promise<void> => {
     if (!text.trim()) return;
 
     const userMessage: ChatMessage = {
@@ -99,45 +82,33 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
 
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
-
-    // Simulate AI typing
     setIsTyping(true);
 
-    // Simulate AI response after a delay
-    setTimeout(() => {
+    try {
+      // Execute the request via the AgentLoop
+      const responseText = await AgentLoop.getInstance().executeUserRequest(text.trim());
+
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: getAIResponse(text),
+        content: responseText,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Error in chat:', error);
+      const errorResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'system',
+        content: 'Sorry, I encountered an error processing your request.',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
-  const getAIResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-
-    if (input.includes('task') || input.includes('add')) {
-      return 'I can help you add that task! Which list should it go to? And do you have a deadline in mind?';
-    }
-    if (input.includes('schedule') || input.includes('today')) {
-      return 'Looking at your schedule for today... You have a few open blocks in the afternoon that would be perfect for deep work. Would you like me to optimize your day?';
-    }
-    if (input.includes('habit')) {
-      return "I'd be happy to help you build a new habit! What would you like to work on, and which phase of the day works best for you?";
-    }
-    if (input.includes('focus') || input.includes('next')) {
-      return "Based on your current phase and priorities, I'd suggest focusing on your highest-priority task. You have about 2 hours until your next scheduled event.";
-    }
-
-    return "I understand. Is there anything specific you'd like me to help you with? I can manage your schedule, add tasks, or provide advice on your daily routine.";
-  };
-
-  const handleQuickAction = (action: QuickAction): void => {
-    sendMessage(action.prompt);
-  };
 
   const renderMessage = ({ item }: { item: ChatMessage }): React.JSX.Element => {
     const isAI = item.type === 'ai';
@@ -177,31 +148,6 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
     );
   };
 
-  const renderQuickActions = (): React.JSX.Element => (
-    <View style={styles.quickActionsContainer}>
-      <Text style={[styles.quickActionsLabel, { color: colors.textSecondary }]}>
-        ⚡ Quick Actions
-      </Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.quickActionsScroll}
-      >
-        {QUICK_ACTIONS.map(action => (
-          <TouchableOpacity
-            key={action.id}
-            style={[
-              styles.quickActionChip,
-              { backgroundColor: colors.surface, borderColor: phaseColor },
-            ]}
-            onPress={() => handleQuickAction(action)}
-          >
-            <Text style={[styles.quickActionText, { color: phaseColor }]}>{action.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
 
   const renderEmptyState = (): React.JSX.Element => (
     <View style={styles.emptyStateContainer}>
@@ -256,8 +202,6 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
           }
         />
 
-        {/* Quick Actions */}
-        {renderQuickActions()}
 
         {/* Input Area */}
         <View style={[styles.inputContainer, { backgroundColor: colors.surface }]}>
@@ -355,28 +299,6 @@ const styles = StyleSheet.create({
   typingText: {
     fontSize: 14,
     fontStyle: 'italic',
-  },
-  quickActionsContainer: {
-    paddingHorizontal: SPACING.m,
-    paddingVertical: SPACING.s,
-  },
-  quickActionsLabel: {
-    fontSize: 12,
-    marginBottom: SPACING.xs,
-  },
-  quickActionsScroll: {
-    flexDirection: 'row',
-  },
-  quickActionChip: {
-    paddingHorizontal: SPACING.m,
-    paddingVertical: SPACING.s,
-    borderRadius: BORDER_RADIUS.large,
-    borderWidth: 1,
-    marginRight: SPACING.s,
-  },
-  quickActionText: {
-    fontSize: 13,
-    fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',

@@ -2,33 +2,28 @@
 
 ## AI-Powered Productivity Assistant
 
-A React Native application with offline AI capabilities and intelligent scheduling, rooted in the Wu
-Xing (Five Elements) philosophy.
+A React Native application with **offline-first AI capabilities** and sophisticated scheduling, roots in the Wu Xing (Five Elements) philosophy.
 
-**Status:** 🚀 Beta / Dogfooding (v0.1.4) - Native Integrations & Sync Enabled
+**Status:** � Alpha / Local Development - Offline Agents & Heuristic Scheduling Enabled
 
-**Note:** Safe and tested for Web (Custom Store Implementation)
+**Note:** Safe and tested for Web (Custom Store Implementation) & Android. iOS pending verification.
 
 ---
 
 ## Overview
 
-**Shifu** is a fully offline-first, privacy-by-design productivity assistant that runs 100% on your
-device. No company servers. No data collection. Just you, your habits, and an intelligent AI coach.
+**Shifu** is a fully offline-first, privacy-by-design productivity assistant that runs 100% on your device. No company servers. No data collection. Just you, your habits, and an intelligent AI coach.
 
-### Current Features
+### Core Features
 
-- 🎨 **Dynamic Wu Xing Theming** - Phase-aware color schemes that adapt to solar time
-- 📍 **Location-Based Solar Calculus** - Accurate Roman hour calculations using sunrise/sunset
-- 🧠 **SchedulerAI** - Intelligent "Best Fit & Spill" algorithm that generates daily plans
-  respecting your energy phases
-- 📅 **Unified Calendar Sync** - Read-only sync for Google, Microsoft, and Device (iOS/Android) calendars
-- 🔐 **Native Authentication** - Secure OAuth2 sign-in flows (Google & Microsoft) with local token storage
-- 🙏 **Spiritual Practice Integration** - Multi-tradition daily practice scheduler
-- 🛡️ **Respectful Planning** - Automatically avoids scheduling tasks during your defining Sleep and
-  Work blocks
-- 🌓 **Onboarding Flow** - Comprehensive setup for location, practices, and preferences
-- 📄 **Agenda Landing** - Quick access to your daily schedule
+- 🧠 **AgentLoop (Offline AI)** - A local LLM orchestrator that plans, routes tools, and chats with you without internet.
+- 🎨 **Dynamic Wu Xing Theming** - Phase-aware color schemes that adapt to solar time.
+- 📍 **Location-Based Solar Calculus** - Accurate Roman hour calculations using sunrise/sunset to determine energy phases.
+- 📅 **SchedulerAI** - Intelligent "Best Fit & Spill" algorithm that generates daily plans respecting your energy phases and boundaries.
+- � **Device Calendar Sync** - Read-only integration with your device's native calendar (Android/iOS).
+- � **Local-First Architecture** - All data lives in SQLite and a local Vector Store for semantic search.
+- 🛡️ **Respectful Planning** - Automatically avoids scheduling tasks during your defined Sleep and Work blocks.
+- 📝 **Vector-Based Journaling** - Chat with your past self via semantic search over your journal entries.
 
 ---
 
@@ -59,7 +54,7 @@ node scripts/check-env.js
 
 ```bash
 # Run on web (fastest for development)
-# Note: Uses custom 'store.ts' for state management (Zustand replacement) for max compatibility
+# Uses custom 'store.ts' for state management (React 19 compatible)
 npm run web
 
 # Run on Android
@@ -79,65 +74,68 @@ npm test
 ```
 shifu/
 ├── src/
-│   ├── navigation/             # React Navigation setup (RootNavigator + MainTab)
-│   ├── screens/                # UI screens
-│   │   ├── onboarding/         # Setup flow
-│   │   ├── AgendaScreen.tsx    # Main dashboard
+│   ├── components/             # Reusable UI components (Themed)
+│   ├── db/                     # Local SQLite Database & Vector Store
+│   │   ├── repositories/       # Data access layer (Task, Habit, Plan, etc.)
+│   │   ├── schema.ts           # Database schema definitions
+│   │   └── vectorStorage.ts    # Semantic search embeddings
+│   ├── hooks/                  # Custom React hooks (Theme, User, etc.)
+│   ├── navigation/             # Navigation configuration (Tabs + Stacks)
+│   ├── screens/                # Application Screens
+│   │   ├── onboarding/         # Setup wizard
+│   │   ├── AgendaScreen.tsx    # Main daily timeline
+│   │   ├── ChatScreen.tsx      # AI Assistant interface
 │   │   └── ...
 │   ├── services/
-│   │   ├── ai/                 # SchedulerAI Logic
-│   │   ├── sync/               # Calendar Sync Adapters (Google, Microsoft, Device)
-│   │   ├── PhaseManager.ts     # Wu Xing phase calculations
-│   │   ├── AuthService.ts      # Google Auth
-│   │   ├── MicrosoftAuthService.ts # Microsoft Auth
-│   │   └── data/               # Anchors & Practices
-│   ├── stores/                 # State management
-│   │   ├── userStore.ts        # User state (using custom store)
-│   │   └── themeStore.ts       # Theme state (using custom store)
+│   │   ├── ai/                 # AI Logic Core
+│   │   │   ├── AgentLoop.ts    # Main LLM Orchestrator (The Brain)
+│   │   │   ├── SchedulerAI.ts  # Heuristic scheduling engine (Best Fit/Spill)
+│   │   │   ├── ToolRegistry.ts # AI Tool Definitions
+│   │   │   └── Inference.ts    # ONNX Model Interface
+│   │   ├── DeviceCalendarSync.ts # Native Calendar Integration
+│   │   ├── PhaseManager.ts     # Wu Xing / Solar Time calculations
+│   │   └── NotificationService.ts # Local Notifications
+│   ├── stores/                 # State Management (Zustand-like custom store)
+│   │   ├── userStore.ts        # User preferences & profile
+│   │   └── listStore.ts        # Task/Habit list management
 │   ├── utils/
-│   │   ├── store.ts            # Custom lightweight store implementation (React 19 compatible)
-│   │   ├── storage.native.ts   # Native MMKV storage
-│   │   └── storage.web.ts      # Web localStorage
+│   │   ├── store.ts            # Custom lightweight store implementation
+│   │   └── sunTimeUtils.ts     # Solar calculation helpers
 │   └── ...
 ├── scripts/
-│   └── check-env.js            # Environment validation script (CI & Local)
+│   └── check-env.js            # Environment validation
 ```
 
 ---
 
-## Key Features & Architecture
+## Key Architecture
 
-### 🧠 Custom State Management
+### 🧠 AgentLoop (The Brain)
 
-To ensure maximum stability across Expo Web and React Native (especially with React 19/concurrent
-features), Shifu uses a lightweight custom store implementation (`src/utils/store.ts`) based on
-`useSyncExternalStore`. This replaces Zustand to avoid compatibility issues while maintaining a
-familiar API.
-
-### 🔐 Multi-Platform Storage
-
-- **Native:** High-performance `react-native-mmkv` via `storage.native.ts`
-- **Web:** Standard `localStorage` via `storage.web.ts`
-- **Resolution:** Automatically handled by Metro bundler file extensions.
+Shifu runs a quantized LLM directly on your device using **ONNX Runtime** and **Transformers.js**.
+- **The Instinct:** Fast embedding-based router selects the right tools for your request.
+- **The Brain:** The LLM generates a JSON plan based on available tools.
+- **The Body:** Native code executes the plan (e.g., scheduling a task, querying the database).
+- **The Voice:** The LLM synthesizes a natural language response.
 
 ### 🌞 Solar-Based Phase System
 
-- **SunCalc** integrated for precise sunrise/sunset times.
-- **Roman Hours** calculation (unequal hours) for accurate circadian alignment.
-- **Wu Xing Phases** mapped automatically to solar time.
+- **SunCalc** integrated for precise sunrise/sunset times based on your location.
+- **Roman Hours** calculation (unequal hours) matches your circadian rhythm.
+- **Wu Xing Phases** (Wood, Fire, Earth, Metal, Water) map automatically to these solar hours, influencing UI themes and scheduling logic.
 
 ### 🤖 SchedulerAI (V1)
 
-The core intelligence of Shifu is the **SchedulerAI**. It uses a "Best Fit & Spill" algorithm to
-organize your day:
+The core planning engine uses a deterministic "Best Fit & Spill" algorithm:
+1.  **Phase Matching:** Prioritizes tasks that match the current energy phase (e.g., Creative work in Fire phase).
+2.  **Best Fit:** Finds the smallest sufficient time slot to preserve large blocks for deep work.
+3.  **Spill & Fill:** Splits large tasks into available slots if continuous time isn't available.
+4.  **Boundary Respect:** Strictly observes Sleep and Work boundaries.
 
-1. **Phase Matching:** Matches tasks to your current Wu Xing energy phase (e.g., Creative work in
-   Fire phase).
-2. **Best Fit:** Finds the smallest sufficient time slot for a task to preserve large blocks for
-   deep work.
-3. **Spill & Fill:** Intelligently splits large tasks into the biggest available slots if continuous
-   time isn't available.
-4. **Boundary Respect:** Strictly observes your configured Sleep and Work boundaries.
+### 💾 Custom State & Storage
+
+- **Store:** A lightweight `useSyncExternalStore` implementation (`src/utils/store.ts`) ensures React 19 compatibility without external state libraries.
+- **Storage:** Hybrid approach using `react-native-mmkv` for fast key-value access and `expo-sqlite` for structured relational data.
 
 ---
 
@@ -147,19 +145,6 @@ organize your day:
 2. Create a feature branch
 3. Run `npm run validate`
 4. Submit PR
-
-## Recent Updates
-
-- **CI/CD Repair:** Restored `check-env.js` and fixed linting pipeline for robust builds.
-- **Code Cleanup:** Removed unused files and debug logs for a cleaner codebase.
-- **SchedulerAI Implementation:** Advanced heuristic scheduling with phase awareness.
-- **Wu Xing Constants:** Centralized logic for Elements, Colors, and Keywords.
-- **Scheduling Fixes:** Resolved user ID segregation and added future-plan clearing.
-- **Performance:** Optimized database queries for task retrieval.
-- **Unified Calendar Sync:** Implemented read-only sync for Google, Microsoft, and Device calendars (v0.1.4).
-- **Native Authentication:** Added secure OAuth2 flows for Google and Microsoft (v0.1.4).
-- **Stability Fixes:** Enhanced `AppInitializer` to self-heal missing user records and prevent foreign key crashes.
-- **Native Persistence Fix:** Implemented Hybrid Storage (SQLite fallback for MMKV) to resolve restart configuration bugs on native builds (v0.1.3).
 
 ## License
 

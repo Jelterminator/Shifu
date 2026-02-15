@@ -6,11 +6,11 @@ import { HabitModal } from '../components/modals/HabitModal';
 import { HabitStatsModal } from '../components/modals/HabitStatsModal';
 
 import {
-  BORDER_RADIUS,
-  PHASE_ICONS,
-  SHADOWS,
-  SPACING,
-  WEEKDAY_ABBREVIATIONS,
+    BORDER_RADIUS,
+    PHASE_ICONS,
+    SHADOWS,
+    SPACING,
+    WEEKDAY_ABBREVIATIONS,
 } from '../constants/theme';
 import { habitRepository } from '../db/repositories/HabitRepository';
 import { planRepository } from '../db/repositories/PlanRepository';
@@ -451,15 +451,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressContainer: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.05)',
     borderRadius: BORDER_RADIUS.large,
     padding: SPACING.m,
     marginBottom: 16,
+    ...SHADOWS.level1,
   },
   progressTitle: {
     fontSize: 14,

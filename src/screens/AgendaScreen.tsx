@@ -1,18 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
 import { CalendarView } from '../components/CalendarView';
 import { AppointmentModal } from '../components/modals/AppointmentModal';
-import { PHASE_ICONS } from '../constants/theme';
+import { PHASE_ICONS, SHADOWS } from '../constants/theme';
 import { appointmentRepository } from '../db/repositories/AppointmentRepository';
 import { planRepository } from '../db/repositories/PlanRepository';
 import { schedulerAI } from '../services/ai/SchedulerAI';
@@ -509,10 +509,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    boxShadow: '0px 3px 6px rgba(0, 0, 0, 0.3)',
+    ...SHADOWS.level3,
   },
   fabIcon: {
     color: 'white',

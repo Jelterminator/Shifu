@@ -10,6 +10,15 @@ jest.mock('expo-file-system', () => ({
   documentDirectory: 'file:///mock/document/directory/',
 }));
 
+jest.mock('expo-file-system/legacy', () => ({
+  documentDirectory: 'file:///mock/document/directory/',
+  getInfoAsync: jest.fn(() => Promise.resolve({ exists: true, isDirectory: true })),
+  makeDirectoryAsync: jest.fn(() => Promise.resolve()),
+  createDownloadResumable: jest.fn(() => ({
+    downloadAsync: jest.fn(() => Promise.resolve({ uri: 'file:///mock/model.onnx' })),
+  })),
+}));
+
 jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => 'mock-uuid'),
 }));
