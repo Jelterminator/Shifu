@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -79,31 +80,38 @@ export function AppointmentModal({
     const match = str.match(regex);
     if (!match) return null;
 
-    const [_, y, m, d, h, min] = match;
+    const y = match[1];
+    const m = match[2];
+    const d = match[3];
+    const h = match[4];
+    const min = match[5];
+
+    if (!y || !m || !d || !h || !min) return null;
+
     const date = new Date(
-      parseInt(y!),
-      parseInt(m!) - 1,
-      parseInt(d!),
-      parseInt(h!),
-      parseInt(min!)
+      parseInt(y, 10),
+      parseInt(m, 10) - 1,
+      parseInt(d, 10),
+      parseInt(h, 10),
+      parseInt(min, 10)
     );
     return isNaN(date.getTime()) ? null : date;
   }
 
   const handleSave = async (): Promise<void> => {
-    if (!user) return;
+    if (!user || user.id === null) return;
     if (!title.trim()) return;
 
     const start = parseDateTime(startText);
     const end = parseDateTime(endText);
 
     if (!start || !end) {
-      alert('Invalid date format. Use YYYY-MM-DD HH:mm');
+      Alert.alert('Error', 'Invalid date format. Use YYYY-MM-DD HH:mm');
       return;
     }
 
     if (end <= start) {
-      alert('End time must be after start time');
+      Alert.alert('Error', 'End time must be after start time');
       return;
     }
 
@@ -118,7 +126,7 @@ export function AppointmentModal({
           endTime: end,
         });
       } else {
-        await appointmentRepository.create(user.id!, {
+        await appointmentRepository.create(user.id, {
           name: title.trim(),
           description: description.trim(),
           startTime: start,
@@ -129,9 +137,8 @@ export function AppointmentModal({
 
       onSave?.();
       onClose();
-    } catch (e) {
-      console.error('Failed to save appointment', e);
-      alert('Failed to save appointment');
+    } catch {
+      Alert.alert('Error', 'Failed to save appointment');
     } finally {
       setLoading(false);
     }
@@ -236,7 +243,9 @@ export function AppointmentModal({
 
           <TouchableOpacity
             style={[styles.saveButton, { backgroundColor: phaseColor, opacity: loading ? 0.7 : 1 }]}
-            onPress={() => void handleSave()}
+            onPress={() => {
+              void handleSave();
+            }}
             disabled={loading}
           >
             <Text style={styles.saveButtonText}>{loading ? 'Saving...' : 'Save Appointment'}</Text>

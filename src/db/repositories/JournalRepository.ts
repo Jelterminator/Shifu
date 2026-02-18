@@ -46,14 +46,15 @@ class JournalRepository {
       'SELECT * FROM journal_entries WHERE id = ?',
       [id]
     );
-    if (entryRows.length === 0) return null;
+    const firstRow = entryRows[0];
+    if (!firstRow) return null;
 
     const segmentRows = await db.query<JournalSegment>(
       'SELECT id, time_key as timeKey, content FROM journal_segments WHERE journal_entry_id = ?',
       [id]
     );
 
-    const entry = mapJournalEntryRowToJournalEntry(entryRows[0]!);
+    const entry = mapJournalEntryRowToJournalEntry(firstRow);
     if (segmentRows.length > 0) {
       entry.segments = segmentRows;
     }

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { taskRepository } from '../../src/db/repositories/TaskRepository';
 import { AgentLoop } from '../../src/services/ai/AgentLoop';
 import { resetForTesting } from '../../src/services/ai/Inference';
@@ -11,7 +12,7 @@ jest.mock('../../src/services/ai/ToolRegistry', () => ({
   routeTools: jest.fn(),
 }));
 
-jest.mock('../../src/services/ModelLoader', () => ({
+jest.mock('../../src/services/ai/ModelLoader', () => ({
   ModelLoader: {
     ensureModel: jest.fn().mockResolvedValue('/path/to/model.onnx'),
   },
@@ -50,7 +51,7 @@ jest.mock('@xenova/transformers', () => ({
 jest.mock('../../src/db/repositories/TaskRepository');
 jest.mock('../../src/services/ai/embedder');
 jest.mock('../../src/stores/userStore');
-jest.mock('../../src/services/PhaseManager', () => ({
+jest.mock('../../src/services/data/PhaseManager', () => ({
   phaseManager: {
     getCurrentPhase: jest.fn().mockReturnValue({ name: 'WOOD', qualities: 'Growth' }),
   },
@@ -132,3 +133,4 @@ describe('AgentLoop', () => {
     expect(taskRepository.delete).toHaveBeenCalledWith('123');
   });
 });
+

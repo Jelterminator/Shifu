@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { Text } from 'react-native';
 
+import { DIMENSIONS } from '../constants/theme';
 import {
   AgendaScreen,
   ChatScreen,
@@ -46,8 +47,9 @@ function MainTabNavigator(): React.JSX.Element {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.background,
+          backgroundColor: colors.background,
+          borderTopColor: colors.surface,
+          height: DIMENSIONS.BAR_HEIGHT,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,

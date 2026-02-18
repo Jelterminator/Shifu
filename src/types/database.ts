@@ -1,4 +1,4 @@
-import type { TaskKeyword } from './models';
+export type TaskKeyword = string;
 
 // Base interface for all entities
 export interface BaseEntity {

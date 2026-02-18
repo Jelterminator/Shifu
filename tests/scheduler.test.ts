@@ -27,7 +27,7 @@ import { projectRepository } from '../src/db/repositories/ProjectRepository';
 import { taskRepository } from '../src/db/repositories/TaskRepository';
 import { schedulerAI } from '../src/services/ai/SchedulerAI';
 import { anchorsService } from '../src/services/data/Anchors';
-import { phaseManager } from '../src/services/PhaseManager';
+import { phaseManager } from '../src/services/data/PhaseManager';
 import { useUserStore } from '../src/stores/userStore';
 
 // Mocks
@@ -37,7 +37,7 @@ jest.mock('../src/db/repositories/AppointmentRepository');
 jest.mock('../src/db/repositories/PlanRepository');
 jest.mock('../src/db/repositories/ProjectRepository');
 jest.mock('../src/services/data/Anchors');
-jest.mock('../src/services/PhaseManager');
+jest.mock('../src/services/data/PhaseManager');
 jest.mock('../src/stores/userStore', () => ({
   useUserStore: {
     getState: jest.fn().mockReturnValue({
@@ -259,7 +259,9 @@ describe('SchedulerAI', () => {
       weeklyGoalMinutes: 210, // 30 mins/day * 7
       selectedKeywords: [],
       idealPhase: 'WOOD',
-      selectedDays: { monday: true }, // assume today matches
+      selectedDays: {
+        [new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()]: true,
+      }, // Dynamic today
       createdAt: new Date(),
     };
 
@@ -270,7 +272,9 @@ describe('SchedulerAI', () => {
       weeklyGoalMinutes: 30, // Low goal
       selectedKeywords: [],
       idealPhase: 'WOOD',
-      selectedDays: { monday: true },
+      selectedDays: {
+        [new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()]: true,
+      },
       createdAt: new Date(),
     };
 

@@ -1,4 +1,4 @@
-import { phaseManager } from '../../src/services/PhaseManager';
+import { phaseManager } from '../../src/services/data/PhaseManager';
 import { calculateRomanHours } from '../../src/utils/sunTimeUtils';
 
 // Mock dependency

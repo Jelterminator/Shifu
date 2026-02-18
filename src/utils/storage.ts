@@ -133,10 +133,6 @@ function createStorage(): StorageAdapter {
       if (mmkv) return; // MMKV works, no need to preload
       if (typeof localStorage !== 'undefined') return; // Web works
 
-      if (typeof localStorage !== 'undefined') return; // Web works
-
-      // eslint-disable-next-line no-console
-      console.log('⚠️ Storage: MMKV missing, initializing SQLite fallback...');
       dbRef = db;
       useFallback = true;
 
@@ -153,11 +149,8 @@ function createStorage(): StorageAdapter {
             memoryCache.set(row.key, row.value);
           }
         });
-        // eslint-disable-next-line no-console
-        console.log(`✅ Storage: Loaded ${memoryCache.size} keys from SQLite fallback`);
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('❌ Storage: Failed to initialize SQLite fallback:', e);
+      } catch {
+        // failed to init fallback
       }
     },
   };

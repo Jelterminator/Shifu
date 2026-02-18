@@ -1,16 +1,15 @@
 // Polyfill crypto.getRandomValues for uuid on native platforms
 import * as Crypto from 'expo-crypto';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 if (!global.crypto) {
-  (global as any).crypto = {
-    getRandomValues: (array: any) => Crypto.getRandomValues(array),
-  };
+  Object.defineProperty(global, 'crypto', {
+    value: {
+      getRandomValues: (array: Uint8Array) => Crypto.getRandomValues(array),
+    },
+    writable: true,
+    configurable: true,
+  });
 }
-/* eslint-enable */
 
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';

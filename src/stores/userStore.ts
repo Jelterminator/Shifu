@@ -44,19 +44,20 @@ const loadInitialState = (): { user: User; isAuthenticated: boolean; deviceConne
           deviceConnected: parsed.state.deviceConnected || false,
         };
       }
+      const data = parsed as { user?: User; isAuthenticated?: boolean; deviceConnected?: boolean };
       return {
-        user: (parsed as { user?: User }).user || DEFAULT_USER,
-        isAuthenticated: (parsed as { isAuthenticated?: boolean }).isAuthenticated || false,
-        deviceConnected: (parsed as { deviceConnected?: boolean }).deviceConnected || false,
+        user: data.user || DEFAULT_USER,
+        isAuthenticated: data.isAuthenticated || false,
+        deviceConnected: data.deviceConnected || false,
       };
     }
-  } catch (e) {
-    console.error('Failed to load user state', e);
+  } catch {
+    // skip
   }
   return { user: DEFAULT_USER, isAuthenticated: false, deviceConnected: false };
 };
 
-export const useUserStore = createStore<UserStoreState>(set => {
+export const useUserStore = createStore<UserStoreState>((set, get) => {
   const initial = loadInitialState();
 
   return {
@@ -64,7 +65,7 @@ export const useUserStore = createStore<UserStoreState>(set => {
     isAuthenticated: initial.isAuthenticated,
     deviceConnected: initial.deviceConnected,
 
-    setUser: user => {
+    setUser: (user: User) => {
       set(prev => ({
         ...prev,
         user,
@@ -77,14 +78,14 @@ export const useUserStore = createStore<UserStoreState>(set => {
       );
     },
 
-    setDeviceConnected: connected => {
+    setDeviceConnected: (connected: boolean) => {
       set({ deviceConnected: connected });
       storage.set(
         STORAGE_KEY,
         JSON.stringify({
           state: {
-            user: useUserStore.getState().user,
-            isAuthenticated: useUserStore.getState().isAuthenticated,
+            user: get().user,
+            isAuthenticated: get().isAuthenticated,
             deviceConnected: connected,
           },
         })

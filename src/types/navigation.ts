@@ -23,9 +23,9 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   Welcome: undefined;
-  LocationSetup: undefined;
-  SleepHoursSetup: undefined;
-  WorkHoursSetup: undefined;
+  LocationSetup: { isEditing?: boolean } | undefined;
+  SleepHoursSetup: { isEditing?: boolean } | undefined;
+  WorkHoursSetup: { isEditing?: boolean } | undefined;
   SpiritualPracticesSetup: { isEditing?: boolean } | undefined;
   LoadingSetup: undefined;
   Settings: undefined;

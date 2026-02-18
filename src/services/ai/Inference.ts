@@ -1,9 +1,8 @@
-import * as ort from 'onnxruntime-react-native';
-// @ts-ignore - transformers.js might not have perfect types for RN yet
 import { AutoTokenizer } from '@xenova/transformers';
+import * as ort from 'onnxruntime-react-native';
 
-import { AI_MODELS } from '../../config/AIConfig';
-import { ModelLoader } from '../ModelLoader';
+import { AI_MODELS } from '../../constants/AIConfig';
+import { ModelLoader } from './ModelLoader';
 import type { Message } from './PromptBuilder';
 
 // -----------------------------------------------------------------------------
@@ -12,8 +11,24 @@ import type { Message } from './PromptBuilder';
 
 const MAX_NEW_TOKENS = 256;
 
-let session: any = null;
-let tokenizer: any = null;
+interface Tokenizer {
+  apply_chat_template: (
+    messages: Message[],
+    options: { tokenize: boolean; add_generation_prompt: boolean }
+  ) => string;
+  (
+    text: string,
+    options: { return_tensor: string }
+  ): Promise<{
+    input_ids: ort.Tensor;
+    attention_mask: ort.Tensor;
+  }>;
+  eos_token_id: number;
+  decode: (tokens: number[]) => string;
+}
+
+let session: ort.InferenceSession | null = null;
+let tokenizer: Tokenizer | null = null;
 
 /**
  * Ensure the ONNX model is loaded into memory.
@@ -24,10 +39,8 @@ async function loadModel(): Promise<void> {
   const modelUrl = AI_MODELS.THE_BRAIN.url;
   const modelFilename = AI_MODELS.THE_BRAIN.fileName;
 
-  console.log('[Inference] Ensuring model is downloaded...');
   const modelPath = await ModelLoader.ensureModel(modelUrl, modelFilename);
 
-  console.log('[Inference] Loading ONNX session...');
   session = await ort.InferenceSession.create(modelPath, {
     executionProviders: ['cpu'],
     graphOptimizationLevel: 'all',
@@ -37,11 +50,13 @@ async function loadModel(): Promise<void> {
 /**
  * Release the model from memory.
  */
-export async function unloadModel(): Promise<void> {
+export function unloadModel(): void {
   if (session) {
-    console.log('[Inference] Unloading model to free RAM.');
     session = null;
-    if (global.gc) global.gc();
+    const g = global as unknown as { gc?: () => void };
+    if (typeof g.gc === 'function') {
+      g.gc();
+    }
   }
 }
 
@@ -56,9 +71,11 @@ export function resetForTesting(): void {
 /**
  * Lazy-load the tokenizer.
  */
-async function getTokenizer(): Promise<any> {
+async function getTokenizer(): Promise<Tokenizer> {
   if (!tokenizer) {
-    tokenizer = await AutoTokenizer.from_pretrained('onnx-community/Qwen2.5-0.5B-Instruct');
+    tokenizer = (await AutoTokenizer.from_pretrained(
+      'onnx-community/Qwen2.5-0.5B-Instruct'
+    )) as unknown as Tokenizer;
   }
   return tokenizer;
 }
@@ -67,26 +84,36 @@ async function getTokenizer(): Promise<any> {
  * Generate text from messages or a full chat-ML prompt string.
  * Loads the model, runs greedy decoding, and immediately unloads.
  */
-export async function generateResponse(input: Message[] | string, _isAction: boolean = false): Promise<string> {
+export async function generateResponse(
+  input: Message[] | string,
+  _isAction: boolean = false
+): Promise<string> {
   await loadModel();
   if (!session) throw new Error('Model failed to load');
 
   const tok = await getTokenizer();
-  
+
   let fullPrompt: string;
   if (Array.isArray(input)) {
     // Apply Qwen-2.5-Instruct chat template
-    fullPrompt = tok.apply_chat_template(input, { tokenize: false, add_generation_prompt: true });
+    fullPrompt = tok.apply_chat_template(input, {
+      tokenize: false,
+      add_generation_prompt: true,
+    });
   } else {
     fullPrompt = input;
   }
 
-  const { input_ids, attention_mask } = await tok(fullPrompt, { return_tensor: 'ort' });
+  const tokenized = await tok(fullPrompt, { return_tensor: 'ort' });
 
-  console.log('[Inference] Running inference...');
-  const responseText = await runGeneration(session, input_ids, attention_mask, tok);
+  const responseText = await runGeneration(
+    session,
+    tokenized.input_ids,
+    tokenized.attention_mask,
+    tok
+  );
 
-  await unloadModel(); // IMMEDIATE UNLOAD
+  unloadModel(); // IMMEDIATE UNLOAD
   return responseText;
 }
 
@@ -94,10 +121,10 @@ export async function generateResponse(input: Message[] | string, _isAction: boo
  * Greedy generation loop over raw ONNX tensors.
  */
 async function runGeneration(
-  sess: any,
-  inputIds: any,
-  attentionMask: any,
-  tok: any
+  sess: ort.InferenceSession,
+  inputIds: ort.Tensor,
+  attentionMask: ort.Tensor,
+  tok: Tokenizer
 ): Promise<string> {
   let currentIds = inputIds;
   let currentMask = attentionMask;
@@ -106,10 +133,16 @@ async function runGeneration(
   for (let i = 0; i < MAX_NEW_TOKENS; i++) {
     const feeds = { input_ids: currentIds, attention_mask: currentMask };
     const results = await sess.run(feeds);
-    const logits = results.logits;
+    const logits = results['logits'];
+    if (!logits) throw new Error('Missing logits in model output');
 
-    const [, seqLen, vocabSize] = logits.dims;
-    const data = logits.data;
+    const dims = logits.dims;
+    const seqLen = dims[1];
+    const vocabSize = dims[2];
+    if (seqLen === undefined || vocabSize === undefined)
+      throw new Error('Invalid logit dimensions');
+
+    const data = logits.data as Float32Array;
     const start = (seqLen - 1) * vocabSize;
     const end = start + vocabSize;
     const lastLogits = data.slice(start, end);
@@ -117,23 +150,24 @@ async function runGeneration(
     let maxVal = -Infinity;
     let nextToken = -1;
     for (let j = 0; j < vocabSize; j++) {
-      if (lastLogits[j] > maxVal) {
-        maxVal = lastLogits[j];
+      const val = lastLogits[j];
+      if (val !== undefined && val > maxVal) {
+        maxVal = val;
         nextToken = j;
       }
     }
 
-    if (nextToken === tok.eos_token_id) break;
+    if (nextToken === -1 || nextToken === tok.eos_token_id) break;
     generatedTokens.push(nextToken);
 
     // Append new token
-    const oldData = currentIds.data;
-    const newData = new (oldData.constructor as any)(oldData.length + 1);
+    const oldData = currentIds.data as BigInt64Array;
+    const newData = new BigInt64Array(oldData.length + 1);
     newData.set(oldData);
     newData[oldData.length] = BigInt(nextToken);
 
-    const oldMask = currentMask.data;
-    const newMask = new (oldMask.constructor as any)(oldMask.length + 1);
+    const oldMask = currentMask.data as BigInt64Array;
+    const newMask = new BigInt64Array(oldMask.length + 1);
     newMask.set(oldMask);
     newMask[oldMask.length] = BigInt(1);
 
@@ -143,4 +177,3 @@ async function runGeneration(
 
   return tok.decode(generatedTokens);
 }
-

@@ -169,3 +169,10 @@ export const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'sa
  * Phases lookup array
  */
 export const PHASES = ['WOOD', 'FIRE', 'EARTH', 'METAL', 'WATER'] as const;
+
+/**
+ * Component dimensions
+ */
+export const DIMENSIONS = {
+  BAR_HEIGHT: 60,
+} as const;

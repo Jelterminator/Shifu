@@ -1,11 +1,10 @@
-/* eslint-disable no-console */
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db/database';
 import { anchorsService } from '../services/data/Anchors';
-import { notificationService } from '../services/NotificationService';
-import { phaseManager } from '../services/PhaseManager';
+import { phaseManager } from '../services/data/PhaseManager';
+import { notificationService } from '../services/notifications/NotificationService';
 import { useUserStore } from '../stores/userStore';
 import { storage } from '../utils/storage';
 
@@ -29,7 +28,6 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
         await storage.preload(db);
 
         // 2. Ensure User Identity exists (Self-Healing)
-        // 2. Ensure User Identity exists (Self-Healing)
         // CRITICAL FIX: Always verify the user exists in the SQLite DB, even if we have it in the Store.
         // This prevents Foreign Key errors if the DB was cleared but LocalStorage wasn't.
         let currentUser = user;
@@ -38,7 +36,6 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
           // Verify existence in DB
           const userExists = await db.query('SELECT 1 FROM users WHERE id = ?', [currentUser.id]);
           if (userExists.length === 0) {
-            console.log('⚠️ User ID found in Store but missing in DB. Re-creating user record...');
             await db.execute(
               'INSERT INTO users (id, timezone, spiritual_practices, created_at) VALUES (?, ?, ?, ?)',
               [
@@ -56,18 +53,21 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
             id: string;
             timezone: string;
             spiritual_practices: string;
-          }>('SELECT * FROM users LIMIT 1');
+          }>('SELECT id, timezone, spiritual_practices FROM users LIMIT 1');
 
-          if (users.length > 0 && users[0]) {
+          const dbUser = users[0];
+          if (dbUser) {
             // Rehydrate store from DB
-            const dbUser = users[0];
             let practices: string[] = [];
             try {
               if (dbUser.spiritual_practices) {
-                practices = JSON.parse(dbUser.spiritual_practices) as string[];
+                const parsed: unknown = JSON.parse(dbUser.spiritual_practices);
+                if (Array.isArray(parsed)) {
+                  practices = parsed as string[];
+                }
               }
-            } catch (e) {
-              console.warn('Failed to parse spiritual practices', e);
+            } catch {
+              // silent
             }
 
             const fullUser = {
@@ -117,27 +117,21 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
           // Initialize Anchors Service (Works on Web now via localStorage fallback)
           try {
             anchorsService.initialize(latitude, longitude);
-          } catch (e) {
-            console.warn('⚠️ AnchorsService init warning:', e);
+          } catch {
+            // silent
           }
 
           // Request Notification Permissions
           try {
-            const hasPermission = await notificationService.requestPermissions();
-            if (!hasPermission) {
-              console.log('⚠️ Notification permissions denied');
-            }
-          } catch (e) {
-            console.warn('⚠️ Notification permission request failed', e);
+            await notificationService.requestPermissions();
+          } catch {
+            // silent
           }
         }
 
         setIsReady(true);
-      } catch (error) {
-        // ... err handling
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error('❌ AppInitializer: Fatal initialization error:', errorMessage);
         setInitError(errorMessage);
         setIsReady(true);
       }

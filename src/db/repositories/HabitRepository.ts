@@ -64,8 +64,8 @@ class HabitRepository {
       .map(row => mapHabitRowToHabit(row))
       .filter(habit => {
         const dayKey = weekdayName.toLowerCase();
-        // @ts-expect-error - dynamic key access
-        return habit.selectedDays[dayKey] === true;
+        const days = habit.selectedDays as Record<string, boolean>;
+        return days[dayKey] === true;
       });
   }
 

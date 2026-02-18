@@ -110,7 +110,7 @@ export function SettingsScreen({
     }
 
     try {
-      const { deviceCalendarSync } = await import('../services/DeviceCalendarSync');
+      const { deviceCalendarSync } = await import('../services/sync/DeviceCalendarSync');
       const granted = await deviceCalendarSync.requestPermissions();
 
       if (!granted) {
@@ -131,6 +131,46 @@ export function SettingsScreen({
   return (
     <BaseScreen title="Settings">
       <View style={styles.container}>
+        {/* User Configuration Section */}
+        <View style={[styles.section, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>User Configuration</Text>
+          <View style={styles.separator} />
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('LocationSetup', { isEditing: true })}
+            style={styles.settingRow}
+          >
+            <Text style={{ color: colors.text, fontSize: 16 }}>Location</Text>
+          </TouchableOpacity>
+
+          <View style={styles.separator} />
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('WorkHoursSetup', { isEditing: true })}
+            style={styles.settingRow}
+          >
+            <Text style={{ color: colors.text, fontSize: 16 }}>Work Hours</Text>
+          </TouchableOpacity>
+
+          <View style={styles.separator} />
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('SleepHoursSetup', { isEditing: true })}
+            style={styles.settingRow}
+          >
+            <Text style={{ color: colors.text, fontSize: 16 }}>Sleep Hours</Text>
+          </TouchableOpacity>
+
+          <View style={styles.separator} />
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('SpiritualPracticesSetup', { isEditing: true })}
+            style={styles.settingRow}
+          >
+            <Text style={{ color: colors.text, fontSize: 16 }}>Spiritual Practices</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Calendar Sync Section */}
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Calendar Sync</Text>
@@ -228,5 +268,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
   },
 });

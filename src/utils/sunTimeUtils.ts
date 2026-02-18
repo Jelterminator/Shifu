@@ -71,9 +71,7 @@ const getSunTimes = (date: Date, coordinates: Coordinates): SunTimes => {
       sunrise: sunData.sunrise,
       sunset: sunData.sunset,
     };
-  } catch (error) {
-    console.warn('SunCalc failed, using default times:', error);
-
+  } catch (error: unknown) {
     // Return reasonable defaults based on date and latitude
     const defaultSunrise = new Date(date);
     const defaultSunset = new Date(date);
@@ -131,9 +129,6 @@ export const calculateRomanHours = (
 
     // Graceful fallback instead of throwing
     if (!nextSunrise || nextSunrise <= sunset) {
-      console.warn(
-        `Invalid night duration calculation. Date: ${date.toISOString()}, Sunrise: ${sunrise?.toISOString()}, Sunset: ${sunset?.toISOString()}, NextSunrise: ${nextSunrise?.toISOString()}`
-      );
       throw new Error('Invalid night duration');
     }
 
@@ -157,9 +152,7 @@ export const calculateRomanHours = (
       ...Array.from({ length: 12 }, (_, i) => buildHour(i, sunrise, dayDuration, i)),
       ...Array.from({ length: 12 }, (_, i) => buildHour(i + 12, sunset, nightDuration, i)),
     ];
-  } catch (err) {
-    // Matches your test expectations
-    console.error('Falling back to equal hours:', err);
+  } catch (error: unknown) {
     return createFallbackRomanHours(
       date instanceof Date && !isNaN(date.getTime()) ? date : new Date()
     );

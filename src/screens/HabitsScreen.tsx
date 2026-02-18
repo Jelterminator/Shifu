@@ -6,11 +6,11 @@ import { HabitModal } from '../components/modals/HabitModal';
 import { HabitStatsModal } from '../components/modals/HabitStatsModal';
 
 import {
-    BORDER_RADIUS,
-    PHASE_ICONS,
-    SHADOWS,
-    SPACING,
-    WEEKDAY_ABBREVIATIONS,
+  BORDER_RADIUS,
+  PHASE_ICONS,
+  SHADOWS,
+  SPACING,
+  WEEKDAY_ABBREVIATIONS,
 } from '../constants/theme';
 import { habitRepository } from '../db/repositories/HabitRepository';
 import { planRepository } from '../db/repositories/PlanRepository';

@@ -34,8 +34,9 @@ class ProjectRepository {
     );
 
     const rows = await db.query<ProjectRow>('SELECT * FROM projects WHERE id = ?', [id]);
-    if (!rows[0]) throw new Error('Failed to create project: Row not found');
-    return mapProjectRowToProject(rows[0]);
+    const firstRow = rows[0];
+    if (!firstRow) throw new Error('Failed to create project: Row not found');
+    return mapProjectRowToProject(firstRow);
   }
 
   // READ

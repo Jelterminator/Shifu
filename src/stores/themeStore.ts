@@ -1,5 +1,5 @@
 import { PHASE_COLORS } from '../constants/theme';
-import { phaseManager, type WuXingPhase } from '../services/PhaseManager';
+import { phaseManager, type WuXingPhase } from '../services/data/PhaseManager';
 import { storage } from '../utils/storage';
 import { createStore } from '../utils/store';
 

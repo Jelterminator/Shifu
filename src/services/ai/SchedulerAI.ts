@@ -2,448 +2,434 @@ import { PHASE_KEYWORDS } from '../../constants/keywords';
 import { appointmentRepository } from '../../db/repositories/AppointmentRepository';
 import { habitRepository } from '../../db/repositories/HabitRepository';
 import { planRepository } from '../../db/repositories/PlanRepository';
-
 import { taskRepository } from '../../db/repositories/TaskRepository';
-import { useListStore } from '../../stores/listStore';
 import { useUserStore } from '../../stores/userStore';
 import type { Habit, Task } from '../../types/database';
 import { anchorsService } from '../data/Anchors';
-import { phaseManager, type WuXingPhase } from '../PhaseManager';
+import { phaseManager, type WuXingPhase } from '../data/PhaseManager';
 
 // --- Types ---
 
-interface RankedPlanItem {
+interface SchedulableItem {
   type: 'task' | 'habit';
   id: string;
   source: Task | Habit;
-  score: number;
-  appropriateness: number;
-  urgence: number;
-  isInProgress: boolean;
+  priorityScore: number;
+  remainingDuration: number;
+  // Specific constraints
+  minChunkSize: number;
+  maxChunkSize: number;
+  allowedDays: number[]; // 0-6 (Sun-Sat)
+  idealPhase?: string | null;
+  keywords: string[];
 }
 
-interface HabitUrgencyDetails {
-  progress: number;
-  daysRemaining: number;
-}
-
-interface ItemSchedulingState {
-  originalDuration: number;
-  remainingMinutes: number;
-  scheduledCount: number;
-  lastEndTime: number | null;
+interface TimeSlot {
+  start: number;
+  end: number;
+  duration: number;
+  phase?: WuXingPhase;
 }
 
 export class SchedulerAI {
+  // Main Entry Point 1: Schedule specific date (e.g. "Plan Tomorrow")
   async generateSchedule(date: Date = new Date(), fromNow: boolean = true): Promise<void> {
-    const userId = useUserStore.getState().user.id;
+    const user = useUserStore.getState().user;
+    const userId = user?.id;
     if (!userId) return;
 
-    const deletionStart = new Date(date);
-    deletionStart.setHours(0, 0, 0, 0);
-    await planRepository.deleteFuturePendingPlans(userId, deletionStart);
+    // Define Window: Start of Date (or Now) -> End of Date
+    const start = new Date(date);
+    if (!fromNow) start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
 
-    await this.scheduleDay(userId, date, fromNow, new Set<string>());
+    await this.executeScheduling(userId, start, end);
   }
 
+  // Main Entry Point 2: Reschedule "Rest of Today + Tomorrow"
   async rescheduleFromNowUntilNextDay(): Promise<void> {
-    const userId = useUserStore.getState().user.id;
+    const user = useUserStore.getState().user;
+    const userId = user?.id;
     if (!userId) return;
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    await planRepository.deleteFuturePendingPlans(userId, todayStart);
+    const start = new Date(); // Now
+    const end = new Date();
+    end.setDate(end.getDate() + 1);
+    end.setHours(23, 59, 59, 999); // End of Tomorrow
 
-    const scheduledIds = new Set<string>();
-
-    await this.scheduleDay(userId, new Date(), true, scheduledIds);
-
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    await this.scheduleDay(userId, tomorrow, false, scheduledIds);
+    await this.executeScheduling(userId, start, end);
   }
 
-  private async scheduleDay(
+  private async executeScheduling(
     userId: string,
-    date: Date,
-    fromNow: boolean,
-    externalScheduledIds: Set<string>
+    windowStart: Date,
+    windowEnd: Date
   ): Promise<void> {
-    const schedulingStart = fromNow ? new Date() : new Date(date);
-    if (!fromNow) schedulingStart.setHours(0, 0, 0, 0);
-    const startTimeMs = schedulingStart.getTime();
+    // 1. Cleanup Future/Pending Plans in Window
+    // We clear from start of day (midnight) to ensure we don't leave "missed" morning plans hanging.
+    // They should be rescheduled if they were pending.
+    const cleanupStart = new Date(windowStart);
+    cleanupStart.setHours(0, 0, 0, 0);
+    await planRepository.deleteFuturePendingPlans(userId, cleanupStart);
 
-    const tasks = await taskRepository.getUrgentTasks(userId, 32);
+    // 2. Fetch Data
+    // A. Tasks (Global Urgent Pool)
+    // We fetch a larger pool to allow "Eat the Frog" to pick the absolute best
+    const tasks = await taskRepository.getUrgentTasks(userId, 50);
 
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const weekday = days[date.getDay()] || 'Sunday';
-    const habits = await habitRepository.getScheduledForToday(userId, weekday);
+    // B. Habits (For every day in the window)
 
-    const habitDetails = new Map<string, HabitUrgencyDetails>();
-    const startOfWeek = new Date(date);
-    const dayIndex = startOfWeek.getDay();
-    startOfWeek.setDate(startOfWeek.getDate() - dayIndex);
-    startOfWeek.setHours(0, 0, 0, 0);
-    const daysRemaining = 7 - date.getDay();
+    const daysInWindow = this.getDaysInWindow(windowStart, windowEnd);
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-    await Promise.all(
-      habits.map(async h => {
-        const progress = await habitRepository.calculateWeeklyProgress(h.id, startOfWeek);
-        habitDetails.set(h.id, { progress, daysRemaining });
-      })
+    // We need to know which habits are for which day, to avoid scheduling "Monday Habit" on "Tuesday"
+    // We will wrap them in SchedulableItem with 'allowedDays' constraint.
+    // Fetch unique habits relevant for these days
+    const uniqueHabitsMap = new Map<string, Habit>();
+
+    for (const d of daysInWindow) {
+      const dayName = dayNames[d.getDay()] || 'Sunday';
+      const dayHabits = await habitRepository.getScheduledForToday(userId, dayName);
+      for (const h of dayHabits) {
+        if (!uniqueHabitsMap.has(h.id)) uniqueHabitsMap.set(h.id, h);
+      }
+    }
+
+    // Calculate Habit Progress to filter out completed ones
+    const activeHabits: Habit[] = [];
+    // We'll do a quick check on weekly progress?
+    // Actually, "Eat the Frog" for habits usually means "Do it today if not done".
+    // We will let the scheduler decide based on 'remaining needed'.
+    for (const h of uniqueHabitsMap.values()) {
+      activeHabits.push(h);
+    }
+
+    // 3. Transform to SchedulableItems
+    const items = await this.prepareItems(tasks, activeHabits, windowStart);
+
+    // 4. Build Available Time Slots (The "Canvas")
+    // Base Busy Slots: Appointments, Anchors, Sleep, Work (if strictly enforcing work hours for personal stuff)
+    const busySlots = await this.getBusySlots(userId, windowStart, windowEnd);
+
+    // 5. Greedy Allocation
+    // Sort items by Priority (Frog First)
+    items.sort((a, b) => b.priorityScore - a.priorityScore);
+
+    for (const item of items) {
+      if (item.remainingDuration <= 0) continue;
+
+      // Try to book the item
+      await this.scheduleItemGreedy(userId, item, busySlots, windowStart, windowEnd);
+    }
+  }
+
+  private async scheduleItemGreedy(
+    userId: string,
+    item: SchedulableItem,
+    busySlots: { start: number; end: number }[],
+    windowStart: Date,
+    windowEnd: Date
+  ): Promise<void> {
+    // 1. Find all free chunks in the window
+    // We need to be careful with "Allowed Days" (e.g. Habit only on Monday)
+    const freeSlots = this.getFreeSlotsMultiDay(
+      busySlots,
+      windowStart.getTime(),
+      windowEnd.getTime()
     );
 
-    // --- 1. Initialize Scheduling State ---
-    const schedulingState = new Map<string, ItemSchedulingState>();
+    // Filter slots by Item Constraints (Day, etc)
+    const validSlots: TimeSlot[] = [];
 
-    for (const t of tasks) {
-      if (externalScheduledIds.has(t.id)) continue;
-      schedulingState.set(t.id, {
-        originalDuration: t.effortMinutes || 30,
-        remainingMinutes: t.effortMinutes || 30,
-        scheduledCount: 0,
-        lastEndTime: null,
+    for (const slot of freeSlots) {
+      const slotMid = new Date(slot.start + slot.duration / 2);
+      const slotDay = slotMid.getDay(); // 0-6
+
+      if (!item.allowedDays.includes(slotDay)) continue;
+      if (slot.duration < item.minChunkSize * 60000) continue;
+
+      // Get Phase for this slot (use midpoint or start?)
+      // We'll split slots by phase for better granularity?
+      // For now, let's just tag the slot with its dominant phase or evaluate suitability dynamically.
+      // Better: The `getFreeSlotsMultiDay` could carry phase info or we look it up.
+      // Let's look it up.
+      const phases = phaseManager.getPhasesForGregorianDate(slotMid); // This gets phases for the day of the slot
+      const currentPhase = phases.find(
+        p => p.startTime.getTime() <= slotMid.getTime() && p.endTime.getTime() > slotMid.getTime()
+      );
+
+      validSlots.push({
+        ...slot,
+        phase: currentPhase,
       });
     }
 
-    for (const h of habits) {
-      if (externalScheduledIds.has(h.id)) continue;
-      const details = habitDetails.get(h.id);
-      const goal = h.weeklyGoalMinutes || 0;
-      const left = Math.max(0, goal - (details?.progress ?? 0));
-      const neededPerDay = left / Math.max(1, details?.daysRemaining ?? 1);
+    if (validSlots.length === 0) return;
 
-      const targetDuration = Math.round(neededPerDay + 5);
+    // 2. Score Slots for Suitability
+    // We want "Greatest Suitability Timing"
+    // Suitability = (Keyword Match) + (Ideal Phase Match) + (Energy Match)
+    // We also likely want to penalize "Too Late" if urgency is high?
+    // "Eat the Frog" means do it ASAP, right? Or do it at *best* time?
+    // "Not focussed on filling all tasks as quickly as possible but one that focusses on getting each task its greatest suitability timing"
+    // -> Prioritize Suitability over Earliness.
 
-      schedulingState.set(h.id, {
-        originalDuration: targetDuration,
-        remainingMinutes: targetDuration,
-        scheduledCount: 0,
-        lastEndTime: null,
-      });
+    let bestGenericSlot: TimeSlot | null = null;
+    let bestScore = -Infinity;
+
+    for (const slot of validSlots) {
+      const suitability = this.calculateSuitability(item, slot.phase);
+
+      // Minor penalty for distance in future? To avoid pushing everything to tomorrow if today is "Okay".
+      // If today is 0.8 suitable and tomorrow is 0.9, do we wait? Yes, based on user implementation request.
+      // But if urgency is high, we might override.
+      // Let's rely heavily on suitability.
+
+      // Tie breaker: Earliness
+      const timePenalty = ((slot.start - windowStart.getTime()) / (1000 * 3600 * 24)) * 0.1; // Small penalty per day
+
+      const finalScore = suitability - timePenalty;
+
+      if (finalScore > bestScore) {
+        bestScore = finalScore;
+        bestGenericSlot = slot;
+      }
     }
 
-    // --- 2. Base Busy Slots (Appts, Sleep, Anchors) ---
-    const activePhases = phaseManager
-      .getPhasesForGregorianDate(date)
-      .filter(p => p.endTime.getTime() > startTimeMs);
+    if (!bestGenericSlot) return;
 
-    const appointments = await appointmentRepository.getForDate(userId, date);
-    const anchors = anchorsService.getAnchorsForDate(date);
-    const user = useUserStore.getState().user;
+    // 3. Book It
+    const bookDurationMs = Math.min(item.remainingDuration, 60) * 60000; // Cap at 60m blocks?
+    // Actually standard practice is maxChunkSize.
+    const actualDuration = Math.min(bookDurationMs, bestGenericSlot.duration);
 
-    const sleepConstraints = this.getUserConstraints(user, date); // Only sleep
+    // We verify if we need to trim the slot?
+    // Logic: schedule at START of the best slot? Or align with Phase?
+    // Simple: Start of slot.
+    const planStart = new Date(bestGenericSlot.start);
+    const planEnd = new Date(bestGenericSlot.start + actualDuration);
 
-    const baseBusySlots = [
-      ...appointments.map(a => ({ start: a.startTime, end: a.endTime })),
-      ...anchors.map(a => ({
-        start: a.startTime,
-        end: a.startTime.getTime() + a.durationMinutes * 60000,
-      })),
-      ...sleepConstraints,
-    ].map(slot => ({
-      start: new Date(slot.start).getTime(),
-      end: new Date(slot.end).getTime(),
-    }));
-
-    // Sort base slots
-    baseBusySlots.sort((a, b) => a.start - b.start);
-
-    // --- 3. Determine Work Hours ---
-    const workHours = this.getWorkHours(user, date);
-
-    // Helper to filter items based on list config
-    const isAllowed = (item: Task | Habit, context: 'work' | 'outside'): boolean => {
-      const itemKeywords = item.selectedKeywords || [];
-      const lists = useListStore.getState().lists;
-
-      // Find matching lists
-      const matchingLists = lists.filter(l => l.keywords.some(k => itemKeywords.includes(k)));
-
-      // If no list matches, default to... allowed everywhere? or allowed nowhere?
-      // Let's assume allowed everywhere if uncategorized for now, or maybe 'Personal' default?
-      // For safety, if no list matches, we treat it as 'outside work' (Private).
-      if (matchingLists.length === 0) {
-        return context === 'outside';
-      }
-
-      if (context === 'work') {
-        return matchingLists.some(l => l.plan_during_work);
-      } else {
-        return matchingLists.some(l => l.plan_outside_work);
-      }
-    };
-
-    // --- Pass 1: Outside Work ---
-    // Block out Work Hours
-    const outsideBusySlots = [...baseBusySlots];
-    if (workHours) {
-      this.addBusySlot(outsideBusySlots, workHours.start, workHours.end);
-    }
-
-    const outsideItems = [
-      ...tasks.filter(t => isAllowed(t, 'outside')),
-      ...habits.filter(h => isAllowed(h, 'outside')),
-    ];
-
-    await this.runSchedulingPass({
-      userId,
-      items: outsideItems,
-      busySlots: outsideBusySlots,
-      phases: activePhases,
-      schedulingState,
-      startTimeMs,
-
-      habitDetails,
-      externalScheduledIds,
+    // Create Plan
+    await planRepository.create(userId, {
+      name: item.source.title,
+      description: `Scheduled by AI (${bestGenericSlot.phase?.name || 'General'} Phase) - Suitability: ${bestScore.toFixed(2)}`,
+      startTime: planStart,
+      endTime: planEnd,
+      sourceId: item.source.id,
+      sourceType: item.type,
+      linkedObjectIds: [],
+      done: null,
     });
 
-    // --- Pass 2: During Work ---
-    // Only if work hours exist
-    if (workHours) {
-      // Block out Non-Work Hours (Before work and After work)
-      const workBusySlots = [...baseBusySlots];
+    // Add Busy Slot
+    this.addBusySlot(busySlots, planStart.getTime(), planEnd.getTime());
 
-      // Add "Before Work" block
-      const dayStart = new Date(date);
-      dayStart.setHours(0, 0, 0, 0);
-      if (workHours.start > dayStart.getTime()) {
-        this.addBusySlot(workBusySlots, dayStart.getTime(), workHours.start);
-      }
+    // Update Item State
+    item.remainingDuration -= actualDuration / 60000;
 
-      // Add "After Work" block
-      const dayEnd = new Date(date);
-      dayEnd.setHours(23, 59, 59, 999);
-      if (workHours.end < dayEnd.getTime()) {
-        this.addBusySlot(workBusySlots, workHours.end, dayEnd.getTime());
-      }
+    // Recurse? If item still has time?
+    if (item.remainingDuration > item.minChunkSize) {
+      // Try to schedule remainder
+      await this.scheduleItemGreedy(userId, item, busySlots, windowStart, windowEnd);
+    }
+  }
 
-      const workItems = [
-        ...tasks.filter(t => isAllowed(t, 'work')),
-        // User requested ONLY tasks for work hours.
-        // "Once with only the work hours and only tasks with the flag 'allowed during work'"
-      ];
+  private calculateSuitability(item: SchedulableItem, phase?: WuXingPhase): number {
+    if (!phase) return 1.0; // Neutral baseline
 
-      await this.runSchedulingPass({
-        userId,
-        items: workItems,
-        busySlots: workBusySlots,
-        phases: activePhases,
-        schedulingState,
-        startTimeMs,
+    let score = 1.0;
 
-        habitDetails,
-        externalScheduledIds,
+    // 1. Keyword Match from Item Selection
+    const phaseKeywords = (PHASE_KEYWORDS[phase.name] || []) as readonly string[];
+    const matchCount = item.keywords.filter(k => phaseKeywords.includes(k)).length;
+
+    if (matchCount > 0) score += matchCount * 0.5; // +0.5 per match
+
+    // 2. Ideal Phase Match (Habits)
+    if (item.idealPhase === phase.name) {
+      score += 2.0; // Strong bonus
+    }
+
+    // 3. Phase Config Qualities (Soft match)
+    // Maybe check if task is "Creative" and phase is "Wood/Fire"
+    // This is covered by keywords mostly.
+
+    return score;
+  }
+
+  private async prepareItems(
+    tasks: Task[],
+    habits: Habit[],
+    windowStart: Date
+  ): Promise<SchedulableItem[]> {
+    const items: SchedulableItem[] = [];
+    const habitProgressMap = new Map<string, number>();
+
+    // Load progress for habits (Weekly)
+    // We assume habits need to be done *today* or *tomorrow* based on remaining weekly goal?
+    // Or just "Habit for Today" needs doing.
+    // Simplification: If habit is scheduled for today, it needs doing today.
+    // Duration? min_session_minutes or (weekly_goal - progress) / remaining_days?
+    // Let's use logic from previous:
+
+    const startOfWeek = new Date(windowStart);
+
+    // Let's just say "Start of Week" for progress purposes
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    for (const h of habits) {
+      const progress = await habitRepository.calculateWeeklyProgress(h.id, startOfWeek);
+      habitProgressMap.set(h.id, progress);
+    }
+
+    // Convert Tasks
+    for (const t of tasks) {
+      // Calculate Priority
+      // default urgency logic:
+      const urgencyMap: Record<string, number> = {
+        T1: 100, // Critical
+        T2: 80,
+        T3: 60,
+        T4: 40,
+        T5: 20,
+        T6: 10,
+        CHORE: 30,
+      };
+      const basePriority = urgencyMap[t.urgencyLevel || 'T6'] || 10;
+
+      // Boost if old
+      const daysOld = (Date.now() - new Date(t.createdAt).getTime()) / (1000 * 3600 * 24);
+      const ageBoost = Math.min(20, daysOld); // Max +20 for age
+
+      items.push({
+        type: 'task',
+        id: t.id,
+        source: t,
+        priorityScore: basePriority + ageBoost,
+        remainingDuration: t.effortMinutes || 30,
+        minChunkSize: 15,
+        maxChunkSize: 60,
+        allowedDays: [0, 1, 2, 3, 4, 5, 6], // Tasks allow any day
+        keywords: t.selectedKeywords || [],
       });
     }
+
+    const dayList = this.getDaysInWindow(
+      windowStart,
+      new Date(windowStart.getTime() + 2 * 24 * 3600 * 1000)
+    ); // Up to 2 days ahead
+
+    for (const dayDate of dayList) {
+      const dayName = [
+        'sunday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+      ][dayDate.getDay()] as keyof Habit['selectedDays'];
+
+      for (const h of habits) {
+        if (h.selectedDays[dayName]) {
+          // It's valid for this day
+          // Check progress
+          const goal = h.weeklyGoalMinutes || 0;
+          const current = habitProgressMap.get(h.id) || 0;
+          if (goal > 0 && current >= goal) continue; // Already met weekly goal
+
+          // Add Instance
+          // Priority: Habits usually high -> "Maintenance"
+          // Base on remaining?
+          items.push({
+            type: 'habit',
+            id: `${h.id}_${dayDate.getTime()}`, // Unique ID for this instance
+            source: h,
+            priorityScore: 75, // Default high-ish
+            remainingDuration: Math.max(15, h.minimumSessionMinutes || 15),
+            minChunkSize: h.minimumSessionMinutes || 15,
+            maxChunkSize: 60,
+            allowedDays: [dayDate.getDay()], // Strict day
+            idealPhase: h.idealPhase,
+            keywords: h.selectedKeywords || [],
+          });
+        }
+      }
+    }
+
+    return items;
   }
 
-  private async runSchedulingPass(ctx: {
-    userId: string;
-    items: (Task | Habit)[];
-    busySlots: { start: number; end: number }[];
-    phases: WuXingPhase[];
-    schedulingState: Map<string, ItemSchedulingState>;
-    startTimeMs: number;
+  // --- Helpers ---
 
-    habitDetails: Map<string, HabitUrgencyDetails>;
-    externalScheduledIds: Set<string>;
-  }): Promise<void> {
-    const {
-      userId,
-      items,
-      busySlots,
-      phases,
-      schedulingState,
-      startTimeMs,
-      habitDetails,
-      externalScheduledIds,
-    } = ctx;
+  private getDaysInWindow(start: Date, end: Date): Date[] {
+    const days: Date[] = [];
+    const current = new Date(start);
+    current.setHours(0, 0, 0, 0);
 
-    busySlots.sort((a, b) => a.start - b.start);
+    const endDate = new Date(end);
+    endDate.setHours(23, 59, 59, 999);
 
-    // We need to know which items are tasks vs habits for the loop
-    const passTasks = items.filter((i): i is Task => 'effortMinutes' in i);
-    const passHabits = items.filter((i): i is Habit => 'weeklyGoalMinutes' in i);
-
-    for (const phase of phases) {
-      const projectsScheduledThisPhase = new Set<string>();
-      const phaseStartMs = Math.max(phase.startTime.getTime(), startTimeMs);
-
-      const rankedItems: RankedPlanItem[] = [];
-
-      // A) Tasks
-      for (const task of passTasks) {
-        const state = schedulingState.get(task.id);
-        if (!state || state.remainingMinutes <= 5) continue;
-        if (externalScheduledIds.has(task.id)) continue;
-
-        // Project Constraints
-        if (task.projectId) {
-          // We only need to check the list of tasks we are currently trying to schedule ('tasks')
-          // We look for any "earlier" task that is not yet finished.
-          const hasEarlierPendingTask = passTasks.some(
-            t =>
-              t.id !== task.id && // Not self
-              t.projectId === task.projectId && // Same project
-              (t.positionInProject ?? Infinity) < (task.positionInProject ?? Infinity) && // Lower position = Earlier
-              (schedulingState.get(t.id)?.remainingMinutes ?? 0) > 5 // Still needs work
-          );
-
-          // If an earlier task exists and isn't done, we must wait for it. Skip this task.
-          if (hasEarlierPendingTask) continue;
-        }
-
-        rankedItems.push(this.calculateScore(task, 'task', phase.name, state, phaseStartMs));
-      }
-
-      // B) Habits
-      for (const habit of passHabits) {
-        const state = schedulingState.get(habit.id);
-        if (!state || state.scheduledCount > 0) continue;
-        if (externalScheduledIds.has(habit.id)) continue;
-
-        const details = habitDetails.get(habit.id);
-        rankedItems.push(
-          this.calculateScore(habit, 'habit', phase.name, state, phaseStartMs, details)
-        );
-      }
-
-      // Sort High to Low
-      rankedItems.sort((a, b) => b.score - a.score);
-
-      // --- Fill Phase ---
-      while (rankedItems.length > 0) {
-        const phaseEnd = phase.endTime.getTime();
-        if (phaseStartMs >= phaseEnd) break;
-
-        const chronologicalSlots = this.getFreeSlots(busySlots, phaseStartMs, phaseEnd);
-        if (chronologicalSlots.length === 0) break;
-
-        const item = rankedItems.shift();
-        if (!item) break;
-
-        const state = schedulingState.get(item.id)!;
-        const durationMs = state.remainingMinutes * 60000;
-
-        let chosenSlot: { start: number; end: number; duration: number } | undefined;
-        let isPartial = false;
-
-        if (item.isInProgress) {
-          chosenSlot = chronologicalSlots[0];
-          if (chosenSlot && chosenSlot.duration < durationMs) isPartial = true;
-        } else {
-          const slotsBySize = [...chronologicalSlots].sort((a, b) => a.duration - b.duration);
-          chosenSlot = slotsBySize.find(s => s.duration >= durationMs);
-          if (!chosenSlot) {
-            const biggest = slotsBySize[slotsBySize.length - 1];
-            if (biggest && biggest.duration >= 10 * 60000) {
-              chosenSlot = biggest;
-              isPartial = true;
-            }
-          }
-        }
-
-        if (chosenSlot) {
-          // Cap duration at 60 minutes to prevent burnout
-          const MAX_BLOCK = 60 * 60000;
-          let timeToBook = isPartial ? chosenSlot.duration : durationMs;
-          if (timeToBook > MAX_BLOCK) {
-            timeToBook = MAX_BLOCK;
-          }
-
-          const planStart = new Date(chosenSlot.start);
-          const planEnd = new Date(chosenSlot.start + timeToBook);
-
-          await this.createPlan(userId, item, phase.name, planStart, planEnd);
-          this.addBusySlot(busySlots, chosenSlot.start, planEnd.getTime());
-
-          const bookedMinutes = timeToBook / 60000;
-          state.remainingMinutes -= bookedMinutes;
-          state.lastEndTime = planEnd.getTime();
-          state.scheduledCount++;
-
-          if (item.type === 'task' && (item.source as Task).projectId) {
-            projectsScheduledThisPhase.add((item.source as Task).projectId!);
-          }
-
-          if (item.type === 'task' && state.remainingMinutes > 5) {
-            item.isInProgress = true;
-            rankedItems.unshift(item);
-          }
-
-          if (item.type === 'habit') {
-            state.remainingMinutes = 0;
-            externalScheduledIds.add(item.id);
-          }
-          if (item.type === 'task' && state.remainingMinutes <= 5) {
-            state.remainingMinutes = 0;
-            externalScheduledIds.add(item.id);
-          }
-        }
-      }
+    while (current <= endDate) {
+      days.push(new Date(current));
+      current.setDate(current.getDate() + 1);
     }
+    return days;
   }
 
-  private calculateScore(
-    item: Task | Habit,
-    type: 'task' | 'habit',
-    phaseName: string,
-    state: ItemSchedulingState,
-    currentPhaseStart: number,
-    habitDetails?: HabitUrgencyDetails
-  ): RankedPlanItem {
-    const keywords = item.selectedKeywords || [];
-    const idealPhase = (item as Habit).idealPhase;
+  private async getBusySlots(
+    userId: string,
+    start: Date,
+    end: Date
+  ): Promise<{ start: number; end: number }[]> {
+    // 1. Appointments
 
-    const created = new Date(item.createdAt);
-    const now = new Date();
-    const ageDays = (now.getTime() - created.getTime()) / (1000 * 3600 * 24);
+    // "AND start_time >= ? AND start_time <= ?" (StartOfDay, EndOfDay)
+    // We need to fetch for multiple days if window > 1 day.
+    // We'll iterate days.
 
-    let appropriateness = 1;
-    let urgence = 1 + ageDays / 5;
+    const slots: { start: number; end: number }[] = [];
 
-    const isInProgress = state.scheduledCount > 0 && state.remainingMinutes > 5;
+    const days = this.getDaysInWindow(start, end);
+    for (const d of days) {
+      const dayAppts = await appointmentRepository.getForDate(userId, d);
+      for (const a of dayAppts) {
+        slots.push({ start: a.startTime.getTime(), end: a.endTime.getTime() });
+      }
 
-    for (const key of keywords) {
-      if (this.doesPhaseMatchKeywords(phaseName, [key])) appropriateness += 2;
-    }
+      const dayAnchors = anchorsService.getAnchorsForDate(d);
+      for (const a of dayAnchors) {
+        slots.push({
+          start: a.startTime.getTime(),
+          end: a.startTime.getTime() + a.durationMinutes * 60000,
+        });
+      }
 
-    if (type === 'habit' && idealPhase === phaseName) appropriateness += 3;
+      // Sleep
+      const user = useUserStore.getState().user;
+      const sleepConstraints = this.getUserConstraints(user, d);
+      slots.push(...sleepConstraints);
 
-    if (isInProgress) {
-      appropriateness += 50;
-    }
-    if (state.lastEndTime) {
-      const gapMinutes = Math.abs(currentPhaseStart - state.lastEndTime) / 60000;
-      if (gapMinutes < 15) appropriateness += 5;
-    }
-
-    if (type === 'task') {
-      const task = item as Task;
-      const level = task.urgencyLevel || 'T6';
-      const map: Record<string, number> = { T1: 6, T2: 5, T3: 4, T4: 3, T5: 2, T6: 1, CHORE: 2 };
-      urgence += map[level] || 1;
-      urgence = urgence * 2;
-    } else {
-      if (habitDetails) {
-        const needed = state.originalDuration;
-        if (needed > 30) urgence += 1;
-        if (needed > 60) urgence += 1;
+      // Work (if needed) - assume work is a 'Busy' block for personal tasks?
+      // Or we mark work blocks?
+      // For now let's assume Mixed Schedule or Block Work?
+      // Legacy code handled 'Work' vs 'Outside work'.
+      // New request doesn't specify, but implies "Best suitability".
+      // Ideally Work is just "Another Phase" (Work Phase).
+      // But usually we can't schedule "Meditation" during work.
+      // Let's add Work Hours as Busy for now to be safe, unless user explicit whitelist.
+      // Or just leave it open?
+      // "during work" checks in legacy code were strict.
+      // Let's block work hours for now.
+      const work = this.getWorkHours(user, d);
+      if (work) {
+        slots.push(work);
       }
     }
 
-    const score = appropriateness * urgence;
-
-    return {
-      type,
-      id: item.id,
-      source: item,
-      score,
-      appropriateness,
-      urgence,
-      isInProgress,
-    };
+    return slots.sort((a, b) => a.start - b.start);
   }
 
   private getUserConstraints(
@@ -452,21 +438,27 @@ export class SchedulerAI {
   ): { start: number; end: number }[] {
     const userConstraints: { start: number; end: number }[] = [];
 
-    if (user.sleepStart && user.sleepEnd) {
-      const sleepStart = this.getTimeOnDate(user.sleepStart, date);
-      const sleepEnd = this.getTimeOnDate(user.sleepEnd, date);
+    const sleepStartStr = user.sleepStart || '23:00';
+    const sleepEndStr = user.sleepEnd || '07:00';
 
-      if (sleepStart && sleepEnd) {
-        if (sleepStart > sleepEnd) {
-          const dayStart = new Date(date);
-          dayStart.setHours(0, 0, 0, 0);
-          userConstraints.push({ start: dayStart.getTime(), end: sleepEnd });
-          const dayEnd = new Date(date);
-          dayEnd.setHours(23, 59, 59, 999);
-          userConstraints.push({ start: sleepStart, end: dayEnd.getTime() });
-        } else {
-          userConstraints.push({ start: sleepStart, end: sleepEnd });
-        }
+    const sleepStart = this.getTimeOnDate(sleepStartStr, date);
+    const sleepEnd = this.getTimeOnDate(sleepEndStr, date);
+
+    if (sleepStart && sleepEnd) {
+      if (sleepStart > sleepEnd) {
+        // Sleep crosses midnight (e.g. 23:00 - 07:00)
+        // Block 1: Midnight -> Wake Time
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
+        userConstraints.push({ start: dayStart.getTime(), end: sleepEnd });
+
+        // Block 2: Sleep Time -> Midnight
+        const dayEnd = new Date(date);
+        dayEnd.setHours(23, 59, 59, 999);
+        userConstraints.push({ start: sleepStart, end: dayEnd.getTime() });
+      } else {
+        // Sleep is within the day (e.g. 01:00 - 09:00, or naps)
+        userConstraints.push({ start: sleepStart, end: sleepEnd });
       }
     }
     return userConstraints;
@@ -496,12 +488,6 @@ export class SchedulerAI {
     return d.getTime();
   }
 
-  private doesPhaseMatchKeywords(phase: string, keywords: string[]): boolean {
-    const map = PHASE_KEYWORDS as Record<string, readonly string[]>;
-    const phaseKeywords = map[phase] || [];
-    return keywords.some(k => phaseKeywords.includes(k));
-  }
-
   private addBusySlot(
     busySlots: { start: number; end: number }[],
     start: number,
@@ -511,55 +497,43 @@ export class SchedulerAI {
     busySlots.sort((a, b) => a.start - b.start);
   }
 
-  private async createPlan(
-    userId: string,
-    item: RankedPlanItem,
-    phaseName: string,
-    start: Date,
-    end: Date
-  ): Promise<void> {
-    const dbStart = new Date(start.getTime() + 60000);
-    const dbEnd = new Date(end.getTime() - 60000);
-
-    await planRepository.create(userId, {
-      name: item.source.title,
-      description: `Scheduled by AI (${phaseName} Phase)`,
-      startTime: dbStart,
-      endTime: dbEnd,
-      sourceId: item.id,
-      sourceType: item.type,
-      linkedObjectIds: [],
-      done: null,
-    });
-  }
-
-  private getFreeSlots(
+  private getFreeSlotsMultiDay(
     busySlots: { start: number; end: number }[],
-    limitStart: number,
-    limitEnd: number
+    windowStart: number,
+    windowEnd: number
   ): { start: number; end: number; duration: number }[] {
     const freeSlots: { start: number; end: number; duration: number }[] = [];
-    let currentProbe = limitStart;
+    let currentProbe = windowStart;
 
-    for (const slot of busySlots) {
+    // Use a copy to sort and filter relevant slots
+    const relevantSlots = busySlots
+      .filter(s => s.end > windowStart && s.start < windowEnd)
+      .sort((a, b) => a.start - b.start);
+
+    for (const slot of relevantSlots) {
       if (slot.end <= currentProbe) continue;
+
+      // If there is a gap before this slot
       if (slot.start > currentProbe) {
         const start = currentProbe;
-        const actualEnd = Math.min(slot.start, limitEnd);
-        if (start >= limitEnd) break;
+        const actualEnd = Math.min(slot.start, windowEnd);
 
-        const duration = actualEnd - start;
-        if (duration >= 5 * 60000) {
-          freeSlots.push({ start, end: actualEnd, duration });
+        if (start < actualEnd) {
+          const duration = actualEnd - start;
+          // 5 min minimum
+          if (duration >= 5 * 60000) {
+            freeSlots.push({ start, end: actualEnd, duration });
+          }
         }
       }
       currentProbe = Math.max(currentProbe, slot.end);
     }
 
-    if (currentProbe < limitEnd) {
-      const duration = limitEnd - currentProbe;
+    // Checking tail
+    if (currentProbe < windowEnd) {
+      const duration = windowEnd - currentProbe;
       if (duration >= 5 * 60000) {
-        freeSlots.push({ start: currentProbe, end: limitEnd, duration });
+        freeSlots.push({ start: currentProbe, end: windowEnd, duration });
       }
     }
     return freeSlots;

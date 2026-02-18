@@ -30,8 +30,7 @@ function loadOrtFromCDN() {
         reject(new Error('ort global not found after script load'));
       }
     };
-    script.onerror = () =>
-      reject(new Error('Failed to load onnxruntime-web from CDN'));
+    script.onerror = () => reject(new Error('Failed to load onnxruntime-web from CDN'));
     document.head.appendChild(script);
   });
 
@@ -66,9 +65,7 @@ const handler = {
       const TensorProxy = class {
         constructor(...args) {
           if (!globalThis.ort) {
-            throw new Error(
-              'ORT not loaded yet. Call loadOrtFromCDN() first.',
-            );
+            throw new Error('ORT not loaded yet. Call loadOrtFromCDN() first.');
           }
           return new globalThis.ort.Tensor(...args);
         }

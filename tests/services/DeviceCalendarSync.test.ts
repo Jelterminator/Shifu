@@ -30,6 +30,7 @@ jest.mock('../../src/db/repositories/AppointmentRepository', () => ({
     create: jest.fn(),
     getByExternalId: jest.fn(),
     update: jest.fn(),
+    deleteBySource: jest.fn(),
   },
 }));
 
@@ -45,7 +46,7 @@ jest.mock('../../src/stores/userStore', () => ({
 // Import after mocks
 import * as Calendar from 'expo-calendar';
 import { appointmentRepository } from '../../src/db/repositories/AppointmentRepository';
-import { deviceCalendarSync } from '../../src/services/DeviceCalendarSync';
+import { deviceCalendarSync } from '../../src/services/sync/DeviceCalendarSync';
 
 // Get mock references - use explicit interface to avoid 'possibly undefined' errors
 interface CalendarMocks {

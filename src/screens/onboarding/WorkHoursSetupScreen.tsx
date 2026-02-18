@@ -9,7 +9,8 @@ import type { RootStackParamList } from '../../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'WorkHoursSetup'>;
 
-export const WorkHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
+export const WorkHoursSetupScreen: React.FC<Props> = ({ navigation, route }) => {
+  const isEditing = route.params?.isEditing ?? false;
   const [workStart, setWorkStart] = useState('09:00');
   const [workEnd, setWorkEnd] = useState('17:00');
 
@@ -19,7 +20,15 @@ export const WorkHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleContinue = (): void => {
     setUser({ ...user, workStart, workEnd });
-    navigation.navigate('SleepHoursSetup');
+    if (isEditing) {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+      }
+    } else {
+      navigation.navigate('SleepHoursSetup');
+    }
   };
 
   const inputStyle = {
@@ -73,7 +82,7 @@ export const WorkHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
         }}
       >
         <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '600', fontSize: 16 }}>
-          Continue →
+          {isEditing ? 'Save Changes' : 'Continue →'}
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

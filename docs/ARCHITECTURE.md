@@ -1,7 +1,13 @@
-# 🌟 Shifu : Architecture [OUTDATED]
+# 🌟 Shifu : Target Architecture
 
-Thisdocument serves as the single source of truth for the **HarmoniousDay** project, defining a
-definitive architecture that meets the core mandate: **100% On-Device Functionality with Zero
+> **⚠️ This document describes the _final, fully-realised_ architecture that Shifu is being built
+> towards.** It is not a reflection of the current implementation state. Many subsystems described
+> here (e.g. hierarchical summarization, nightly training pipeline, on-device MLOps) are planned but
+> not yet implemented. For current progress and what has been completed, see
+> **[ROADMAP.md](ROADMAP.md)**.
+
+This document serves as the single source of truth for the **Shifu** project, defining a
+definitive target architecture that meets the core mandate: **100% On-Device Functionality with Zero
 Company-Run Servers**.
 
 ## I. System Overview and Mandate
@@ -11,11 +17,11 @@ for **offline-first** operation with sophisticated AI capabilities, rooted in 
 Elements) philosophy. It functions as a fully self-contained, intelligent life manager that operates
 without compromise to user privacy or data sovereignty.
 
-The front-end is built with React Native (0.72) and Expo for optimalcross-platform development,
-utilizing a local SQLite database for alldata storage. Combined with Zustand (a ~2KB state store
-[1]) for statemanagement, this architecture guarantees the app “will work offlinewithout any extra
-effort” [2]. React Native’s Hermes engine isused to compile JavaScript ahead-of-time, improving
-startup time andreducing memory usage [3].
+The front-end is built with React Native (0.72) and Expo for optimal cross-platform development,
+utilizing a local SQLite database for all data storage. Combined with Zustand (a ~2KB state store
+[1]) for state management, this architecture guarantees the app “will work offline without any extra
+effort” [2]. React Native’s Hermes engine is used to compile JavaScript ahead-of-time, improving
+startup time and reducing memory usage [3].
 
 Third-party integration, such as with Google Calendar or Tasks, is implemented via direct,
 client-side **OAuth 2.0**. Authentication tokens are stored locally, and API calls are made only

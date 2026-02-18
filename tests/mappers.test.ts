@@ -1,13 +1,13 @@
 import * as Mappers from '../src/db/mappers';
 import type {
-  Habit,
-  HabitRow,
-  JournalEntry,
-  JournalEntryRow,
-  Project,
-  ProjectRow,
-  Task,
-  TaskRow,
+    Habit,
+    HabitRow,
+    JournalEntry,
+    JournalEntryRow,
+    Project,
+    ProjectRow,
+    Task,
+    TaskRow,
 } from '../src/types/database';
 
 describe('Mappers', () => {
@@ -20,10 +20,7 @@ describe('Mappers', () => {
     });
 
     it('safeParse should return fallback on error', () => {
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
       expect(Mappers.safeParse('invalid', [])).toEqual([]);
-      expect(warnSpy).toHaveBeenCalled();
-      warnSpy.mockRestore();
     });
 
     it('safeStringify should return JSON string', () => {

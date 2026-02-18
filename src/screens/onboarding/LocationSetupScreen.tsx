@@ -10,7 +10,8 @@ import type { RootStackParamList } from '../../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LocationSetup'>;
 
-export const LocationSetupScreen: React.FC<Props> = ({ navigation }) => {
+export const LocationSetupScreen: React.FC<Props> = ({ navigation, route }) => {
+  const isEditing = route.params?.isEditing ?? false;
   const [city, setCity] = useState('');
   const [manualLat, setManualLat] = useState('');
   const [manualLong, setManualLong] = useState('');
@@ -80,7 +81,15 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation }) => {
       timezone,
     });
 
-    navigation.navigate('WorkHoursSetup');
+    if (isEditing) {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+      }
+    } else {
+      navigation.navigate('WorkHoursSetup');
+    }
   };
 
   const inputStyle = {
@@ -186,7 +195,7 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation }) => {
         }}
       >
         <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '600', fontSize: 16 }}>
-          Continue →
+          {isEditing ? 'Save Changes' : 'Continue →'}
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

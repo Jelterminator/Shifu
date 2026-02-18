@@ -8,15 +8,16 @@ export interface ToolDefinition {
   name: string;
   description: string; // Verbose: for embeddings/routing (Instinct)
   shortDescription: string; // Concise: for LLM prompt (Context)
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   embedding?: Float32Array; // Cached embedding
 }
 
 const AVAILABLE_TOOLS: ToolDefinition[] = [
   {
     name: 'create_task',
-    description: "Create, add, or make a new task, to-do item, chore, assignment, or shopping list entry in the user's list (sometimes called tabs).",
-    shortDescription: "Create a new task or to-do.",
+    description:
+      "Create, add, or make a new task, to-do item, chore, assignment, or shopping list entry in the user's list (sometimes called tabs).",
+    shortDescription: 'Create a new task or to-do.',
     parameters: {
       type: 'object',
       properties: {
@@ -29,7 +30,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'delete_task',
-    description: 'Delete, remove, erase, or cancel a task, to-do, or chore by its unique identifier or ID.',
+    description:
+      'Delete, remove, erase, or cancel a task, to-do, or chore by its unique identifier or ID.',
     shortDescription: 'Delete a task by ID.',
     parameters: {
       type: 'object',
@@ -41,7 +43,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'get_tasks',
-    description: 'Get, retrieve, fetch, list, or find active tasks, chores, and to-do items, optionally filtering by keyword or search term.',
+    description:
+      'Get, retrieve, fetch, list, or find active tasks, chores, and to-do items, optionally filtering by keyword or search term.',
     shortDescription: 'Fetch a list of active tasks.',
     parameters: {
       type: 'object',
@@ -52,7 +55,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'complete_task',
-    description: 'Mark, check off, finish, or indicate a task, chore, or to-do as completed or done.',
+    description:
+      'Mark, check off, finish, or indicate a task, chore, or to-do as completed or done.',
     shortDescription: 'Mark a task as completed.',
     parameters: {
       type: 'object',
@@ -64,8 +68,9 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'get_agenda',
-    description: "Get, fetch, retrieve, or list all appointments, plans, schedules, and anchors for a specific date, today, or a particular time period.",
-    shortDescription: "List agenda for a specific date.",
+    description:
+      'Get, fetch, retrieve, or list all appointments, plans, schedules, and anchors for a specific date, today, or a particular time period.',
+    shortDescription: 'List agenda for a specific date.',
     parameters: {
       type: 'object',
       properties: {
@@ -75,7 +80,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'create_appointment',
-    description: 'Create, schedule, book, or set a new calendar appointment, meeting, event, or engagement.',
+    description:
+      'Create, schedule, book, or set a new calendar appointment, meeting, event, or engagement.',
     shortDescription: 'Create a new calendar appointment.',
     parameters: {
       type: 'object',
@@ -90,7 +96,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'move_appointment',
-    description: 'Reschedule, move, postpone, adjust, or change the time of an existing appointment, meeting, or event.',
+    description:
+      'Reschedule, move, postpone, adjust, or change the time of an existing appointment, meeting, or event.',
     shortDescription: 'Reschedule an existing appointment.',
     parameters: {
       type: 'object',
@@ -116,7 +123,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'get_habits',
-    description: 'Get, retrieve, list, fetch, or find user habits, routines, and recurring practices.',
+    description:
+      'Get, retrieve, list, fetch, or find user habits, routines, and recurring practices.',
     shortDescription: 'List user habits.',
     parameters: {
       type: 'object',
@@ -127,7 +135,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'add_habit',
-    description: 'Create, add, make, or establish a new habit template, routine, or recurring activity.',
+    description:
+      'Create, add, make, or establish a new habit template, routine, or recurring activity.',
     shortDescription: 'Create a new habit template.',
     parameters: {
       type: 'object',
@@ -142,7 +151,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'track_habit',
-    description: 'Log, record, track, or note the completion of a habit session, routine, or activity.',
+    description:
+      'Log, record, track, or note the completion of a habit session, routine, or activity.',
     shortDescription: 'Log completion of a habit session.',
     parameters: {
       type: 'object',
@@ -179,7 +189,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'create_project',
-    description: 'Create, add, make, or establish a new project group, collection, or container for tasks.',
+    description:
+      'Create, add, make, or establish a new project group, collection, or container for tasks.',
     shortDescription: 'Create a new project group.',
     parameters: {
       type: 'object',
@@ -205,7 +216,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'search_memory',
-    description: 'Search, find, look up, or retrieve information from journals, notes, tasks, and memories using semantic search.',
+    description:
+      'Search, find, look up, or retrieve information from journals, notes, tasks, and memories using semantic search.',
     shortDescription: 'Semantic search through memories.',
     parameters: {
       type: 'object',
@@ -217,7 +229,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'add_journal_entry',
-    description: 'Write, create, add, or log a new journal entry, note, thought, or diary reflection.',
+    description:
+      'Write, create, add, or log a new journal entry, note, thought, or diary reflection.',
     shortDescription: 'Write a new journal entry.',
     parameters: {
       type: 'object',
@@ -230,7 +243,8 @@ const AVAILABLE_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'get_status',
-    description: 'Get, retrieve, fetch, or find current system status, Wu Xing phase, current time, date, and state.',
+    description:
+      'Get, retrieve, fetch, or find current system status, Wu Xing phase, current time, date, and state.',
     shortDescription: 'Get current system status and time.',
     parameters: {
       type: 'object',
@@ -262,10 +276,16 @@ export async function routeTools(userPrompt: string): Promise<ToolDefinition[]> 
       let dot = 0;
       let normA = 0;
       let normB = 0;
+      const emb = tool.embedding;
+
       for (let i = 0; i < promptVector.length; i++) {
-        dot += promptVector[i]! * tool.embedding[i]!;
-        normA += promptVector[i]! * promptVector[i]!;
-        normB += tool.embedding[i]! * tool.embedding[i]!;
+        const valA = promptVector[i];
+        const valB = emb[i];
+        if (valA !== undefined && valB !== undefined) {
+          dot += valA * valB;
+          normA += valA * valA;
+          normB += valB * valB;
+        }
       }
       const sim = dot / (Math.sqrt(normA) * Math.sqrt(normB));
 
@@ -282,4 +302,3 @@ export async function routeTools(userPrompt: string): Promise<ToolDefinition[]> 
 
 /** Expose the tools array for testing and external use. */
 export { AVAILABLE_TOOLS };
-

@@ -9,7 +9,8 @@ import type { RootStackParamList } from '../../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SleepHoursSetup'>;
 
-export const SleepHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
+export const SleepHoursSetupScreen: React.FC<Props> = ({ navigation, route }) => {
+  const isEditing = route.params?.isEditing ?? false;
   const [sleepStart, setSleepStart] = useState('22:00');
   const [sleepEnd, setSleepEnd] = useState('06:00');
   const setUser = useUserStore(state => state.setUser);
@@ -18,7 +19,15 @@ export const SleepHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleContinue = (): void => {
     setUser({ ...user, sleepStart, sleepEnd });
-    navigation.navigate('SpiritualPracticesSetup');
+    if (isEditing) {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+      }
+    } else {
+      navigation.navigate('SpiritualPracticesSetup');
+    }
   };
 
   const inputStyle = {
@@ -72,7 +81,7 @@ export const SleepHoursSetupScreen: React.FC<Props> = ({ navigation }) => {
         }}
       >
         <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '600', fontSize: 16 }}>
-          Continue →
+          {isEditing ? 'Save Changes' : 'Continue →'}
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

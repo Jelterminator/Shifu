@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { RELIGIOUS_PRACTICES, type PracticeCategory } from '../../data/practices';
+import { RELIGIOUS_PRACTICES, type PracticeCategory } from '../../constants/practices';
 import { anchorsService } from '../../services/data/Anchors';
 import { useThemeStore } from '../../stores/themeStore';
 import { useUserStore } from '../../stores/userStore';

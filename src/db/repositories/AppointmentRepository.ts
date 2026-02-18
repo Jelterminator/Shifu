@@ -103,6 +103,10 @@ class AppointmentRepository {
   async delete(id: string): Promise<void> {
     await db.execute('DELETE FROM appointments WHERE id = ?', [id]);
   }
+
+  async deleteBySource(userId: string, source: string): Promise<void> {
+    await db.execute('DELETE FROM appointments WHERE user_id = ? AND source = ?', [userId, source]);
+  }
 }
 
 export const appointmentRepository = new AppointmentRepository();

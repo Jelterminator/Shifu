@@ -29,7 +29,7 @@ If none, return [].`;
 
   return [
     { role: 'system', content: system },
-    { role: 'user', content: userPrompt }
+    { role: 'user', content: userPrompt },
   ];
 }
 
@@ -47,7 +47,7 @@ Be helpful, concise, and maintain your persona.`;
 export function buildDirectPrompt(userMessage: string): Message[] {
   return [
     { role: 'system', content: buildVoicePrompt() },
-    { role: 'user', content: userMessage }
+    { role: 'user', content: userMessage },
   ];
 }
 
@@ -58,7 +58,7 @@ export function buildSynthesisPrompt(originalPrompt: string, toolResults: string
   const content = `User Request: "${originalPrompt}"\nResults: ${JSON.stringify(toolResults)}\nSummarize what was done.`;
   return [
     { role: 'system', content: buildVoicePrompt() },
-    { role: 'user', content: content }
+    { role: 'user', content: content },
   ];
 }
 

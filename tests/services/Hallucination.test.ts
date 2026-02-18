@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { AgentLoop } from '../../src/services/ai/AgentLoop';
 import { generateResponse } from '../../src/services/ai/Inference';
 import { routeTools } from '../../src/services/ai/ToolRegistry';
@@ -12,7 +13,7 @@ jest.mock('../../src/services/ai/Inference', () => ({
 }));
 jest.mock('../../src/stores/userStore');
 jest.mock('../../src/services/ai/ToolExecutor', () => ({
-  executeTools: jest.fn().mockResolvedValue(['Mock Execution Result'])
+  executeTools: jest.fn().mockResolvedValue(['Mock Execution Result']),
 }));
 
 // Mock Expo and ONNX to prevent "install" errors
@@ -38,7 +39,7 @@ describe('AgentLoop Hallucination Prevention', () => {
 
   it('should skip tool generation and synthesize directly when no tools are relevant', async () => {
     (routeTools as jest.Mock).mockResolvedValue([]);
-    
+
     // In this case, generateResponse should ONLY be called for synthesizeResponse (which calls it with buildDirectPrompt)
     (generateResponse as jest.Mock).mockResolvedValue('Direct conversation answer');
 
@@ -57,9 +58,9 @@ describe('AgentLoop Hallucination Prevention', () => {
     // Mock the LLM hallucinating a tool 'climb_trees' alongside 'get_tasks'
     const plan = JSON.stringify([
       { tool: 'get_tasks', args: {} },
-      { tool: 'climb_trees', args: {} }
+      { tool: 'climb_trees', args: {} },
     ]);
-    
+
     (generateResponse as jest.Mock)
       .mockResolvedValueOnce(plan) // Step 3: plan generation
       .mockResolvedValueOnce('Final Synth'); // Step 6: synthesis
@@ -69,10 +70,10 @@ describe('AgentLoop Hallucination Prevention', () => {
     const { executeTools } = require('../../src/services/ai/ToolExecutor');
     // Only get_tasks should be executed
     expect(executeTools).toHaveBeenCalledWith(
-        expect.arrayContaining([expect.objectContaining({ tool: 'get_tasks' })]),
-        'test-user'
+      expect.arrayContaining([expect.objectContaining({ tool: 'get_tasks' })]),
+      'test-user'
     );
-    
+
     // Verify that climb_trees was NOT passed to executeTools
     const calls = (executeTools as jest.Mock).mock.calls;
     const executedSteps = calls[0][0];
@@ -81,3 +82,4 @@ describe('AgentLoop Hallucination Prevention', () => {
     expect(response).toBe('Final Synth');
   });
 });
+

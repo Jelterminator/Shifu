@@ -1,8 +1,17 @@
-import * as ort from 'onnxruntime-react-native';
-// @ts-ignore
 import { AutoTokenizer } from '@xenova/transformers';
-import { AI_MODELS } from '../../config/AIConfig';
-import { ModelLoader } from '../ModelLoader';
+import * as ort from 'onnxruntime-react-native';
+import { AI_MODELS } from '../../constants/AIConfig';
+import { ModelLoader } from './ModelLoader';
+
+interface EmbedTokenizer {
+  (
+    text: string,
+    options: { padding: boolean; truncation: boolean; return_tensor: string }
+  ): Promise<{
+    input_ids: ort.Tensor;
+    attention_mask: ort.Tensor;
+  }>;
+}
 
 /** Default embedding dimension (MiniLM-L6-v2 uses 384) */
 export const EMBEDDING_DIMENSIONS = 384;
@@ -21,37 +30,31 @@ export interface Embedder {
  * Real Embedder using onnxruntime-react-native and all-MiniLM-L6-v2
  */
 class OnnxEmbedder implements Embedder {
-  private session: any = null;
-  private tokenizer: any = null;
+  private session: ort.InferenceSession | null = null;
+  private tokenizer: EmbedTokenizer | null = null;
   private readonly dimensions = EMBEDDING_DIMENSIONS;
 
-  async init() {
+  async init(): Promise<void> {
     if (this.session && this.tokenizer) return;
 
-    try {
-      // 1. Ensure Model
-      const modelUrl = AI_MODELS.THE_INSTINCT.url;
-      const fileName = AI_MODELS.THE_INSTINCT.fileName;
-      console.log('[Embedder] Ensuring model exists:', fileName);
-      const modelPath = await ModelLoader.ensureModel(modelUrl, fileName);
+    // 1. Ensure Model
+    const modelUrl = AI_MODELS.THE_INSTINCT.url;
+    const fileName = AI_MODELS.THE_INSTINCT.fileName;
+    const modelPath = await ModelLoader.ensureModel(modelUrl, fileName);
 
-      // 2. Load Tokenizer
-      if (!this.tokenizer) {
-        console.log('[Embedder] Loading tokenizer...');
-        this.tokenizer = await AutoTokenizer.from_pretrained('Xenova/all-MiniLM-L6-v2');
-      }
+    // 2. Load Tokenizer
+    if (!this.tokenizer) {
+      this.tokenizer = (await AutoTokenizer.from_pretrained(
+        'Xenova/all-MiniLM-L6-v2'
+      )) as unknown as EmbedTokenizer;
+    }
 
-      // 3. Load Session
-      if (!this.session) {
-        console.log('[Embedder] Loading ONNX session...');
-        this.session = await ort.InferenceSession.create(modelPath, {
-          executionProviders: ['cpu'], // Start simple
-          graphOptimizationLevel: 'all',
-        });
-      }
-    } catch (e) {
-      console.error('[Embedder] Failed to initialize:', e);
-      throw e;
+    // 3. Load Session
+    if (!this.session) {
+      this.session = await ort.InferenceSession.create(modelPath, {
+        executionProviders: ['cpu'], // Start simple
+        graphOptimizationLevel: 'all',
+      });
     }
   }
 
@@ -61,6 +64,7 @@ class OnnxEmbedder implements Embedder {
 
   async embed(text: string): Promise<Float32Array> {
     await this.init();
+    if (!this.session || !this.tokenizer) throw new Error('Embedder not initialized');
 
     // Tokenize
     const { input_ids, attention_mask } = await this.tokenizer(text, {
@@ -73,11 +77,10 @@ class OnnxEmbedder implements Embedder {
     const feeds = { input_ids, attention_mask };
     const results = await this.session.run(feeds);
 
-    // Extract last_hidden_state (usually the first output: 'last_hidden_state' or 'logits' depending on export)
-    // For sentence-transformers exports, it's usually 'last_hidden_state' or 'contextual'
-    // Let's inspect keys if needed, but standard export has it as first output.
     const outputName = this.session.outputNames[0];
+    if (!outputName) throw new Error('No output names in session');
     const lastHiddenState = results[outputName]; // [batch, seq, hidden]
+    if (!lastHiddenState) throw new Error(`Missing output ${outputName}`);
 
     // Mean Pooling
     return this.meanPooling(lastHiddenState, attention_mask);
@@ -86,49 +89,66 @@ class OnnxEmbedder implements Embedder {
   /**
    * Performs mean pooling on the token embeddings, accounting for attention mask.
    */
-  private meanPooling(lastHiddenState: any, attentionMask: any): Float32Array {
+  private meanPooling(lastHiddenState: ort.Tensor, attentionMask: ort.Tensor): Float32Array {
     // Shape: [batch_size, seq_len, hidden_size]
     // We assume batch_size = 1 for this client-side usage
-    const [, seqLen, hidden] = lastHiddenState.dims;
-    const data = lastHiddenState.data; // Float32Array
-    const mask = attentionMask.data; // BigInt64Array or Int32Array (usually 1s and 0s)
+    const dims = lastHiddenState.dims;
+    const seqLen = dims[1];
+    const hidden = dims[2];
+    if (seqLen === undefined || hidden === undefined)
+      throw new Error('Invalid hidden state dimensions');
+
+    const data = lastHiddenState.data as Float32Array;
+    const mask = attentionMask.data as BigInt64Array | Int32Array;
 
     const pooled = new Float32Array(hidden).fill(0);
     let totalWeight = 0;
 
     // Loop over sequence
     for (let i = 0; i < seqLen; i++) {
-      // Check mask (if 1, include)
-      // mask is [batch, seqLen], here batch=0
-      const isAttended = Number(mask[i]) === 1;
+      const maskVal = mask[i];
+      const isAttended = maskVal !== undefined && Number(maskVal) === 1;
 
       if (isAttended) {
         const offset = i * hidden;
         for (let j = 0; j < hidden; j++) {
-          pooled[j] += data[offset + j];
+          const val = data[offset + j];
+          const current = pooled[j];
+          if (val !== undefined && current !== undefined) {
+            pooled[j] = current + val;
+          }
         }
         totalWeight++;
       }
     }
 
-      if (totalWeight > 0) {
-          for (let j = 0; j < hidden; j++) {
-              pooled[j]! /= totalWeight;
-          }
-      }
-
-      // Normalize (L2)
-      let norm = 0;
+    if (totalWeight > 0) {
       for (let j = 0; j < hidden; j++) {
-          norm += pooled[j]! * pooled[j]!;
+        const val = pooled[j];
+        if (val !== undefined) {
+          pooled[j] = val / totalWeight;
+        }
       }
-      norm = Math.sqrt(norm);
-      
-      if (norm > 0) {
-          for (let j = 0; j < hidden; j++) {
-              pooled[j]! /= norm;
-          }
+    }
+
+    // Normalize (L2)
+    let norm = 0;
+    for (let j = 0; j < hidden; j++) {
+      const val = pooled[j];
+      if (val !== undefined) {
+        norm += val * val;
       }
+    }
+    norm = Math.sqrt(norm);
+
+    if (norm > 0) {
+      for (let j = 0; j < hidden; j++) {
+        const val = pooled[j];
+        if (val !== undefined) {
+          pooled[j] = val / norm;
+        }
+      }
+    }
 
     return pooled;
   }
@@ -138,10 +158,11 @@ class OnnxEmbedder implements Embedder {
  * Stub Embedder (Legacy/Fallback)
  */
 export class StubEmbedder implements Embedder {
-  getDimensions() {
+  getDimensions(): number {
     return EMBEDDING_DIMENSIONS;
   }
-  async embed(_text: string) {
+  async embed(_text: string): Promise<Float32Array> {
+    await Promise.resolve();
     return new Float32Array(384).fill(0.1);
   }
 }

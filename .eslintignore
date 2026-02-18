@@ -24,3 +24,5 @@ jest.config.js
 assets/fonts/
 assets/images/
 models/
+src/shims/
+dist-web-test/

@@ -39,8 +39,9 @@ class TaskRepository {
     );
 
     const rows = await db.query<TaskRow>('SELECT * FROM tasks WHERE id = ?', [id]);
-    if (!rows[0]) throw new Error('Failed to create task: Row not found');
-    return mapTaskRowToTask(rows[0]);
+    const firstRow = rows[0];
+    if (!firstRow) throw new Error('Failed to create task: Row not found');
+    return mapTaskRowToTask(firstRow);
   }
 
   // READ

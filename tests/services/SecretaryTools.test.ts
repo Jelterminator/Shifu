@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { AgentLoop } from '../../src/services/ai/AgentLoop';
 import { getEmbedder } from '../../src/services/ai/embedder';
 import { resetForTesting } from '../../src/services/ai/Inference';
@@ -10,7 +11,7 @@ import { planRepository } from '../../src/db/repositories/PlanRepository';
 import { vectorStorage } from '../../src/db/vectorStorage';
 import { AVAILABLE_TOOLS, routeTools } from '../../src/services/ai/ToolRegistry';
 import { anchorsService } from '../../src/services/data/Anchors';
-import { phaseManager } from '../../src/services/PhaseManager';
+import { phaseManager } from '../../src/services/data/PhaseManager';
 
 // Mock Dependencies
 jest.mock('../../src/services/ai/ToolRegistry', () => ({
@@ -18,7 +19,7 @@ jest.mock('../../src/services/ai/ToolRegistry', () => ({
   routeTools: jest.fn(),
 }));
 
-jest.mock('../../src/services/ModelLoader', () => ({
+jest.mock('../../src/services/ai/ModelLoader', () => ({
   ModelLoader: {
     ensureModel: jest.fn().mockResolvedValue('/path/to/model.onnx'),
   },
@@ -61,7 +62,7 @@ jest.mock('../../src/db/repositories/ProjectRepository');
 jest.mock('../../src/db/repositories/TaskRepository');
 jest.mock('../../src/services/data/Anchors');
 jest.mock('../../src/db/vectorStorage');
-jest.mock('../../src/services/PhaseManager');
+jest.mock('../../src/services/data/PhaseManager');
 jest.mock('../../src/services/ai/embedder');
 jest.mock('../../src/stores/userStore');
 
@@ -79,12 +80,15 @@ describe('AgentLoop Secretary Tools', () => {
     (getEmbedder as jest.Mock).mockReturnValue({
       embed: jest.fn().mockResolvedValue(new Float32Array(384).fill(0.1)),
     });
-    (phaseManager.getCurrentPhase as jest.Mock).mockReturnValue({ name: 'WOOD', qualities: 'Growth' });
+    (phaseManager.getCurrentPhase as jest.Mock).mockReturnValue({
+      name: 'WOOD',
+      qualities: 'Growth',
+    });
 
     const { AutoTokenizer } = require('@xenova/transformers');
     mockTokenizer = await AutoTokenizer.from_pretrained();
     AutoTokenizer.from_pretrained.mockResolvedValue(mockTokenizer);
-    
+
     // Ensure router always returns our tools
     (routeTools as jest.Mock).mockResolvedValue(AVAILABLE_TOOLS);
   });
@@ -109,18 +113,27 @@ describe('AgentLoop Secretary Tools', () => {
   });
 
   it('should execute create_appointment', async () => {
-    setupMockPlan([{
-      tool: 'create_appointment',
-      args: { name: 'Meeting', startTime: '2026-02-14T10:00:00Z', endTime: '2026-02-14T11:00:00Z' }
-    }]);
+    setupMockPlan([
+      {
+        tool: 'create_appointment',
+        args: {
+          name: 'Meeting',
+          startTime: '2026-02-14T10:00:00Z',
+          endTime: '2026-02-14T11:00:00Z',
+        },
+      },
+    ]);
     (appointmentRepository.create as jest.Mock).mockResolvedValue({ id: 'apt-1', name: 'Meeting' });
 
     await agent.executeUserRequest('Schedule a meeting at 10am');
 
-    expect(appointmentRepository.create).toHaveBeenCalledWith('test-user', expect.objectContaining({
-      name: 'Meeting',
-      source: 'manual'
-    }));
+    expect(appointmentRepository.create).toHaveBeenCalledWith(
+      'test-user',
+      expect.objectContaining({
+        name: 'Meeting',
+        source: 'manual',
+      })
+    );
   });
 
   it('should execute add_habit', async () => {
@@ -129,10 +142,13 @@ describe('AgentLoop Secretary Tools', () => {
 
     await agent.executeUserRequest('Add a meditation habit for 60 mins a week');
 
-    expect(habitRepository.create).toHaveBeenCalledWith('test-user', expect.objectContaining({
-      title: 'Meditation',
-      weeklyGoalMinutes: 60
-    }));
+    expect(habitRepository.create).toHaveBeenCalledWith(
+      'test-user',
+      expect.objectContaining({
+        title: 'Meditation',
+        weeklyGoalMinutes: 60,
+      })
+    );
   });
 
   it('should execute search_memory', async () => {
@@ -146,10 +162,14 @@ describe('AgentLoop Secretary Tools', () => {
 
   it('should execute get_status', async () => {
     setupMockPlan([{ tool: 'get_status', args: {} }]);
-    (phaseManager.getCurrentPhase as jest.Mock).mockReturnValue({ name: 'WOOD', qualities: 'Growth' });
+    (phaseManager.getCurrentPhase as jest.Mock).mockReturnValue({
+      name: 'WOOD',
+      qualities: 'Growth',
+    });
 
     await agent.executeUserRequest('What is the current phase?');
 
     expect(phaseManager.getCurrentPhase).toHaveBeenCalled();
   });
 });
+

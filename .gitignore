@@ -60,3 +60,4 @@ yarn-error.*
 
 # Misc
 *.log
+dist-web-test/

@@ -1,8 +1,8 @@
-import { RELIGIOUS_PRACTICES } from '../../data/practices';
+import { RELIGIOUS_PRACTICES } from '../../constants/practices';
 import { useUserStore } from '../../stores/userStore';
 import { storage } from '../../utils/storage';
 import { calculateRomanHours } from '../../utils/sunTimeUtils';
-import { notificationService } from '../NotificationService';
+import { notificationService } from '../notifications/NotificationService';
 
 export interface AnchorEvent {
   id: string;

@@ -1,4 +1,4 @@
-import { notificationService } from '../../services/NotificationService';
+import { notificationService } from '../../services/notifications/NotificationService';
 import type { Plan, PlanRow } from '../../types/database';
 import { generateId } from '../../utils/id';
 import { db } from '../database';
@@ -51,8 +51,9 @@ class PlanRepository {
     }
 
     const rows = await db.query<PlanRow>('SELECT * FROM plans WHERE id = ?', [id]);
-    if (!rows[0]) throw new Error('Failed to create plan: Row not found');
-    return mapPlanRowToPlan(rows[0]);
+    const firstRow = rows[0];
+    if (!firstRow) throw new Error('Failed to create plan: Row not found');
+    return mapPlanRowToPlan(firstRow);
   }
 
   async getForDateRange(userId: string, start: Date, end: Date): Promise<Plan[]> {

@@ -3,8 +3,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { DIMENSIONS } from '../constants/theme';
 import { useThemeStore } from '../stores/themeStore';
 import type { RootStackParamList } from '../types/navigation';
+import PhaseClock from './PhaseClock';
 
 /**
  * Props for the BaseScreen component
@@ -60,7 +62,12 @@ export function BaseScreen({
         barStyle={colors.text === '#FFFFFF' ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}
       />
-      <View style={[styles.header, { borderBottomColor: colors.surface }]}>
+      <View
+        style={[
+          styles.header,
+          { borderBottomColor: colors.surface, backgroundColor: colors.background },
+        ]}
+      >
         {typeof title === 'string' ? (
           <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         ) : (
@@ -79,6 +86,7 @@ export function BaseScreen({
       </View>
       <View style={styles.content}>{children}</View>
       {footer}
+      <PhaseClock />
     </SafeAreaView>
   );
 }
@@ -89,11 +97,11 @@ const styles = StyleSheet.create({
     // background color injected dynamically
   },
   header: {
+    height: DIMENSIONS.BAR_HEIGHT,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
     borderBottomWidth: 1,
     // border color injected dynamically
   },

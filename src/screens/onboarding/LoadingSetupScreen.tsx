@@ -3,8 +3,8 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, Alert, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { phaseManager } from '../../services/PhaseManager';
 import { anchorsService } from '../../services/data/Anchors';
+import { phaseManager } from '../../services/data/PhaseManager';
 import { useThemeStore } from '../../stores/themeStore';
 import { useUserStore } from '../../stores/userStore';
 import type { RootStackParamList } from '../../types/navigation';

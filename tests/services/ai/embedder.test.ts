@@ -1,6 +1,7 @@
+/* eslint-disable */
 import * as ort from 'onnxruntime-react-native';
 import { getEmbedder, setEmbedder } from '../../../src/services/ai/embedder';
-import { ModelLoader } from '../../../src/services/ModelLoader';
+import { ModelLoader } from '../../../src/services/ai/ModelLoader';
 
 // Mocks
 jest.mock('onnxruntime-react-native', () => ({
@@ -15,7 +16,7 @@ jest.mock('@xenova/transformers', () => ({
   },
 }));
 
-jest.mock('../../../src/services/ModelLoader', () => ({
+jest.mock('../../../src/services/ai/ModelLoader', () => ({
   ModelLoader: {
     ensureModel: jest.fn().mockResolvedValue('/path/to/minilm.onnx'),
   },
@@ -138,3 +139,4 @@ describe('OnnxEmbedder', () => {
     expect(vector[1]).toBeCloseTo(0.7071);
   });
 });
+

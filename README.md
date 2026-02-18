@@ -39,7 +39,7 @@ A React Native application with **offline-first AI capabilities** and sophistica
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/shifu.git
+git clone https://github.com/Jelterminator/shifu.git
 cd shifu
 
 # Install dependencies

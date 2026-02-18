@@ -1,40 +1,48 @@
-
 import { jsonrepair } from 'jsonrepair';
 
 // -----------------------------------------------------------------------------
 // JSON Repair
 // -----------------------------------------------------------------------------
 
+export interface PlanStep {
+  tool: string;
+  args: Record<string, unknown>;
+}
+
 /**
  * Parse a potentially-malformed JSON array from the model output.
  */
-export function parsePlan(jsonString: string): any[] {
+export function parsePlan(jsonString: string): unknown[] {
   if (typeof jsonString !== 'string') {
-    console.error('[AI Utils] parsePlan received non-string input:', jsonString);
     return [];
   }
   try {
     const repaired = jsonrepair(jsonString);
-    const parsed = JSON.parse(repaired);
+    const parsed = JSON.parse(repaired) as unknown;
     if (!Array.isArray(parsed)) {
       throw new Error('Response is not an array');
     }
     return parsed;
-  } catch (e) {
-    console.warn('[AI Utils] JSON Repair failed, trying regex extraction...');
+  } catch {
     const match = jsonString.match(/\[.*\]/s);
-    if (match) {
+    if (match?.[0]) {
       try {
         const repaired = jsonrepair(match[0]);
-        const parsed = JSON.parse(repaired);
+        const parsed = JSON.parse(repaired) as unknown;
         return Array.isArray(parsed) ? parsed : [];
-      } catch (e2) {
+      } catch {
         // Final fallback: try to extract individual objects
         const objects = jsonString.match(/\{[^{}]*\}/g);
         if (objects) {
-            return objects.map(obj => {
-                try { return JSON.parse(jsonrepair(obj)); } catch { return null; }
-            }).filter(Boolean);
+          return objects
+            .map(obj => {
+              try {
+                return JSON.parse(jsonrepair(obj)) as unknown;
+              } catch {
+                return null;
+              }
+            })
+            .filter((item): item is unknown => item !== null);
         }
       }
     }
@@ -45,10 +53,14 @@ export function parsePlan(jsonString: string): any[] {
 /**
  * Normailze a plan step to ensure it has a 'tool' property.
  */
-export function normalizeStep(step: any): any {
-    if (!step) return null;
-    const name = step.tool || step.name || step.action;
-    const args = step.args || step.arguments || step.params || step.parameters || {};
-    if (!name) return null;
-    return { tool: name, args };
+export function normalizeStep(step: unknown): PlanStep | null {
+  if (!step || typeof step !== 'object') return null;
+  const s = step as Record<string, unknown>;
+  const name = s['tool'] || s['name'] || s['action'];
+  const args = (s['args'] || s['arguments'] || s['params'] || s['parameters'] || {}) as Record<
+    string,
+    unknown
+  >;
+  if (!name || typeof name !== 'string') return null;
+  return { tool: name, args };
 }

@@ -20,8 +20,7 @@ export function safeParse<T>(json: string | null, fallback: T): T {
   if (!json) return fallback;
   try {
     return JSON.parse(json) as T;
-  } catch (e) {
-    console.warn('Failed to parse JSON:', json, e);
+  } catch {
     return fallback;
   }
 }
@@ -32,8 +31,7 @@ export function safeParse<T>(json: string | null, fallback: T): T {
 export function safeStringify<T>(data: T): string {
   try {
     return JSON.stringify(data);
-  } catch (e) {
-    console.warn('Failed to stringify data:', data, e);
+  } catch {
     return '[]';
   }
 }
