@@ -58,6 +58,31 @@ yarn-error.*
 *.swo
 *~
 
-# Misc
+# Logs & temporary files
 *.log
+test_errors.txt
+jest.log
+
+# Build artifacts
 dist-web-test/
+
+# ONNX runtime binaries (very large, ~32MB+ combined)
+public/onnx/
+*.wasm
+*.onnx
+
+# Source maps (large, can be regenerated)
+*.map
+
+# Bundled library shims (should be installed via npm, not committed)
+src/shims/transformers-lib.js
+
+# Model files (download at runtime, not tracked in git)
+models/
+!models/metadata.json
+
+# Binary documents
+*.pdf
+
+# Debug/test output files
+test_*.txt
