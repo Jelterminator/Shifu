@@ -65,9 +65,16 @@ export async function executeTools(steps: PlanStep[], userId: string): Promise<s
             anchorsService.getAnchorsForDate(date),
           ]);
           output = `Agenda for ${date.toDateString()}:\n`;
-          output += `Appointments: ${apts.map(a => `${a.name} (${a.startTime.toLocaleTimeString()})`).join(', ') || 'None'}\n`;
-          output += `Plans: ${plans.map(p => `${p.name} (${p.startTime.toLocaleTimeString()})`).join(', ') || 'None'}\n`;
-          output += `Anchors: ${anchors.map(a => `${a.title} (${a.startTime.toLocaleTimeString()})`).join(', ') || 'None'}`;
+          output += `Appointments: ${
+            apts.map(a => `${a.name} (${a.startTime.toLocaleTimeString()})`).join(', ') || 'None'
+          }\n`;
+          output += `Plans: ${
+            plans.map(p => `${p.name} (${p.startTime.toLocaleTimeString()})`).join(', ') || 'None'
+          }\n`;
+          output += `Anchors: ${
+            anchors.map(a => `${a.title} (${a.startTime.toLocaleTimeString()})`).join(', ') ||
+            'None'
+          }`;
           break;
         }
 
@@ -101,7 +108,9 @@ export async function executeTools(steps: PlanStep[], userId: string): Promise<s
             userId,
             (args['activeOnly'] as boolean) ?? true
           );
-          output = `Found ${habits.length} habits: ${habits.map(h => `${h.id}: ${h.title}`).join(', ')}`;
+          output = `Found ${habits.length} habits: ${habits
+            .map(h => `${h.id}: ${h.title}`)
+            .join(', ')}`;
           break;
         }
 
@@ -141,7 +150,9 @@ export async function executeTools(steps: PlanStep[], userId: string): Promise<s
             date,
             args['durationMinutes'] as number
           );
-          output = `Tracked habit ${args['habitId'] as string} for ${args['durationMinutes'] as number} minutes.`;
+          output = `Tracked habit ${args['habitId'] as string} for ${
+            args['durationMinutes'] as number
+          } minutes.`;
           break;
         }
 
@@ -150,7 +161,9 @@ export async function executeTools(steps: PlanStep[], userId: string): Promise<s
             userId,
             (args['completed'] as boolean) ?? false
           );
-          output = `Found ${projects.length} projects: ${projects.map(p => `${p.id}: ${p.title}`).join(', ')}`;
+          output = `Found ${projects.length} projects: ${projects
+            .map(p => `${p.id}: ${p.title}`)
+            .join(', ')}`;
           break;
         }
 
@@ -193,7 +206,9 @@ export async function executeTools(steps: PlanStep[], userId: string): Promise<s
 
         case 'get_status': {
           const phase = phaseManager.getCurrentPhase();
-          output = `Current Phase: ${phase.name} (${phase.qualities})\nTime: ${new Date().toISOString()}`;
+          output = `Current Phase: ${phase.name} (${
+            phase.qualities
+          })\nTime: ${new Date().toISOString()}`;
           break;
         }
 

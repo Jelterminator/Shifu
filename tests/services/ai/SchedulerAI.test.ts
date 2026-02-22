@@ -144,8 +144,6 @@ describe('SchedulerAI', () => {
     const planData = firstCall[1];
     const planStart = new Date(planData.startTime);
 
-
-
     // Expect plan to start AFTER or AT 10:00 AM (plus buffer maybe), definitely NOT 00:00 (midnight)
     // The scheduler adds 1 min buffer in createPlan: dbStart = start + 60000
     // So if it schedules at 10:00, dbStart should be 10:01
@@ -153,4 +151,3 @@ describe('SchedulerAI', () => {
     expect(planStart.getTime()).toBeGreaterThanOrEqual(mockNow.getTime());
   });
 });
-

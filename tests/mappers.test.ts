@@ -1,13 +1,13 @@
 import * as Mappers from '../src/db/mappers';
 import type {
-    Habit,
-    HabitRow,
-    JournalEntry,
-    JournalEntryRow,
-    Project,
-    ProjectRow,
-    Task,
-    TaskRow,
+  Habit,
+  HabitRow,
+  JournalEntry,
+  JournalEntryRow,
+  Project,
+  ProjectRow,
+  Task,
+  TaskRow,
 } from '../src/types/database';
 
 describe('Mappers', () => {
@@ -67,6 +67,7 @@ describe('Mappers', () => {
       effort_minutes: 30,
       deadline: mockDate.toISOString(),
       project_id: 'p1',
+      parent_id: null,
       notes: 'Some notes',
       position_in_project: 1,
       selected_keywords: '["quick"]',

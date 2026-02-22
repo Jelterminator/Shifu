@@ -263,4 +263,12 @@ export const MIGRATIONS: Migration[] = [
     CREATE INDEX idx_appointments_external ON appointments(external_id);
     `,
   },
+  {
+    version: 14,
+    sql: `
+    -- Add parent_id to tasks (for subtasks)
+    ALTER TABLE tasks ADD COLUMN parent_id TEXT REFERENCES tasks(id) ON DELETE CASCADE;
+    CREATE INDEX idx_tasks_parent ON tasks(parent_id);
+    `,
+  },
 ];

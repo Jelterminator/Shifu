@@ -1,6 +1,7 @@
 # Contributing to Shifu
 
-Thank you for your interest in contributing to Shifu! We welcome contributions from the community properly.
+Thank you for your interest in contributing to Shifu! We welcome contributions from the community
+properly.
 
 ## Getting Started
 
@@ -14,32 +15,33 @@ Thank you for your interest in contributing to Shifu! We welcome contributions f
     ```bash
     npm install
     ```
-4.  **Set up environment**:
-    Copy `.env.example` to `.env` and fill in necessary values (though for core logic, defaults often suffice).
+4.  **Set up environment**: Copy `.env.example` to `.env` and fill in necessary values (though for
+    core logic, defaults often suffice).
     ```bash
     cp .env.example .env
     ```
 
 ## Development Workflow
 
--   **Branching**: specific feature branches off `develop` (e.g., `feature/amazing-feature` or `fix/critical-bug`).
--   **Commits**: Use clear, descriptive commit messages.
--   **Linting**: Ensure your code passes linting checks before pushing.
-    ```bash
-    npm run lint:check
-    ```
--   **Testing**: Add or update tests for your changes. Run the test suite to ensure no regressions.
-    ```bash
-    npm test
-    ```
+- **Branching**: specific feature branches off `develop` (e.g., `feature/amazing-feature` or
+  `fix/critical-bug`).
+- **Commits**: Use clear, descriptive commit messages.
+- **Linting**: Ensure your code passes linting checks before pushing.
+  ```bash
+  npm run lint:check
+  ```
+- **Testing**: Add or update tests for your changes. Run the test suite to ensure no regressions.
+  ```bash
+  npm test
+  ```
 
 ## Project Structure
 
--   `src/components`: Reusable UI components.
--   `src/screens`: Application screens.
--   `src/services`: Core business logic and AI services.
--   `src/db`: Database schema and repositories.
--   `src/stores`: Zustand state management.
+- `src/components`: Reusable UI components.
+- `src/screens`: Application screens.
+- `src/services`: Core business logic and AI services.
+- `src/db`: Database schema and repositories.
+- `src/stores`: Zustand state management.
 
 ## Pull Requests
 

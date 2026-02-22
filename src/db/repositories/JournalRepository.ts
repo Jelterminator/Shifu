@@ -2,6 +2,7 @@ import type { JournalEntry, JournalEntryRow, JournalSegment } from '../../types/
 import { generateId } from '../../utils/id';
 import { db } from '../database';
 import { mapJournalEntryRowToJournalEntry } from '../mappers';
+import { vectorService } from '../vectors';
 
 class JournalRepository {
   // CREATE
@@ -37,6 +38,18 @@ class JournalRepository {
 
     const entry = await this.getById(id);
     if (!entry) throw new Error('Failed to create journal entry');
+
+    try {
+      const embedText = [entry.content, ...(entry.segments?.map(s => s.content) || [])]
+        .filter(Boolean)
+        .join('\n');
+      if (embedText.trim()) {
+        await vectorService.addEmbedding(userId, 'journal_entry', id, embedText);
+      }
+    } catch (e) {
+      console.warn('Failed to add embedding for journal entry', e);
+    }
+
     return entry;
   }
 
@@ -116,12 +129,31 @@ class JournalRepository {
       `UPDATE journal_entries SET content = ?, updated_at = datetime('now') WHERE id = ?`,
       [content, id]
     );
+
+    try {
+      const entry = await this.getById(id);
+      if (entry) {
+        const embedText = [entry.content, ...(entry.segments?.map(s => s.content) || [])]
+          .filter(Boolean)
+          .join('\n');
+        if (embedText.trim()) {
+          await vectorService.addEmbedding(entry.userId, 'journal_entry', id, embedText);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to update embedding for journal entry', e);
+    }
   }
 
   // DELETE
   async delete(id: string): Promise<void> {
     // Segments will cascade delete due to FK
     await db.execute('DELETE FROM journal_entries WHERE id = ?', [id]);
+    try {
+      await vectorService.delete('journal_entry', id);
+    } catch (e) {
+      console.warn('Failed to delete embedding for journal entry', e);
+    }
   }
 }
 

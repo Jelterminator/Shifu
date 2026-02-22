@@ -34,7 +34,11 @@ class WebEmbedder implements Embedder {
     // This automatically handles tokenization and inference.
     this.extractor = (await (pipeline as unknown as (...args: unknown[]) => Promise<unknown>)(
       'feature-extraction',
-      'Xenova/all-MiniLM-L6-v2'
+      'Xenova/all-MiniLM-L6-v2',
+      {
+        dtype: 'fp32', // Force fp32 to match input/output expectation
+        device: 'wasm', // Use WASM for embeddings to avoid WebGPU f16 issues for now, it's fast enough for small models
+      }
     )) as WebExtractor;
   }
 

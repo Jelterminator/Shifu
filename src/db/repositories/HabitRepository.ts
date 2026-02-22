@@ -2,6 +2,7 @@ import type { Habit, HabitRow } from '../../types/database';
 import { generateId } from '../../utils/id';
 import { db } from '../database';
 import { mapHabitRowToHabit, safeStringify } from '../mappers';
+import { vectorService } from '../vectors';
 
 class HabitRepository {
   // CREATE
@@ -37,7 +38,18 @@ class HabitRepository {
 
     const rows = await db.query<HabitRow>('SELECT * FROM habits WHERE id = ?', [id]);
     if (!rows[0]) throw new Error('Failed to create habit: Row not found');
-    return mapHabitRowToHabit(rows[0]);
+    const habit = mapHabitRowToHabit(rows[0]);
+
+    const embedText = [habit.title, habit.notes].filter(Boolean).join(' ');
+    try {
+      if (embedText.trim()) {
+        await vectorService.addEmbedding(userId, 'habit', id, embedText);
+      }
+    } catch (e) {
+      console.warn('Failed to add embedding for habit', e);
+    }
+
+    return habit;
   }
 
   // READ
@@ -118,11 +130,30 @@ class HabitRepository {
     params.push(id);
 
     await db.execute(`UPDATE habits SET ${updates.join(', ')} WHERE id = ?`, params);
+
+    if (data.title !== undefined || data.notes !== undefined) {
+      try {
+        const habit = await this.getById(id);
+        if (habit) {
+          const embedText = [habit.title, habit.notes].filter(Boolean).join(' ');
+          if (embedText.trim()) {
+            await vectorService.addEmbedding(habit.userId, 'habit', id, embedText);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to update embedding for habit', e);
+      }
+    }
   }
 
   // DELETE
   async delete(id: string): Promise<void> {
     await db.execute('DELETE FROM habits WHERE id = ?', [id]);
+    try {
+      await vectorService.delete('habit', id);
+    } catch (e) {
+      console.warn('Failed to delete embedding for habit', e);
+    }
   }
 
   // --- STATS & COMPLETION Logic (Refactored for Timezones) ---

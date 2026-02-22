@@ -43,7 +43,9 @@
     "plugins": [
       "expo-sqlite",
       "onnxruntime-react-native",
-      "expo-asset"
+      "expo-asset",
+      "expo-background-task",
+      "expo-task-manager"
     ],
     "transpilePackages": [
       "@huggingface/transformers",

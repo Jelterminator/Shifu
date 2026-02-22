@@ -3,6 +3,7 @@ import type { Task, TaskRow } from '../../types/database';
 import { generateId } from '../../utils/id';
 import { db } from '../database';
 import { mapTaskRowToTask, safeStringify } from '../mappers';
+import { vectorService } from '../vectors';
 
 class TaskRepository {
   // CREATE
@@ -21,9 +22,9 @@ class TaskRepository {
 
     await db.execute(
       `INSERT INTO tasks (
-        id, user_id, title, effort_minutes, deadline, project_id,
+        id, user_id, title, effort_minutes, deadline, project_id, parent_id,
         notes, position_in_project, selected_keywords, is_completed, linked_object_ids
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
       [
         id,
         userId,
@@ -31,6 +32,7 @@ class TaskRepository {
         data.effortMinutes,
         data.deadline ? data.deadline.toISOString() : null,
         data.projectId || null,
+        data.parentId || null, // Added parent_id
         data.notes || null,
         data.positionInProject || null,
         selectedKeywordsJson,
@@ -41,7 +43,16 @@ class TaskRepository {
     const rows = await db.query<TaskRow>('SELECT * FROM tasks WHERE id = ?', [id]);
     const firstRow = rows[0];
     if (!firstRow) throw new Error('Failed to create task: Row not found');
-    return mapTaskRowToTask(firstRow);
+    const task = mapTaskRowToTask(firstRow);
+
+    const embedText = [task.title, task.notes].filter(Boolean).join(' ');
+    try {
+      await vectorService.addEmbedding(userId, 'task', id, embedText);
+    } catch (e) {
+      console.warn('Failed to add embedding for task', e);
+    }
+
+    return task;
   }
 
   // READ
@@ -215,11 +226,29 @@ class TaskRepository {
     params.push(id);
 
     await db.execute(`UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`, params);
+
+    // Update embedding if fields that matter changed
+    if (data.title !== undefined || data.notes !== undefined) {
+      try {
+        const task = await this.getById(id);
+        if (task) {
+          const embedText = [task.title, task.notes].filter(Boolean).join(' ');
+          await vectorService.addEmbedding(task.userId, 'task', id, embedText);
+        }
+      } catch (e) {
+        console.warn('Failed to update embedding for task', e);
+      }
+    }
   }
 
   // DELETE
   async delete(id: string): Promise<void> {
     await db.execute('DELETE FROM tasks WHERE id = ?', [id]);
+    try {
+      await vectorService.delete('task', id);
+    } catch (e) {
+      console.warn('Failed to delete embedding for task', e);
+    }
   }
 
   // BATCH UPDATE

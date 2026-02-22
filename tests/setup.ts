@@ -28,6 +28,15 @@ jest.mock('expo-sqlite', () => ({
     transaction: jest.fn(),
     execAsync: jest.fn(),
   })),
+  openDatabaseAsync: jest.fn(() =>
+    Promise.resolve({
+      execAsync: jest.fn(() => Promise.resolve()),
+      withTransactionAsync: jest.fn(async (cb: () => Promise<void>) => await cb()),
+      getFirstAsync: jest.fn(() => Promise.resolve(null)),
+      getAllAsync: jest.fn(() => Promise.resolve([])),
+      runAsync: jest.fn(() => Promise.resolve({ changes: 1, lastInsertRowId: 1 })),
+    })
+  ),
 }));
 
 jest.mock('expo-calendar', () => ({
@@ -44,4 +53,14 @@ jest.mock('expo-notifications', () => ({
   getAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve([])),
   getPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
   requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+}));
+
+jest.mock('@xenova/transformers', () => ({
+  AutoTokenizer: { from_pretrained: jest.fn() },
+  pipeline: jest.fn(),
+}));
+
+jest.mock('onnxruntime-react-native', () => ({
+  InferenceSession: { create: jest.fn() },
+  Tensor: jest.fn(),
 }));

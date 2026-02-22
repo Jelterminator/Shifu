@@ -2,6 +2,7 @@ import type { Appointment, AppointmentRow } from '../../types/database';
 import { generateId } from '../../utils/id';
 import { db } from '../database';
 import { mapAppointmentRowToAppointment, safeStringify } from '../mappers';
+import { vectorService } from '../vectors';
 
 class AppointmentRepository {
   async create(
@@ -36,7 +37,18 @@ class AppointmentRepository {
 
     const rows = await db.query<AppointmentRow>('SELECT * FROM appointments WHERE id = ?', [id]);
     if (!rows[0]) throw new Error('Failed to create appointment: Row not found');
-    return mapAppointmentRowToAppointment(rows[0]);
+    const appointment = mapAppointmentRowToAppointment(rows[0]);
+
+    const embedText = [appointment.name, appointment.description].filter(Boolean).join(' ');
+    try {
+      if (embedText.trim()) {
+        await vectorService.addEmbedding(userId, 'appointment', id, embedText);
+      }
+    } catch (e) {
+      console.warn('Failed to add embedding for appointment', e);
+    }
+
+    return appointment;
   }
 
   async getForDate(userId: string, date: Date): Promise<Appointment[]> {
@@ -98,13 +110,46 @@ class AppointmentRepository {
     params.push(id);
 
     await db.execute(`UPDATE appointments SET ${updates.join(', ')} WHERE id = ?`, params);
+
+    if (data.name !== undefined || data.description !== undefined) {
+      try {
+        const rows = await db.query<AppointmentRow>('SELECT * FROM appointments WHERE id = ?', [
+          id,
+        ]);
+        if (rows[0]) {
+          const appointment = mapAppointmentRowToAppointment(rows[0]);
+          const embedText = [appointment.name, appointment.description].filter(Boolean).join(' ');
+          if (embedText.trim()) {
+            await vectorService.addEmbedding(appointment.userId, 'appointment', id, embedText);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to update embedding for appointment', e);
+      }
+    }
   }
 
   async delete(id: string): Promise<void> {
     await db.execute('DELETE FROM appointments WHERE id = ?', [id]);
+    try {
+      await vectorService.delete('appointment', id);
+    } catch (e) {
+      console.warn('Failed to delete embedding for appointment', e);
+    }
   }
 
   async deleteBySource(userId: string, source: string): Promise<void> {
+    const rows = await db.query<{ id: string }>(
+      'SELECT id FROM appointments WHERE user_id = ? AND source = ?',
+      [userId, source]
+    );
+    for (const row of rows) {
+      try {
+        await vectorService.delete('appointment', row.id);
+      } catch (e) {
+        console.warn('Failed to delete embedding for appointment', e);
+      }
+    }
     await db.execute('DELETE FROM appointments WHERE user_id = ? AND source = ?', [userId, source]);
   }
 }

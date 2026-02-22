@@ -270,10 +270,10 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
             scrollEnabled={false}
           />
           <TouchableOpacity
-            style={[styles.addListButton]}
+            style={[styles.addListButton, { backgroundColor: phaseColor }]}
             onPress={() => setIsAddListModalVisible(true)}
           >
-            <Text style={[styles.addListText, { color: colors.textSecondary }]}>+ Add List</Text>
+            <Text style={styles.addListText}>+ Add List</Text>
           </TouchableOpacity>
         </View>
 
@@ -300,20 +300,32 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
 
         {/* Footer Actions */}
         <TouchableOpacity
-          style={{ paddingVertical: SPACING.m, alignItems: 'center' }}
+          style={{
+            padding: SPACING.m,
+            alignItems: 'center',
+            backgroundColor: colors.surface,
+            borderRadius: BORDER_RADIUS.medium,
+            marginTop: SPACING.m,
+          }}
           onPress={handleViewAllTasks}
         >
           <Text style={{ fontSize: 14, fontWeight: '500', color: phaseColor }}>
-            View all tasks sorted by urgency →
+            View all tasks sorted by urgency
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={{ paddingVertical: SPACING.s, alignItems: 'center' }}
+          style={{
+            padding: SPACING.m,
+            alignItems: 'center',
+            backgroundColor: colors.surface,
+            borderRadius: BORDER_RADIUS.medium,
+            marginTop: SPACING.s,
+          }}
           onPress={handleViewCompletedTasks}
         >
           <Text style={{ fontSize: 14, fontWeight: '500', color: phaseColor }}>
-            View completed tasks →
+            View completed tasks
           </Text>
         </TouchableOpacity>
 
@@ -412,18 +424,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   addListButton: {
-    paddingVertical: SPACING.m,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: SPACING.s,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    padding: SPACING.m,
     borderRadius: BORDER_RADIUS.medium,
-    borderStyle: 'dashed',
+    alignItems: 'center',
+    marginTop: SPACING.s,
   },
   addListText: {
-    fontSize: 14,
-    fontWeight: '500',
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

@@ -27,6 +27,7 @@ jest.mock('onnxruntime-react-native', () => ({
           data: new Float32Array(500), // Mock data
         },
       }),
+      inputNames: [],
     }),
   },
   Tensor: jest.fn().mockImplementation((type, data, dims) => ({ type, data, dims })),
@@ -40,7 +41,7 @@ jest.mock('@xenova/transformers', () => ({
         attention_mask: { dims: [1, 5], data: new BigInt64Array(5) },
       });
       (tokenizer as any).encode = jest.fn().mockReturnValue({ input_ids: [], attention_mask: [] });
-      (tokenizer as any).decode = jest.fn().mockReturnValue('[\"mock_tool_call\"]');
+      (tokenizer as any).decode = jest.fn().mockReturnValue('["mock_tool_call"]');
       (tokenizer as any).apply_chat_template = jest.fn().mockReturnValue('mock prompt');
       (tokenizer as any).eos_token_id = 99;
       return tokenizer;
@@ -49,6 +50,7 @@ jest.mock('@xenova/transformers', () => ({
 }));
 
 jest.mock('../../src/db/repositories/TaskRepository');
+jest.mock('../../src/db/vectorStorage');
 jest.mock('../../src/services/ai/embedder');
 jest.mock('../../src/stores/userStore');
 jest.mock('../../src/services/data/PhaseManager', () => ({
@@ -133,4 +135,3 @@ describe('AgentLoop', () => {
     expect(taskRepository.delete).toHaveBeenCalledWith('123');
   });
 });
-

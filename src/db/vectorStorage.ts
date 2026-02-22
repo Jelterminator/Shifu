@@ -153,7 +153,7 @@ class SqliteVectorStorage implements VectorStorageAdapter {
         `UPDATE vector_embeddings 
          SET vector = ?, dimensions = ?, user_id = ?
          WHERE entity_type = ? AND entity_id = ?`,
-        [float32ToBuffer(vector) as unknown as string, vector.length, userId, entityType, entityId]
+        [float32ToBuffer(vector), vector.length, userId, entityType, entityId]
       );
       return existing[0]!.id;
     }
@@ -162,14 +162,7 @@ class SqliteVectorStorage implements VectorStorageAdapter {
     await dbService.execute(
       `INSERT INTO vector_embeddings (id, user_id, entity_type, entity_id, vector, dimensions)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        userId,
-        entityType,
-        entityId,
-        float32ToBuffer(vector) as unknown as string,
-        vector.length,
-      ]
+      [id, userId, entityType, entityId, float32ToBuffer(vector), vector.length]
     );
 
     return id;

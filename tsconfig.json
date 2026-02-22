@@ -54,5 +54,5 @@
     "scripts/**/*"
   ],
   "exclude": ["node_modules", "build", "dist"],
-  "extends": "expo/tsconfig.base"
+  "extends": "expo/tsconfig.base.json"
 }

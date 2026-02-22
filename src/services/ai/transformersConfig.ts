@@ -10,6 +10,7 @@ import { env } from '@huggingface/transformers';
  */
 export function configureTransformers(): void {
   env.allowLocalModels = false;
+  env.allowRemoteModels = true;
   env.useBrowserCache = true;
 
   // Serve ONNX Runtime WASM files locally to avoid tracking prevention issues

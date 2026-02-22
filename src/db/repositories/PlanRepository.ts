@@ -3,6 +3,7 @@ import type { Plan, PlanRow } from '../../types/database';
 import { generateId } from '../../utils/id';
 import { db } from '../database';
 import { mapPlanRowToPlan, safeStringify } from '../mappers';
+import { vectorService } from '../vectors';
 
 class PlanRepository {
   async create(
@@ -53,7 +54,18 @@ class PlanRepository {
     const rows = await db.query<PlanRow>('SELECT * FROM plans WHERE id = ?', [id]);
     const firstRow = rows[0];
     if (!firstRow) throw new Error('Failed to create plan: Row not found');
-    return mapPlanRowToPlan(firstRow);
+    const plan = mapPlanRowToPlan(firstRow);
+
+    const embedText = [plan.name, plan.description].filter(Boolean).join(' ');
+    try {
+      if (embedText.trim()) {
+        await vectorService.addEmbedding(userId, 'plan', id, embedText);
+      }
+    } catch (e) {
+      console.warn('Failed to add embedding for plan', e);
+    }
+
+    return plan;
   }
 
   async getForDateRange(userId: string, start: Date, end: Date): Promise<Plan[]> {
@@ -108,6 +120,15 @@ class PlanRepository {
     // Cancel notifications
     for (const row of rows) {
       await notificationService.cancelPlanReminder(row.id);
+    }
+
+    // Also delete embeddings for future pending plans
+    for (const row of rows) {
+      try {
+        await vectorService.delete('plan', row.id);
+      } catch (e) {
+        console.warn('Failed to delete embedding for plan', e);
+      }
     }
 
     await db.execute(
@@ -204,11 +225,31 @@ class PlanRepository {
         });
       }
     }
+
+    if (data.name !== undefined || data.description !== undefined) {
+      try {
+        const rows = await db.query<PlanRow>('SELECT * FROM plans WHERE id = ?', [id]);
+        if (rows[0]) {
+          const plan = mapPlanRowToPlan(rows[0]);
+          const embedText = [plan.name, plan.description].filter(Boolean).join(' ');
+          if (embedText.trim()) {
+            await vectorService.addEmbedding(plan.userId, 'plan', id, embedText);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to update embedding for plan', e);
+      }
+    }
   }
 
   async delete(id: string): Promise<void> {
     await notificationService.cancelPlanReminder(id);
     await db.execute('DELETE FROM plans WHERE id = ?', [id]);
+    try {
+      await vectorService.delete('plan', id);
+    } catch (e) {
+      console.warn('Failed to delete embedding for plan', e);
+    }
   }
 }
 

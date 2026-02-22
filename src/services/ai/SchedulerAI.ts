@@ -213,7 +213,9 @@ export class SchedulerAI {
     // Create Plan
     await planRepository.create(userId, {
       name: item.source.title,
-      description: `Scheduled by AI (${bestGenericSlot.phase?.name || 'General'} Phase) - Suitability: ${bestScore.toFixed(2)}`,
+      description: `Scheduled by AI (${
+        bestGenericSlot.phase?.name || 'General'
+      } Phase) - Suitability: ${bestScore.toFixed(2)}`,
       startTime: planStart,
       endTime: planEnd,
       sourceId: item.source.id,

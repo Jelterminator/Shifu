@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db/database';
+import { registerHeartbeatTask } from '../services/background';
 import { anchorsService } from '../services/data/Anchors';
 import { phaseManager } from '../services/data/PhaseManager';
 import { notificationService } from '../services/notifications/NotificationService';
@@ -126,6 +127,13 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
             await notificationService.requestPermissions();
           } catch {
             // silent
+          }
+
+          // Register background heartbeat task (Android WorkManager / iOS BGTaskScheduler)
+          try {
+            await registerHeartbeatTask();
+          } catch {
+            // silent — background tasks may not be available on all devices
           }
         }
 

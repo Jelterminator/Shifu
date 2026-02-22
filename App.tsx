@@ -17,6 +17,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppInitializer } from './src/components/AppInitializer';
 import { RootNavigator } from './src/navigation/RootNavigator';
 
+// ⚠️ Side-effectful import: defines the background task in global scope.
+// Must be imported at the app entry point BEFORE components mount.
+import './src/services/background/BackgroundTaskSetup';
+
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 
 export default function App(): React.JSX.Element {

@@ -56,12 +56,15 @@ export class DatabaseService {
     return await this.db.getAllAsync<T>(sql, params as (string | number)[]);
   }
 
+  // Execute a SQL statement with parameters, converting ArrayBuffer to Uint8Array for SQLite compatibility
   async execute(
     sql: string,
-    params: (string | number | null)[] = []
+    params: (string | number | null | ArrayBuffer)[] = []
   ): Promise<SQLite.SQLiteRunResult> {
     if (!this.db) throw new Error('Database not initialized');
-    return await this.db.runAsync(sql, params as (string | number)[]);
+    // Convert any ArrayBuffer parameters to Uint8Array (Blob) as required by expo-sqlite
+    const processedParams = params.map(p => (p instanceof ArrayBuffer ? new Uint8Array(p) : p));
+    return await this.db.runAsync(sql, processedParams);
   }
 
   async transaction(operations: (tx: SQLite.SQLiteDatabase) => Promise<void>): Promise<void> {

@@ -1,13 +1,15 @@
 import { useUserStore } from '../../stores/userStore';
 import { normalizeStep, parsePlan, type PlanStep } from '../../utils/aiUtils';
 import { generateResponse, unloadModel } from './Inference';
-import { buildActionMessages, buildDirectPrompt, buildSynthesisPrompt } from './PromptBuilder';
+import { RAGMemoryScanner } from './MemoryScanner';
+import {
+  buildPlanPrompt,
+  buildSagePrompt,
+  buildSynthesisPrompt,
+  type Message,
+} from './PromptBuilder';
 import { executeTools } from './ToolExecutor';
 import { routeTools } from './ToolRegistry';
-
-// -----------------------------------------------------------------------------
-// AgentLoop — Thin Orchestrator
-// -----------------------------------------------------------------------------
 
 export class AgentLoop {
   private static instance: AgentLoop;
@@ -22,58 +24,65 @@ export class AgentLoop {
   }
 
   /**
-   * Main entry point: execute a user request end-to-end.
-   *
-   * Flow: routeTools → buildPrompt → infer → execute → synthesize
+   * Main entry point: execute a user request end-to-end using the Sage architecture.
    */
-  async executeUserRequest(prompt: string): Promise<string> {
+  async executeUserRequest(prompt: string, history: Message[] = []): Promise<string> {
     try {
-      // 1. Route Tools (The Instinct)
-      const relevantTools = await routeTools(prompt);
+      const user = useUserStore.getState().user;
+      const userId = user?.id;
 
-      let results: string[] = [];
+      let dataContext = '';
 
-      if (relevantTools.length > 0) {
-        // 2. Build Messages
-        const messages = buildActionMessages(relevantTools, prompt);
-
-        // 3. Generate Plan (The Brain)
-        const planJson = await generateResponse(messages, true);
-
-        // 4. Parse & Guard
-        const rawSteps = parsePlan(planJson);
-
-        // Normalize and filter hallucinations
-        const selectedToolNames = new Set(relevantTools.map(t => t.name));
-        const executionSteps = rawSteps.map(normalizeStep).filter((step): step is PlanStep => {
-          if (!step) return false;
-          return selectedToolNames.has(step.tool);
-        });
-
-        // 5. Execute Native (The Body)
-        const userId = useUserStore.getState().user?.id;
-        if (!userId) throw new Error('User not logged in');
-
-        if (executionSteps.length > 0) {
-          results = await executeTools(executionSteps, userId);
+      if (userId) {
+        try {
+          dataContext = `User Info: ${user.name || 'Unknown'} (Timezone: ${user.timezone})\n\n`;
+          // Phase 1: Semantic Scrape (RAG)
+          const scrapedMemory = await RAGMemoryScanner.buildContext(prompt, userId);
+          dataContext += scrapedMemory;
+        } catch (e) {
+          console.warn('Failed to scrape user data', e);
         }
       }
 
-      // 6. Synthesize (The Voice)
-      const finalResponse = await this.synthesizeResponse(prompt, results);
-      return finalResponse;
+      // Phase 2: Tool Routing (Instinct)
+      const relevantTools = await routeTools(prompt);
+
+      // If no tools are relevant, go direct to Sage Synthesis
+      if (!relevantTools || relevantTools.length === 0) {
+        const messages = buildSagePrompt(prompt, dataContext.trim(), history);
+        return await generateResponse(messages, false);
+      }
+
+      // Phase 3: Tool Planning (Brain)
+      const planMessages = buildPlanPrompt(prompt, dataContext, relevantTools, history);
+      const rawPlan = await generateResponse(planMessages, true);
+
+      // Phase 4: Parsing & Cleaning
+      const parsed = parsePlan(rawPlan);
+      const filteredSteps = parsed
+        .map(normalizeStep)
+        .filter((s): s is PlanStep => s !== null && relevantTools.some(t => t.name === s.tool));
+
+      // Phase 5: Tool Execution (Body)
+      let toolResults: string[] = [];
+      if (filteredSteps.length > 0 && userId) {
+        toolResults = await executeTools(filteredSteps, userId);
+      } else {
+        // If the model produced no valid steps or refused tools
+        const messages = buildSagePrompt(prompt, dataContext.trim(), history);
+        return await generateResponse(messages, false);
+      }
+
+      // Phase 6: Final Synthesis
+      const synthesisMessages = buildSynthesisPrompt(prompt, toolResults, history);
+      const finalResponse = await generateResponse(synthesisMessages, false);
+
+      return finalResponse.trim();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return `I'm sorry, I encountered an internal error: ${message}`;
     } finally {
       unloadModel();
     }
-  }
-
-  private async synthesizeResponse(originalPrompt: string, toolResults: string[]): Promise<string> {
-    if (toolResults.length === 0) {
-      return generateResponse(buildDirectPrompt(originalPrompt), false);
-    }
-    return generateResponse(buildSynthesisPrompt(originalPrompt, toolResults), false);
   }
 }

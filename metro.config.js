@@ -20,8 +20,7 @@ config.resolver = {
   resolveRequest: (context, moduleName, platform) => {
     if (
       platform === 'web' &&
-      (moduleName === 'onnxruntime-web' ||
-        moduleName.startsWith('onnxruntime-web/'))
+      (moduleName === 'onnxruntime-web' || moduleName.startsWith('onnxruntime-web/'))
     ) {
       return {
         filePath: path.resolve(__dirname, 'src/shims/onnxruntime-web.js'),
@@ -30,8 +29,7 @@ config.resolver = {
     }
     if (
       platform === 'web' &&
-      (moduleName === 'onnxruntime-node' ||
-        moduleName.startsWith('onnxruntime-node/'))
+      (moduleName === 'onnxruntime-node' || moduleName.startsWith('onnxruntime-node/'))
     ) {
       return {
         filePath: path.resolve(__dirname, 'src/shims/onnxruntime-node.js'),
@@ -39,20 +37,14 @@ config.resolver = {
       };
     }
 
-    if (
-      platform === 'web' &&
-      moduleName === '@huggingface/transformers'
-    ) {
+    if (platform === 'web' && moduleName === '@huggingface/transformers') {
       return {
         filePath: path.resolve(__dirname, 'src/shims/transformers-lib.js'),
         type: 'sourceFile',
       };
     }
 
-    if (
-      platform === 'web' &&
-      moduleName === 'onnxruntime-common'
-    ) {
+    if (platform === 'web' && moduleName === 'onnxruntime-common') {
       return {
         filePath: path.resolve(__dirname, 'src/shims/onnxruntime-web.js'),
         type: 'sourceFile',

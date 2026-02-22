@@ -3,6 +3,7 @@ import type { PanResponderInstance } from 'react-native';
 import {
   Dimensions,
   PanResponder,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -65,6 +66,8 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
   const isDark = useThemeStore(state => state.isDark);
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const containerRef = useRef<View>(null);
+  const containerBounds = useRef({ top: 0, bottom: WINDOW_HEIGHT, height: WINDOW_HEIGHT });
   const scrollY = useRef(0);
   const autoScrollInterval = useRef<NodeJS.Timeout | null>(null);
 
@@ -76,6 +79,16 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
   // Ghost State (Visual only, follows cursor)
   const [ghostY, setGhostY] = useState<number | null>(null);
   const [ghostItem, setGhostItem] = useState<TimelineEvent | null>(null);
+
+  // Ticking Time State
+  const [internalNow, setInternalNow] = useState(propCurrentTime || new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setInternalNow(new Date());
+    }, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   // Refs
   const localPlansRef = useRef(localPlans);
@@ -99,7 +112,6 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
     phasesRef.current = phases;
   }, [phases]);
 
-  // === Helper: Time <-> Y ===
   const getBaseTime = useCallback((): number => {
     const ps = phasesRef.current;
     const baseDate = ps.length > 0 && ps[0] ? new Date(ps[0].startTime) : new Date();
@@ -123,6 +135,10 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
     },
     [getBaseTime]
   );
+
+  const toContentY = useCallback((pageY: number): number => {
+    return pageY - containerBounds.current.top + scrollY.current;
+  }, []);
 
   // === Scroll to now on mount ===
   const hasScrolledRef = useRef(false);
@@ -186,7 +202,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
   const handleAutoScroll = (velocity: number): void => {
     if (!scrollViewRef.current) return;
     const newY = scrollY.current + velocity;
-    const maxScroll = TOTAL_HEIGHT - WINDOW_HEIGHT;
+    const maxScroll = TOTAL_HEIGHT - containerBounds.current.height;
     const clampedY = Math.max(0, Math.min(maxScroll, newY));
 
     if (clampedY !== scrollY.current) {
@@ -205,20 +221,22 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
       const MAX_SPEED = 20;
       let velocity = 0;
 
-      if (screenY < EDGE) {
-        velocity = -MAX_SPEED * ((EDGE - screenY) / EDGE);
-      } else if (screenY > WINDOW_HEIGHT - EDGE) {
-        velocity = MAX_SPEED * ((screenY - (WINDOW_HEIGHT - EDGE)) / EDGE);
+      // Use the actual container bounds instead of absolute window height
+      const { top: containerTop, bottom: containerBottom } = containerBounds.current;
+
+      if (screenY < containerTop + EDGE) {
+        // Dragging near top of timeline container
+        velocity = -MAX_SPEED * ((containerTop + EDGE - screenY) / EDGE);
+      } else if (screenY > containerBottom - EDGE) {
+        // Dragging near bottom of timeline container
+        velocity = MAX_SPEED * ((screenY - (containerBottom - EDGE)) / EDGE);
       }
 
       if (velocity !== 0) {
         handleAutoScroll(velocity);
-        // Since we scrolled, the "Content Y" under the finger changed.
-        // We must update the drag logic.
+        // Since we scrolled, update ghost position based on active screen cursor
         requestAnimationFrame(() => {
           if (draggedIdRef.current) {
-            // Just trigger a move update with the latest know pageY
-            // This ensures ghost follows content if logic depends on ScrollY
             handleDragMove(latestPageY.current);
           }
         });
@@ -234,11 +252,26 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
   };
 
   // === Drag Logic ===
-  const dragStartRef = useRef<{ absoluteY: number; ghostTopStart: number } | null>(null);
 
-  const updateDrag = (newGhostContentTop: number): void => {
+  // During drag we purely update the visual ghost overlay, nothing else.
+  const handleDragMove = (pageY: number): void => {
+    latestPageY.current = pageY;
+
+    if (draggedIdRef.current) {
+      const contentY = toContentY(pageY);
+      // Center the ghost on the cursor based on where they actually clicked it
+      // For simplicity, we just put the top of the ghost where the cursor is,
+      // or optionally offset it by `ghostOffset` captured at start.
+      // Easiest is to center it on the cursor:
+      const draggedHeight = (ghostItem?.durationMinutes || 0) * MINUTE_HEIGHT;
+      setGhostY(contentY - draggedHeight / 2);
+    }
+  };
+
+  // Heavy physics and restructuring deferred strictly to Release
+  const finalizeDrop = (): void => {
     const dId = draggedIdRef.current;
-    if (!dId) return;
+    if (!dId || ghostY === null) return;
 
     const currentPlans = [...localPlansRef.current];
     const draggedIdx = currentPlans.findIndex(p => p.id === dId);
@@ -249,12 +282,12 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
 
     const draggedHeight = draggedItem.durationMinutes * MINUTE_HEIGHT;
     const ghostRect = {
-      top: newGhostContentTop,
-      bottom: newGhostContentTop + draggedHeight,
-      center: newGhostContentTop + draggedHeight / 2,
+      top: ghostY,
+      bottom: ghostY + draggedHeight,
+      center: ghostY + draggedHeight / 2,
     };
 
-    // 1. Check Swap (Midpoint Crossing)
+    // 1. Check Swap Directory
     let swapCandidateIdx = -1;
 
     for (let i = 0; i < currentPlans.length; i++) {
@@ -266,9 +299,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
       const itemHeight = item.durationMinutes * MINUTE_HEIGHT;
       const itemCenter = itemTop + itemHeight / 2;
 
-      // Check visual overlap with other items
       if (ghostRect.center > itemTop && ghostRect.center < itemTop + itemHeight) {
-        // Directional swap check
         if (draggedIdx < i && ghostRect.center > itemCenter) {
           swapCandidateIdx = i;
         } else if (draggedIdx > i && ghostRect.center < itemCenter) {
@@ -280,7 +311,6 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
     const getNextValidTime = (time: number, durationMinutes: number): number => {
       let start = time;
       let end = start + durationMinutes * 60000;
-
       let changed = true;
       while (changed) {
         changed = false;
@@ -288,8 +318,6 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
           if (!fe.startTime) continue;
           const feStart = fe.startTime.getTime();
           const feEnd = feStart + fe.durationMinutes * 60000;
-
-          // Tolerance: shrink by 1s to allow seamless abutting
           if (start < feEnd - 1000 && end > feStart + 1000) {
             start = feEnd;
             end = start + durationMinutes * 60000;
@@ -300,109 +328,78 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
       return start;
     };
 
+    let newPlans = [...currentPlans];
+
     if (swapCandidateIdx !== -1) {
-      // SWAP
-      const targetItem = currentPlans[swapCandidateIdx];
-      if (!targetItem) return;
+      // SWAP EXECUTION
+      const targetItem = newPlans[swapCandidateIdx];
+      if (targetItem) {
+        newPlans[draggedIdx] = targetItem;
+        newPlans[swapCandidateIdx] = draggedItem;
 
-      const newPlans = [...currentPlans];
-      newPlans[draggedIdx] = targetItem;
-      newPlans[swapCandidateIdx] = draggedItem;
+        // Force a chronological sort after swapping
+        newPlans = newPlans
+          .filter(p => !!p.startTime)
+          .sort((a, b) => a.startTime!.getTime() - b.startTime!.getTime());
 
-      // Ripple from top of the affected block
-      const minIdx = Math.min(draggedIdx, swapCandidateIdx);
+        // Ripple timing forward
+        const minItem = newPlans[0];
+        let runningTime = minItem?.startTime?.getTime() || getBaseTime();
 
-      const minItem = currentPlans[minIdx];
-      let runningTime = minItem?.startTime?.getTime();
-
-      if (!runningTime) runningTime = getBaseTime();
-
-      if (runningTime) {
-        for (let k = minIdx; k < newPlans.length; k++) {
+        for (let k = 0; k < newPlans.length; k++) {
           const p = newPlans[k];
           if (!p) continue;
-
           runningTime = getNextValidTime(runningTime, p.durationMinutes);
-
           newPlans[k] = { ...p, startTime: new Date(runningTime) };
-
           runningTime += p.durationMinutes * 60000;
         }
       }
-
-      setLocalPlans(newPlans);
-      localPlansRef.current = newPlans;
     } else {
-      // FREE MOVE
-      const proposedTime = yToTime(newGhostContentTop);
+      // FREE DROPPING
+      const proposedTime = yToTime(ghostY);
       const date = new Date(proposedTime);
-      const m = date.getMinutes();
-      const snapM = Math.round(m / 15) * 15;
+      const snapM = Math.round(date.getMinutes() / 15) * 15;
       date.setMinutes(snapM, 0, 0);
       const snappedMs = date.getTime();
 
       const myStart = snappedMs;
-      const myEnd = snappedMs + draggedHeight * (60000 / MINUTE_HEIGHT);
-
+      const myEnd = snappedMs + draggedItem.durationMinutes * 60000;
       let collision = false;
 
-      // Check Flexible Plans
-      for (const other of currentPlans) {
-        if (other.id === dId) continue;
-        if (!other.startTime) continue;
+      // Detect Free Move Collisions against all siblings entirely chronologically
+      for (const other of newPlans) {
+        if (other.id === dId || !other.startTime) continue;
         const oStart = other.startTime.getTime();
         const oEnd = oStart + other.durationMinutes * 60000;
-
-        const intersectStart = Math.max(myStart, oStart);
-        const intersectEnd = Math.min(myEnd, oEnd);
-
-        if (intersectEnd - intersectStart > 1000) {
+        if (Math.min(myEnd, oEnd) - Math.max(myStart, oStart) > 1000) {
           collision = true;
           break;
         }
       }
 
-      // Check Fixed Events
       for (const fe of fixedEventsRef.current) {
         if (!fe.startTime) continue;
         const fStart = fe.startTime.getTime();
         const fEnd = fStart + fe.durationMinutes * 60000;
-
-        const intersectStart = Math.max(myStart, fStart);
-        const intersectEnd = Math.min(myEnd, fEnd);
-
-        if (intersectEnd - intersectStart > 1000) {
+        if (Math.min(myEnd, fEnd) - Math.max(myStart, fStart) > 1000) {
           collision = true;
           break;
         }
       }
 
       if (!collision) {
-        const newPlans = [...currentPlans];
-        if (draggedIdx >= 0 && draggedIdx < newPlans.length) {
-          newPlans[draggedIdx] = {
-            ...draggedItem,
-            startTime: new Date(snappedMs),
-          };
-          newPlans.sort((a, b) => (a.startTime?.getTime() || 0) - (b.startTime?.getTime() || 0));
-          setLocalPlans(newPlans);
-          localPlansRef.current = newPlans;
+        newPlans[draggedIdx] = { ...draggedItem, startTime: new Date(snappedMs) };
+        try {
+          newPlans.sort((a, b) => a.startTime!.getTime() - b.startTime!.getTime());
+        } catch (e) {
+          console.warn('Silent skip sorting in collision path', e);
         }
       }
     }
-  };
 
-  const handleDragMove = (pageY: number): void => {
-    latestPageY.current = pageY;
-
-    if (dragStartRef.current && draggedIdRef.current) {
-      const currentAbsoluteY = pageY + scrollY.current;
-      const delta = currentAbsoluteY - dragStartRef.current.absoluteY;
-      const newGhostY = dragStartRef.current.ghostTopStart + delta;
-
-      setGhostY(newGhostY);
-      updateDrag(newGhostY);
-    }
+    setLocalPlans(newPlans);
+    localPlansRef.current = newPlans;
+    onReorder(newPlans);
   };
 
   // Cache PRs
@@ -412,34 +409,36 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
     if (!panResponders.current[plan.id]) {
       panResponders.current[plan.id] = PanResponder.create({
         onStartShouldSetPanResponder: () => false,
+        onStartShouldSetPanResponderCapture: () => false,
         onMoveShouldSetPanResponder: (_, { dx, dy }) => {
+          if (Platform.OS === 'web') {
+            return Math.abs(dx) > 5 || Math.abs(dy) > 5;
+          }
           if (dragTargetRef.current !== plan.id) return false;
           return Math.abs(dx) > 2 || Math.abs(dy) > 2;
         },
+        onMoveShouldSetPanResponderCapture: (_, { dx, dy }) => {
+          if (Platform.OS === 'web') {
+            return Math.abs(dx) > 5 || Math.abs(dy) > 5;
+          }
+          if (dragTargetRef.current !== plan.id) return false;
+          return Math.abs(dx) > 2 || Math.abs(dy) > 2;
+        },
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: evt => {
           const pageY = evt.nativeEvent.pageY;
           latestPageY.current = pageY;
-          const startScroll = scrollY.current;
-
-          // Calculate initial offset
-          const currentSeg = localPlansRef.current.find(p => p.id === plan.id);
-          const startTime = currentSeg?.startTime?.getTime();
-          if (!startTime) return;
-
-          const itemTop = timeToY(new Date(startTime));
 
           // Initialize Drag State
           setIsDragging(true);
           setDraggedId(plan.id);
           draggedIdRef.current = plan.id;
           setGhostItem(plan);
-          setGhostY(itemTop);
 
-          // Track start point
-          dragStartRef.current = {
-            absoluteY: pageY + startScroll,
-            ghostTopStart: itemTop,
-          };
+          // Fast-link the ghost precisely to cursor layout
+          const contentY = toContentY(pageY);
+          const draggedHeight = (plan.durationMinutes || 0) * MINUTE_HEIGHT;
+          setGhostY(contentY - draggedHeight / 2);
 
           startAutoScrollCheck();
         },
@@ -448,14 +447,13 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
         },
         onPanResponderRelease: () => {
           stopAutoScroll();
+          finalizeDrop();
           setIsDragging(false);
           setDraggedId(null);
           draggedIdRef.current = null;
           setGhostY(null);
-          dragStartRef.current = null;
           if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
           dragTargetRef.current = null;
-          onReorder(localPlansRef.current);
         },
         onPanResponderTerminate: () => {
           stopAutoScroll();
@@ -463,7 +461,6 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
           setDraggedId(null);
           draggedIdRef.current = null;
           setGhostY(null);
-          dragStartRef.current = null;
           if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
           dragTargetRef.current = null;
           setLocalPlans(plans);
@@ -484,24 +481,6 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
     return (
       <View
         key={seg.id}
-        onTouchStart={() => {
-          if (isDragging) return;
-          if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
-          dragTargetRef.current = null;
-          
-          dragTimeoutRef.current = setTimeout(() => {
-            dragTargetRef.current = seg.originalId;
-            Vibration.vibrate(50);
-          }, 300);
-        }}
-        onTouchEnd={() => {
-          if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
-          dragTargetRef.current = null;
-        }}
-        onTouchCancel={() => {
-          if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
-          dragTargetRef.current = null;
-        }}
         {...pr.panHandlers}
         style={[
           styles.eventCard,
@@ -512,6 +491,8 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
             borderLeftColor: seg.color,
             opacity: isShadow ? 0.3 : 1,
             zIndex: 1,
+            // @ts-expect-error valid for react-native-web
+            touchAction: 'none',
           },
         ]}
       >
@@ -519,6 +500,16 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
           style={styles.eventContent}
           activeOpacity={1}
           onPress={() => onSelectEvent?.(seg.originalId)}
+          onLongPress={() => {
+            if (isDragging) return;
+            dragTargetRef.current = seg.originalId;
+            try {
+              Vibration.vibrate(50);
+            } catch {
+              // ignore
+            }
+          }}
+          delayLongPress={300}
           disabled={!!isDragging}
         >
           <View style={styles.titleRow}>
@@ -583,8 +574,41 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
     return lines;
   }, [colors]);
 
+  const renderCurrentTime = (): React.ReactElement | null => {
+    const now = internalNow;
+    const base = getBaseTime();
+    const nowMs = now.getTime();
+
+    // Only show if the current time falls on the viewed day (0-24h window)
+    if (nowMs < base || nowMs > base + 24 * 60 * 60 * 1000) {
+      return null;
+    }
+
+    // timeToY takes a date object
+    const top = timeToY(now);
+
+    return (
+      <View style={[styles.currentTimeContainer, { top }]} pointerEvents="none">
+        <View style={styles.currentTimeDot} />
+        <View style={styles.currentTimeLine} />
+      </View>
+    );
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View
+      ref={containerRef}
+      style={{ flex: 1, backgroundColor: colors.background }}
+      onLayout={() => {
+        containerRef.current?.measure((_x, _y, _width, height, _pageX, pageY) => {
+          containerBounds.current = {
+            top: pageY,
+            bottom: pageY + height,
+            height: height,
+          };
+        });
+      }}
+    >
       <ScrollView
         ref={scrollViewRef}
         contentContainerStyle={{ height: TOTAL_HEIGHT }}
@@ -596,6 +620,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
       >
         {renderPhases()}
         {gridLines}
+        {renderCurrentTime()}
 
         {segments.map(seg => renderItem(seg))}
 
@@ -646,6 +671,28 @@ const styles = StyleSheet.create({
   timeLabelContainer: {
     width: TIMELINE_PADDING_LEFT,
     alignItems: 'center',
+  },
+  currentTimeContainer: {
+    position: 'absolute',
+    left: TIMELINE_PADDING_LEFT - 4, // Center the dot on the boundary
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 10, // above lines and phases
+    height: 10,
+    marginTop: -5,
+  },
+  currentTimeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#E63946',
+  },
+  currentTimeLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: '#E63946',
+    opacity: 0.8,
   },
   timeLabel: {
     fontSize: 10,

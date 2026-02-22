@@ -357,15 +357,6 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
         >
           <Text style={styles.addButtonText}>+ Add Habit</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.configButton, { borderColor: phaseColor }]}
-          onPress={() => navigation.navigate('SpiritualPracticesSetup', { isEditing: true })}
-        >
-          <Text style={[styles.configButtonText, { color: phaseColor }]}>
-            🙏 Reconfigure Spiritual Disciplines
-          </Text>
-        </TouchableOpacity>
       </View>
     </View>
   );

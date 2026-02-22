@@ -54,6 +54,7 @@ export interface TaskRow extends BaseEntity {
   effort_minutes: number;
   deadline: string | null;
   project_id: string | null;
+  parent_id: string | null; // Added for subtasks
   notes: string | null;
   position_in_project: number | null;
   selected_keywords: string; // JSON
@@ -69,6 +70,7 @@ export interface Task {
   effortMinutes: number;
   deadline?: Date;
   projectId?: string;
+  parentId?: string; // Added for subtasks
   notes?: string;
   positionInProject?: number;
   selectedKeywords: TaskKeyword[];

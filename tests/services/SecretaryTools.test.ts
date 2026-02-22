@@ -34,6 +34,7 @@ jest.mock('onnxruntime-react-native', () => ({
           data: new Float32Array(500),
         },
       }),
+      inputNames: [],
     }),
   },
   Tensor: jest.fn().mockImplementation((type, data, dims) => ({ type, data, dims })),
@@ -172,4 +173,3 @@ describe('AgentLoop Secretary Tools', () => {
     expect(phaseManager.getCurrentPhase).toHaveBeenCalled();
   });
 });
-

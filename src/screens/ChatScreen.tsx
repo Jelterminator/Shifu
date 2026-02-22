@@ -84,8 +84,19 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
     setIsTyping(true);
 
     try {
+      // Prepare history (last 10 messages, excluding the current one being sent)
+      // We use 'messages' state which doesn't have the new user message yet in this closure,
+      // or we can just filter. The 'messages' in scope is the state at render time.
+      const history = messages
+        .slice(-10) // Limit to last 10
+        .filter(m => m.type !== 'system' && m.id !== 'welcome') // Skip system/welcome messages if needed
+        .map(m => ({
+          role: (m.type === 'ai' ? 'assistant' : m.type) as 'assistant' | 'user' | 'system',
+          content: m.content,
+        }));
+
       // Execute the request via the AgentLoop
-      const responseText = await AgentLoop.getInstance().executeUserRequest(text.trim());
+      const responseText = await AgentLoop.getInstance().executeUserRequest(text.trim(), history);
 
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -211,6 +222,7 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
             maxLength={500}
             onSubmitEditing={() => sendMessage(inputText)}
             blurOnSubmit={false}
+            nativeID="chat-input"
           />
           <TouchableOpacity
             style={[
@@ -353,4 +365,3 @@ const styles = StyleSheet.create({
 });
 
 export default ChatScreen;
-

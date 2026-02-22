@@ -15,6 +15,13 @@ describe('TaskRepository', () => {
       db: mockDb,
     }));
 
+    jest.mock('../src/db/vectors', () => ({
+      vectorService: {
+        addEmbedding: jest.fn(),
+        delete: jest.fn(),
+      },
+    }));
+
     // Re-require to ensure mock is used
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const module = require('../src/db/repositories/TaskRepository');

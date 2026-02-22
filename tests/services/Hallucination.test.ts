@@ -12,13 +12,14 @@ jest.mock('../../src/services/ai/Inference', () => ({
   unloadModel: jest.fn(),
 }));
 jest.mock('../../src/stores/userStore');
+jest.mock('../../src/db/vectorStorage');
 jest.mock('../../src/services/ai/ToolExecutor', () => ({
   executeTools: jest.fn().mockResolvedValue(['Mock Execution Result']),
 }));
 
 // Mock Expo and ONNX to prevent "install" errors
 jest.mock('onnxruntime-react-native', () => ({
-  InferenceSession: { create: jest.fn() },
+  InferenceSession: { create: jest.fn().mockResolvedValue({ inputNames: [] }) },
   Tensor: jest.fn(),
 }));
 
@@ -82,4 +83,3 @@ describe('AgentLoop Hallucination Prevention', () => {
     expect(response).toBe('Final Synth');
   });
 });
-

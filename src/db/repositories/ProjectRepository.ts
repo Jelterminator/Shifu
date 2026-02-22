@@ -2,6 +2,7 @@ import type { Project, ProjectRow } from '../../types/database';
 import { generateId } from '../../utils/id';
 import { db } from '../database';
 import { mapProjectRowToProject, safeStringify } from '../mappers';
+import { vectorService } from '../vectors';
 
 class ProjectRepository {
   // CREATE
@@ -36,7 +37,16 @@ class ProjectRepository {
     const rows = await db.query<ProjectRow>('SELECT * FROM projects WHERE id = ?', [id]);
     const firstRow = rows[0];
     if (!firstRow) throw new Error('Failed to create project: Row not found');
-    return mapProjectRowToProject(firstRow);
+    const project = mapProjectRowToProject(firstRow);
+
+    const embedText = [project.title, project.notes].filter(Boolean).join(' ');
+    try {
+      await vectorService.addEmbedding(userId, 'project', id, embedText);
+    } catch (e) {
+      console.warn('Failed to add embedding for project', e);
+    }
+
+    return project;
   }
 
   // READ
@@ -101,11 +111,28 @@ class ProjectRepository {
     params.push(id);
 
     await db.execute(`UPDATE projects SET ${updates.join(', ')} WHERE id = ?`, params);
+
+    if (data.title !== undefined || data.notes !== undefined) {
+      try {
+        const project = await this.getById(id);
+        if (project) {
+          const embedText = [project.title, project.notes].filter(Boolean).join(' ');
+          await vectorService.addEmbedding(project.userId, 'project', id, embedText);
+        }
+      } catch (e) {
+        console.warn('Failed to update embedding for project', e);
+      }
+    }
   }
 
   // DELETE
   async delete(id: string): Promise<void> {
     await db.execute('DELETE FROM projects WHERE id = ?', [id]);
+    try {
+      await vectorService.delete('project', id);
+    } catch (e) {
+      console.warn('Failed to delete embedding for project', e);
+    }
   }
 }
 

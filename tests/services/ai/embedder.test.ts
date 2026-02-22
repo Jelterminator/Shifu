@@ -139,4 +139,3 @@ describe('OnnxEmbedder', () => {
     expect(vector[1]).toBeCloseTo(0.7071);
   });
 });
-

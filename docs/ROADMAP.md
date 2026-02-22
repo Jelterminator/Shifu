@@ -362,15 +362,15 @@ Animations, Reanimated 2, Dynamic Styling.
 
 ### Hierarchical Memory & RAG Pipeline
 
-- [ ] Vector Database: Finalize the SqliteVectorStorage implementation to securely store Float32Array embeddings as ArrayBuffers.
-- [ ] Context Compression: Implement an aggressive context-window guard. If a user's conversation exceeds threshold, use Qwen to invisibly summarize the history and truncate the active array.
+- [x] Vector Database: Finalize the SqliteVectorStorage implementation to securely store Float32Array embeddings as ArrayBuffers.
+- [ ] Context Compression: Implement an aggressive context-window guard. If a user's conversation exceeds threshold invisibly summarize the history and truncate the active array.
 - [ ] Summarization Roll-ups: Implement the Daily -> Weekly -> Monthly summarization pipeline, storing compressed summary embeddings for fast retrieval via MiniLM.
 
 ### The Heartbeat (Autonomous Maintenance)
 
-- [ ] Set up an expo-task-manager background loop that hooks into Android WorkManager / iOS BGTaskScheduler.
-- [ ] Define stateless, NoHistory background maintenance prompts (e.g., "Summarize today and prepare tomorrow's schedule based on Wu Xing phases").
-- [ ] Battery & OS Guard: Ensure the heavy Qwen model only wakes up for Heartbeat tasks when the device is actively charging and idle, to prevent the OS from killing the Shifu process.
+- [x] Set up an expo-task-manager background loop that hooks into Android WorkManager / iOS BGTaskScheduler.
+- [ ] Define stateless, NoHistory background maintenance prompts for the daily/weekly/monthly archiver and for a daily coaching prompt for in the journal screen.
+- [ ] Battery & OS Guard: Ensure the model only wakes up for Heartbeat tasks when the device has sufficient battery and is idle, to prevent the OS from killing the Shifu process.
 
 ---
 
