@@ -74,7 +74,12 @@ export class AgentLoop {
       }
 
       // Phase 6: Final Synthesis
-      const synthesisMessages = buildSynthesisPrompt(prompt, toolResults, history);
+      const synthesisMessages = buildSynthesisPrompt(
+        prompt,
+        toolResults,
+        dataContext.trim(),
+        history
+      );
       const finalResponse = await generateResponse(synthesisMessages, false);
 
       return finalResponse.trim();

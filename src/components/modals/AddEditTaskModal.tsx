@@ -15,6 +15,7 @@ import { useListStore } from '../../stores/listStore';
 import { useThemeStore } from '../../stores/themeStore';
 import { useUserStore } from '../../stores/userStore';
 import type { Task } from '../../types/database';
+import { LIST_ICONS } from '../icons/AppIcons';
 import { ConfirmationModal } from './ConfirmationModal';
 
 interface AddEditTaskModalProps {
@@ -214,7 +215,15 @@ export function AddEditTaskModal({
                           setSelectedKeywords(Array.from(newKeywords));
                         }}
                       >
-                        <Text style={{ marginRight: 6 }}>{list.icon}</Text>
+                        {(() => {
+                          const IconComp = LIST_ICONS[list.icon] ?? LIST_ICONS['default'];
+                          return IconComp ? (
+                            <IconComp
+                              color={isSelected ? '#fff' : colors.textSecondary}
+                              size={16}
+                            />
+                          ) : null;
+                        })()}
                         <Text
                           style={{
                             color: isSelected ? '#fff' : colors.text,
@@ -464,6 +473,7 @@ const styles = StyleSheet.create({
   liChip: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
     paddingHorizontal: SPACING.m,
     paddingVertical: SPACING.s,
     borderRadius: BORDER_RADIUS.circle,

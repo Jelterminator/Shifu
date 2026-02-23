@@ -1,16 +1,17 @@
 /* eslint-disable */
 import React, { useRef, useState } from 'react';
 import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
+import { BotIcon, SendIcon } from '../components/icons/AppIcons';
 import { BORDER_RADIUS, SHADOWS, SPACING } from '../constants/theme';
 import { AgentLoop } from '../services/ai/AgentLoop';
 import { useThemeStore } from '../stores/themeStore';
@@ -137,7 +138,7 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
       <View style={[styles.messageRow, !isAI && styles.messageRowUser]}>
         {isAI && (
           <View style={styles.avatarContainer}>
-            <Text style={styles.avatar}>🤖</Text>
+            <BotIcon color={phaseColor} size={24} />
           </View>
         )}
         <View
@@ -199,7 +200,9 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
           ListFooterComponent={
             isTyping ? (
               <View style={styles.typingContainer}>
-                <Text style={styles.typingAvatar}>🤖</Text>
+                <View style={styles.avatarContainer}>
+                  <BotIcon color={phaseColor} size={24} />
+                </View>
                 <View style={[styles.typingBubble, { backgroundColor: colors.surface }]}>
                   <Text style={[styles.typingText, { color: colors.textSecondary }]}>
                     Typing...
@@ -232,7 +235,7 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
             onPress={() => sendMessage(inputText)}
             disabled={!inputText.trim()}
           >
-            <Text style={styles.sendButtonText}>📤</Text>
+            <SendIcon color={inputText.trim() ? '#fff' : '#9E9E9E'} size={20} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -295,10 +298,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginBottom: SPACING.m,
   },
-  typingAvatar: {
-    fontSize: 24,
-    marginRight: SPACING.s,
-  },
   typingBubble: {
     padding: SPACING.m,
     borderRadius: BORDER_RADIUS.large,
@@ -330,9 +329,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  sendButtonText: {
-    fontSize: 20,
   },
   emptyStateContainer: {
     flex: 1,

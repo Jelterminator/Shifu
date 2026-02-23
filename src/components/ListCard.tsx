@@ -4,6 +4,7 @@ import { BORDER_RADIUS, SHADOWS, SPACING } from '../constants/theme';
 import type { ListConfiguration } from '../stores/listStore';
 import { useThemeStore } from '../stores/themeStore';
 import type { Task } from '../types/database';
+import { LIST_ICONS, UrgentIcon } from './icons/AppIcons';
 
 interface ListCardProps {
   list: ListConfiguration;
@@ -34,8 +35,11 @@ export function ListCard({
     >
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Text style={styles.icon}>{list.icon}</Text>
-          <Text style={[styles.name, { color: colors.text }]}>
+          {(() => {
+            const IconComp = LIST_ICONS[list.icon] ?? LIST_ICONS['default'];
+            return IconComp ? <IconComp color={colors.text} size={20} /> : null;
+          })()}
+          <Text style={[styles.name, { color: colors.text, marginLeft: SPACING.s }]}>
             {list.name} <Text style={{ color: colors.textSecondary }}>({count})</Text>
           </Text>
         </View>
@@ -53,7 +57,7 @@ export function ListCard({
                 {task.title}
               </Text>
               {task.urgencyLevel && task.urgencyLevel <= 'T3' && (
-                <Text style={{ fontSize: 10, color: 'red', marginLeft: 4 }}>🔥</Text>
+                <UrgentIcon color="#E63946" size={12} />
               )}
             </View>
           ))}
@@ -101,10 +105,6 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  icon: {
-    fontSize: 20,
-    marginRight: SPACING.s,
   },
   name: {
     fontSize: 16,

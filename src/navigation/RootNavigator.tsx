@@ -2,7 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import { Text } from 'react-native';
+import { TAB_ICONS } from '../components/icons/AppIcons';
 
 import { DIMENSIONS } from '../constants/theme';
 import {
@@ -24,15 +24,9 @@ import { type MainTabParamList, type RootStackParamList } from '../types/navigat
 import { storage } from '../utils/storage';
 
 // -- Icons --
-function TabIcon({ name, color }: { name: string; color: string }): React.JSX.Element {
-  const icons: Record<string, string> = {
-    Agenda: '📅', // Calendar
-    Tasks: '✅',
-    Habits: '🔄',
-    Journal: '📖',
-    Chat: '💬',
-  };
-  return <Text style={{ fontSize: 24, color }}>{icons[name] || '?'}</Text>;
+function TabIcon({ name, color }: { name: string; color: string }): React.JSX.Element | null {
+  const Icon = TAB_ICONS[name];
+  return Icon ? <Icon color={color} size={24} /> : null;
 }
 
 // -- Main Tab Navigator --

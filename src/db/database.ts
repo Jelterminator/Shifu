@@ -44,8 +44,15 @@ export class DatabaseService {
     // Run migrations in sequence
     for (const migration of MIGRATIONS) {
       if (migration.version > currentVersion) {
-        await this.db.execAsync(migration.sql);
-        await this.db.execAsync(`PRAGMA user_version = ${migration.version}`);
+        // eslint-disable-next-line no-console
+        console.log(`🗄️ [DB] Running migration to version ${migration.version}...`);
+        try {
+          await this.db.execAsync(migration.sql);
+          await this.db.execAsync(`PRAGMA user_version = ${migration.version}`);
+        } catch (error) {
+          console.error(`🗄️ [DB] Migration to version ${migration.version} failed:`, error);
+          throw error;
+        }
       }
     }
   }

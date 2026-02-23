@@ -12,6 +12,7 @@ import {
 import { BORDER_RADIUS, DAYS, KEYWORDS, PHASES, SPACING } from '../../constants';
 import { useListStore } from '../../stores/listStore';
 import { useThemeStore } from '../../stores/themeStore';
+import { LIST_ICON_KEYS, LIST_ICONS } from '../icons/AppIcons';
 import { ConfirmationModal } from './ConfirmationModal';
 
 interface AddEditListModalProps {
@@ -31,7 +32,7 @@ export function AddEditListModal({
   const { addList, updateList, deleteList } = useListStore();
 
   const [name, setName] = useState('');
-  const [icon, setIcon] = useState('📝');
+  const [icon, setIcon] = useState('work');
   const [keywords, setKeywords] = useState<string[]>([]);
   const [planDuringWork, setPlanDuringWork] = useState(true);
   const [planOutsideWork, setPlanOutsideWork] = useState(true);
@@ -78,7 +79,7 @@ export function AddEditListModal({
 
   const resetForm = (): void => {
     setName('');
-    setIcon('📝');
+    setIcon('work');
     setKeywords([]);
     setPlanDuringWork(true);
     setPlanOutsideWork(true);
@@ -133,13 +134,37 @@ export function AddEditListModal({
 
           <View style={styles.formGroup}>
             <Text style={[styles.label, { color: colors.text }]}>Icon</Text>
-            <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-              value={icon}
-              onChangeText={setIcon}
-              placeholder="e.g. 💼"
-              placeholderTextColor={colors.textSecondary}
-            />
+            <View style={styles.iconPickerRow}>
+              {LIST_ICON_KEYS.map(({ key, label }) => {
+                const IconComp = LIST_ICONS[key];
+                const selected = icon === key;
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    style={[
+                      styles.iconOption,
+                      {
+                        borderColor: selected ? phaseColor : colors.border,
+                        backgroundColor: selected ? phaseColor + '22' : colors.surface,
+                      },
+                    ]}
+                    onPress={() => setIcon(key)}
+                  >
+                    {IconComp && (
+                      <IconComp color={selected ? phaseColor : colors.textSecondary} size={28} />
+                    )}
+                    <Text
+                      style={[
+                        styles.iconLabel,
+                        { color: selected ? phaseColor : colors.textSecondary },
+                      ]}
+                    >
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
           <View style={styles.section}>
@@ -295,6 +320,26 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING.m,
+  },
+  iconPickerRow: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: SPACING.s,
+  },
+  iconOption: {
+    flex: 1,
+    minWidth: 60,
+    alignItems: 'center' as const,
+    paddingVertical: SPACING.m,
+    paddingHorizontal: SPACING.s,
+    borderRadius: BORDER_RADIUS.medium,
+    borderWidth: 2,
+    gap: 4,
+  },
+  iconLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    textAlign: 'center' as const,
   },
   formGroup: {
     marginBottom: SPACING.m,

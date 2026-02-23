@@ -29,7 +29,7 @@ const DEFAULT_LISTS: ListConfiguration[] = [
   {
     id: 'work',
     name: 'Work',
-    icon: '💼',
+    icon: 'work',
     keywords: ['work'],
     plan_during_work: true,
     plan_outside_work: false,
@@ -40,7 +40,7 @@ const DEFAULT_LISTS: ListConfiguration[] = [
   {
     id: 'private',
     name: 'Private',
-    icon: '🏠',
+    icon: 'home',
     keywords: ['private', 'personal'],
     plan_during_work: false,
     plan_outside_work: true,

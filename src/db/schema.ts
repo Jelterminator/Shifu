@@ -271,4 +271,21 @@ export const MIGRATIONS: Migration[] = [
     CREATE INDEX idx_tasks_parent ON tasks(parent_id);
     `,
   },
+  {
+    version: 15,
+    sql: `
+    -- Archival Summaries (Hierarchical RAG)
+    CREATE TABLE IF NOT EXISTS archival_summaries (
+      id TEXT PRIMARY KEY NOT NULL,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      summary_type TEXT NOT NULL CHECK (summary_type IN ('daily', 'weekly', 'monthly', 'quarterly')),
+      date_string TEXT NOT NULL,
+      content TEXT NOT NULL,
+      is_rolled_up INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX idx_archival_summaries_type ON archival_summaries(summary_type, is_rolled_up);
+    CREATE INDEX idx_archival_summaries_user ON archival_summaries(user_id, date_string);
+    `,
+  },
 ];

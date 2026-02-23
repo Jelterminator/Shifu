@@ -4,6 +4,7 @@ import { BORDER_RADIUS, SHADOWS, SPACING, URGENCY_COLORS } from '../constants/th
 import { determineUrgency } from '../db/mappers';
 import { useThemeStore } from '../stores/themeStore';
 import type { Task } from '../types/database';
+import { AgendaIcon, TimerIcon } from './icons/AppIcons';
 
 interface TaskCardProps {
   task: Task;
@@ -120,16 +121,21 @@ export function TaskCard({
 
         <View style={styles.meta}>
           {task.deadline && (
-            <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-              📅{' '}
-              {formatDeadline(
-                typeof task.deadline === 'string' ? new Date(task.deadline) : task.deadline
-              )}
-            </Text>
+            <View style={styles.metaItem}>
+              <AgendaIcon color={colors.textSecondary} size={12} />
+              <Text style={[styles.metaText, { color: colors.textSecondary, marginLeft: 3 }]}>
+                {formatDeadline(
+                  typeof task.deadline === 'string' ? new Date(task.deadline) : task.deadline
+                )}
+              </Text>
+            </View>
           )}
-          <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-            ⏱️ {task.effortMinutes}m
-          </Text>
+          <View style={styles.metaItem}>
+            <TimerIcon color={colors.textSecondary} size={12} />
+            <Text style={[styles.metaText, { color: colors.textSecondary, marginLeft: 3 }]}>
+              {task.effortMinutes}m
+            </Text>
+          </View>
         </View>
 
         {isExpanded && task.notes && (
@@ -185,6 +191,10 @@ const styles = StyleSheet.create({
   meta: {
     flexDirection: 'row',
     gap: SPACING.m,
+  },
+  metaItem: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
   },
   metaText: {
     fontSize: 13,

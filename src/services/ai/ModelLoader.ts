@@ -9,7 +9,9 @@ export class ModelLoader {
       );
       return null;
     }
-    return docDir + 'models/';
+    // Ensure trailing slash
+    const path = docDir.endsWith('/') ? docDir : docDir + '/';
+    return path + 'models/';
   }
 
   static async initialize(): Promise<void> {

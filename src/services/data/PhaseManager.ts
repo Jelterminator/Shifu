@@ -236,21 +236,31 @@ class PhaseManager {
 
   /**
    * Get current phase based on current time.
+   * Checks both yesterday's night cycle (for pre-sunrise hours) and today's cycle.
    */
   getCurrentPhase(): WuXingPhase {
     try {
-      const phases = this.calculateTodayPhases();
       const now = new Date();
 
-      const currentPhase = phases.find(p => now >= p.startTime && now < p.endTime);
+      // Yesterday's solar cycle covers the night period up to today's sunrise
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      const phasesYesterday = this.calculatePhasesForDate(yesterday);
+
+      // Today's solar cycle covers today's sunrise onwards
+      const phasesToday = this.calculateTodayPhases();
+
+      // Search yesterday's phases first (covers 00:00 → sunrise window)
+      const currentPhase =
+        phasesYesterday.find(p => now >= p.startTime && now < p.endTime) ??
+        phasesToday.find(p => now >= p.startTime && now < p.endTime);
 
       if (currentPhase) return currentPhase;
 
-      // Fallback to last phase if nothing found
-      const lastPhase = phases[phases.length - 1];
-      if (lastPhase) {
-        return lastPhase;
-      }
+      // Fallback to last phase of the combined list
+      const combined = [...phasesYesterday, ...phasesToday];
+      const lastPhase = combined[combined.length - 1];
+      if (lastPhase) return lastPhase;
 
       throw new Error('No phases calculated');
     } catch {

@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
+import { AgendaIcon, BoltIcon, CheckCircleIcon, ListIcon } from '../components/icons/AppIcons';
 import { ListCard } from '../components/ListCard';
 import { AddEditListModal } from '../components/modals/AddEditListModal';
 import { AddEditProjectModal } from '../components/modals/AddEditProjectModal';
@@ -193,7 +194,7 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
 
   const renderEmptyState = (): React.JSX.Element => (
     <View style={styles.emptyState}>
-      <Text style={styles.emptyIcon}>✓</Text>
+      <CheckCircleIcon color={phaseColor} size={64} />
       <Text style={[styles.emptyTitle, { color: colors.text }]}>All tasks complete!</Text>
       <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
         Great work! Add a new task to keep the momentum going.
@@ -223,7 +224,10 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
       >
         {/* 1. Today's Tasks Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>📅 Today&apos;s Tasks</Text>
+          <View style={styles.sectionTitleRow}>
+            <AgendaIcon color={colors.text} size={16} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Today&apos;s Tasks</Text>
+          </View>
           {todayTasks.length > 0 ? (
             <FlatList
               data={todayTasks}
@@ -253,7 +257,10 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
 
         {/* 2. My Lists Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>📋 My Lists</Text>
+          <View style={styles.sectionTitleRow}>
+            <ListIcon color={colors.text} size={16} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>My Lists</Text>
+          </View>
           <FlatList
             data={lists}
             renderItem={({ item }) => (
@@ -281,7 +288,10 @@ export function TasksScreen(_props: TasksScreenProps): React.JSX.Element {
         {urgentTasks.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>⚡ Most Urgent</Text>
+              <View style={styles.sectionTitleRow}>
+                <BoltIcon color={colors.text} size={16} />
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Most Urgent</Text>
+              </View>
             </View>
             <FlatList
               data={urgentTasks}
@@ -387,20 +397,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.s,
   },
+  sectionTitleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    marginBottom: SPACING.s,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: SPACING.s,
   },
   emptyState: {
     padding: SPACING.xl,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: SPACING.xl,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: SPACING.m,
   },
   emptyTitle: {
     fontSize: 20,

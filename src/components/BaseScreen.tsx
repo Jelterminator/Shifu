@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DIMENSIONS } from '../constants/theme';
 import { useThemeStore } from '../stores/themeStore';
 import type { RootStackParamList } from '../types/navigation';
+import { SettingsIcon } from './icons/AppIcons';
 import PhaseClock from './PhaseClock';
 
 /**
@@ -80,7 +81,7 @@ export function BaseScreen({
             accessibilityLabel="Settings"
             accessibilityRole="button"
           >
-            <Text style={styles.settingsIcon}>⚙️</Text>
+            <SettingsIcon color={colors.textSecondary} size={24} />
           </TouchableOpacity>
         )}
       </View>
@@ -112,9 +113,6 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     padding: 8,
-  },
-  settingsIcon: {
-    fontSize: 24,
   },
   content: {
     flex: 1,

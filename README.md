@@ -4,9 +4,9 @@
 
 A React Native application with **offline-first AI capabilities** and sophisticated scheduling, roots in the Wu Xing (Five Elements) philosophy.
 
-**Status:** � Alpha / Local Development - Offline Agents & Heuristic Scheduling Enabled
+**Status:** 🧪 Pre-Beta / Stable for Android & Web
 
-**Note:** Safe and tested for Web (Custom Store Implementation) & Android. iOS pending verification.
+**Note:** Verified stable for **Android** (Native Boot Flow) & **Web** (Custom Store Implementation). iOS pending verification.
 
 ---
 
@@ -20,10 +20,12 @@ A React Native application with **offline-first AI capabilities** and sophistica
 - 🎨 **Dynamic Wu Xing Theming** - Phase-aware color schemes that adapt to solar time.
 - 📍 **Location-Based Solar Calculus** - Accurate Roman hour calculations using sunrise/sunset to determine energy phases.
 - 📅 **SchedulerAI** - Intelligent "Best Fit & Spill" algorithm that generates daily plans respecting your energy phases and boundaries.
-- � **Device Calendar Sync** - Read-only integration with your device's native calendar (Android/iOS).
-- � **Local-First Architecture** - All data lives in SQLite and a local Vector Store for semantic search.
+- 📱 **Device Calendar Sync** - Read-only integration with your device's native calendar (Android/iOS).
+- 💾 **Local-First Architecture** - All data lives in SQLite and a local Vector Store for semantic search.
 - 🛡️ **Respectful Planning** - Automatically avoids scheduling tasks during your defined Sleep and Work blocks.
 - 📝 **Vector-Based Journaling** - Chat with your past self via semantic search over your journal entries.
+- 📦 **Stable Android Startup** - Hardened native boot process with migration safety & background task resilience.
+- 🔍 **Hierarchical RAG** - Multi-level semantic retrieval using daily, weekly, and monthly summaries for massive context awareness.
 
 ---
 
@@ -135,7 +137,8 @@ The core planning engine uses a deterministic "Best Fit & Spill" algorithm:
 ### 💾 Custom State & Storage
 
 - **Store:** A lightweight `useSyncExternalStore` implementation (`src/utils/store.ts`) ensures React 19 compatibility without external state libraries.
-- **Storage:** Hybrid approach using `react-native-mmkv` for fast key-value access and `expo-sqlite` for structured relational data.
+- **Storage:** Hybrid approach using `expo-sqlite` (Native) and `localStorage` (Web) for vector embeddings, with `react-native-mmkv` for fast key-value access.
+- **Stability:** Dedicated Android boot flow ensures schema migrations and native module initialization (FileSystem, TaskManager) complete safely before rendering.
 
 ---
 

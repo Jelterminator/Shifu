@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
+import { LightbulbIcon } from '../components/icons/AppIcons';
 import { ConfirmationModal } from '../components/modals/ConfirmationModal';
 import { BORDER_RADIUS, MOOD_COLORS, SHADOWS, SPACING } from '../constants/theme';
 import { journalRepository } from '../db/repositories/JournalRepository';
@@ -17,6 +18,7 @@ import { useThemeStore } from '../stores/themeStore';
 import { useUserStore } from '../stores/userStore';
 import type { JournalEntry } from '../types/database';
 import type { MainTabScreenProps } from '../types/navigation';
+import { storage } from '../utils/storage';
 
 /**
  * Props for the JournalScreen component
@@ -213,24 +215,35 @@ export function JournalScreen(_props: JournalScreenProps): React.JSX.Element {
     </View>
   );
 
-  const renderAIInsights = (): React.JSX.Element => (
-    <View style={[styles.insightsCard, { backgroundColor: colors.surface }]}>
-      <Text style={[styles.insightsTitle, { color: colors.text }]}>💡 AI Insights</Text>
-      <View style={styles.insightsDivider} />
-      {entries.length > 0 ? (
-        <Text style={[styles.insightsText, { color: colors.textSecondary }]}>
-          {"You've been consistent with your daily reflections. Your mood tends to improve on days"}
-          {' when you complete your morning habits.'}
-        </Text>
-      ) : (
-        <Text style={[styles.insightsText, { color: colors.textSecondary }]}>
-          {
-            'Start journaling regularly to receive personalized insights about your patterns and moods.'
-          }
-        </Text>
-      )}
-    </View>
-  );
+  const renderAIInsights = (): React.JSX.Element => {
+    const aiInsight = storage.getString('journal_insight_text');
+    return (
+      <View style={[styles.insightsCard, { backgroundColor: colors.surface }]}>
+        <View style={styles.insightsTitleRow}>
+          <LightbulbIcon color={colors.text} size={18} />
+          <Text style={[styles.insightsTitle, { color: colors.text, marginLeft: 6 }]}>
+            AI Insights
+          </Text>
+        </View>
+        <View style={styles.insightsDivider} />
+        {aiInsight ? (
+          <Text style={[styles.insightsText, { color: colors.textSecondary }]}>{aiInsight}</Text>
+        ) : entries.length > 0 ? (
+          <Text style={[styles.insightsText, { color: colors.textSecondary }]}>
+            {
+              "You've been consistent with your daily reflections. New insights will appear after your next daily summary."
+            }
+          </Text>
+        ) : (
+          <Text style={[styles.insightsText, { color: colors.textSecondary }]}>
+            {
+              'Start journaling regularly to receive personalized insights about your patterns and moods.'
+            }
+          </Text>
+        )}
+      </View>
+    );
+  };
 
   const handleDeleteEntry = (entry: JournalEntry): void => {
     setEntryToDelete(entry);
@@ -422,6 +435,11 @@ const styles = StyleSheet.create({
     padding: SPACING.m,
     borderRadius: BORDER_RADIUS.medium,
     ...SHADOWS.level1,
+  },
+  insightsTitleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    marginBottom: 0,
   },
   insightsTitle: {
     fontSize: 16,

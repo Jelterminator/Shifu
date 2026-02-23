@@ -5,13 +5,8 @@ import { ConfirmationModal } from '../components/modals/ConfirmationModal';
 import { HabitModal } from '../components/modals/HabitModal';
 import { HabitStatsModal } from '../components/modals/HabitStatsModal';
 
-import {
-  BORDER_RADIUS,
-  PHASE_ICONS,
-  SHADOWS,
-  SPACING,
-  WEEKDAY_ABBREVIATIONS,
-} from '../constants/theme';
+import { PHASE_ICON_COMPONENTS, StreakIcon, TimerIcon } from '../components/icons/AppIcons';
+import { BORDER_RADIUS, SHADOWS, SPACING, WEEKDAY_ABBREVIATIONS } from '../constants/theme';
 import { habitRepository } from '../db/repositories/HabitRepository';
 import { planRepository } from '../db/repositories/PlanRepository';
 import { useThemeStore } from '../stores/themeStore';
@@ -21,11 +16,6 @@ import type { HabitsScreenProps } from '../types/navigation';
 
 export type { HabitsScreenProps };
 
-// Helper function
-const getPhaseIcon = (idealPhase?: string): string => {
-  if (!idealPhase) return '🌳';
-  return PHASE_ICONS[idealPhase] || '🌳';
-};
 export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Element {
   const [loading, setLoading] = useState(true);
   const [weeklyProgress, setWeeklyProgress] = useState({ totalGoal: 0, currentProgress: 0 });
@@ -217,9 +207,17 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
       <View style={[styles.miniCard, { backgroundColor: colors.surface }]}>
         <View style={styles.miniCardContent}>
           <Text style={[styles.miniTitle, { color: colors.text }]}>{item.habit.title}</Text>
-          <Text style={[styles.miniMeta, { color: colors.textSecondary }]}>
-            {getPhaseIcon(item.habit.idealPhase)} {item.habit.minimumSessionMinutes}m
-          </Text>
+          <View style={styles.miniMeta}>
+            {(() => {
+              const PhaseIco =
+                PHASE_ICON_COMPONENTS[item.habit.idealPhase ?? ''] ?? PHASE_ICON_COMPONENTS['WOOD'];
+              if (!PhaseIco) return null;
+              return <PhaseIco color={phaseColor} size={14} />;
+            })()}
+            <Text style={{ color: colors.textSecondary, fontSize: 12, marginLeft: 4 }}>
+              {item.habit.minimumSessionMinutes}m
+            </Text>
+          </View>
         </View>
         <TouchableOpacity onPress={() => void handleToggleCompletion(item.habit)}>
           <View
@@ -292,12 +290,18 @@ export function HabitsScreen({ navigation }: HabitsScreenProps): React.JSX.Eleme
         <TouchableOpacity style={styles.fullCardHeader} onPress={() => openStats(item.habit)}>
           <Text style={[styles.fullTitle, { color: colors.text }]}>{item.habit.title}</Text>
           <View style={styles.statsRow}>
-            <Text style={[styles.fullMeta, { color: colors.textSecondary, marginRight: 12 }]}>
-              🔥 {item.streak}
-            </Text>
-            <Text style={[styles.fullMeta, { color: colors.textSecondary }]}>
-              ⏳ {item.weeklyProgress}/{goal}m
-            </Text>
+            <View style={[styles.statItem, { marginRight: 12 }]}>
+              <StreakIcon color={colors.textSecondary} size={13} />
+              <Text style={[styles.fullMeta, { color: colors.textSecondary, marginLeft: 3 }]}>
+                {item.streak}
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <TimerIcon color={colors.textSecondary} size={13} />
+              <Text style={[styles.fullMeta, { color: colors.textSecondary, marginLeft: 3 }]}>
+                {item.weeklyProgress}/{goal}m
+              </Text>
+            </View>
           </View>
         </TouchableOpacity>
         <View style={styles.historyRow}>
@@ -497,8 +501,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   miniMeta: {
-    fontSize: 12,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     marginTop: 2,
+  },
+  statItem: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
   },
   checkbox: {
     width: 32,

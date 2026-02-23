@@ -74,12 +74,14 @@ export class HeartbeatService {
       await this.runLightMaintenance();
       stepsCompleted.push('light_maintenance');
 
-      // ── Step 4: (Future) Heavy maintenance — gated on charging ──────
-      // const isCharging = await this.isDeviceCharging();
-      // if (isCharging) {
-      //   await this.runHeavyMaintenance();
-      //   stepsCompleted.push('heavy_maintenance');
-      // }
+      // ── Step 4: Heavy maintenance — gated on charging ─────────────────
+      const isCharging = await this.isDeviceCharging();
+      if (isCharging) {
+        await this.runHeavyMaintenance();
+        stepsCompleted.push('heavy_maintenance');
+      } else {
+        stepsCompleted.push('skipped_heavy_not_charging');
+      }
 
       // ── Step 5: Update run metadata ─────────────────────────────────
       const durationMs = Date.now() - start;
@@ -95,6 +97,7 @@ export class HeartbeatService {
       const count = storage.getNumber(HEARTBEAT_COUNT_KEY) ?? 0;
       storage.set(HEARTBEAT_COUNT_KEY, count + 1);
 
+      // eslint-disable-next-line no-console
       console.log(
         `💓 Heartbeat completed in ${durationMs}ms (steps: ${stepsCompleted.join(', ')})`
       );
@@ -136,6 +139,50 @@ export class HeartbeatService {
         metadata   TEXT
       )
     `);
+  }
+
+  /**
+   * Check if the device is currently charging.
+   * On the web or if the check fails, we default to false (safe approach).
+   */
+  private async isDeviceCharging(): Promise<boolean> {
+    if (Platform.OS === 'web') return false;
+    try {
+      const { default: Battery } = await import('expo-battery');
+      const state = await Battery.getBatteryStateAsync();
+      return state === Battery.BatteryState.CHARGING || state === Battery.BatteryState.FULL;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Heavy maintenance that should ONLY run when the device is charging.
+   * This includes loading the AI model and generating hierarchical summaries.
+   */
+  private async runHeavyMaintenance(): Promise<void> {
+    try {
+      // Dynamic import to avoid loading the model logic if not needed
+      const { archiverService } = await import('../ai/ArchiverService');
+
+      // Calculate yesterday's date string (YYYY-MM-DD)
+      // We summarize "yesterday" so we don't accidentally summarize a day while it's still happening
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const dateString = yesterday.toISOString().split('T')[0] || '';
+
+      // Get the current user
+      const users = await db.query<{ id: string }>('SELECT id FROM users LIMIT 1');
+      const user = users && users.length > 0 ? users[0] : undefined;
+      const userId = user?.id;
+      if (typeof userId === 'string') {
+        await archiverService.runDailyArchive(dateString, userId);
+        await archiverService.generateJournalInsights(userId);
+      }
+    } catch (error) {
+      console.error(`[Heartbeat] Heavy maintenance error:`, error);
+      throw error;
+    }
   }
 
   /**

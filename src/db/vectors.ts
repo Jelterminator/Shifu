@@ -108,7 +108,8 @@ class VectorService {
    */
   async reset(): Promise<void> {
     this.isInitialized = false;
-    await this.initialize();
+    await vectorStorage.reset();
+    this.isInitialized = true;
   }
 }
 

@@ -8,8 +8,8 @@
 
 // Re-export everything consumers need
 export {
-  HEARTBEAT_TASK_NAME,
   getHeartbeatStatus,
+  HEARTBEAT_TASK_NAME,
   isHeartbeatRegistered,
   registerHeartbeatTask,
   triggerHeartbeatForTesting,

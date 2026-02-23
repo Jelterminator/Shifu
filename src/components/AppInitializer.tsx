@@ -6,8 +6,10 @@ import { registerHeartbeatTask } from '../services/background';
 import { anchorsService } from '../services/data/Anchors';
 import { phaseManager } from '../services/data/PhaseManager';
 import { notificationService } from '../services/notifications/NotificationService';
+import { useThemeStore } from '../stores/themeStore';
 import { useUserStore } from '../stores/userStore';
 import { storage } from '../utils/storage';
+import { WuXingEmblem } from './icons/WuXingEmblem';
 
 interface Props {
   children: React.ReactNode;
@@ -115,6 +117,15 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
 
           phaseManager.initialize(latitude, longitude, timezone);
 
+          // Immediately sync the theme store with the correct phase now that
+          // phaseManager has been initialized with the real location.
+          try {
+            const currentPhase = phaseManager.getCurrentPhase();
+            useThemeStore.getState().setCurrentPhase(currentPhase);
+          } catch {
+            // silent — theme will stay at defaults
+          }
+
           // Initialize Anchors Service (Works on Web now via localStorage fallback)
           try {
             anchorsService.initialize(latitude, longitude);
@@ -151,7 +162,9 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
   if (!isReady) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#4A7C59" />
+        <WuXingEmblem size={160} />
+        <Text style={styles.splashText}>S H I F U</Text>
+        <ActivityIndicator size="small" color="#4A7C59" style={{ marginTop: 20 }} />
       </View>
     );
   }
@@ -173,8 +186,18 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#121212',
+  },
+  splashText: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '300',
+    letterSpacing: 12,
+    marginTop: 30,
+    marginLeft: 12, // Offset for letter-spacing
   },
 });

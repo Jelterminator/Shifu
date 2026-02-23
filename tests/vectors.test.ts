@@ -33,7 +33,10 @@ jest.mock('../src/services/ai/embedder', () => {
 
 // Mock Platform for web testing
 jest.mock('react-native', () => ({
-  Platform: { OS: 'web' },
+  Platform: {
+    OS: 'web',
+    select: (obj: any) => obj.web || obj.default,
+  },
 }));
 
 // Mock localStorage for web storage tests

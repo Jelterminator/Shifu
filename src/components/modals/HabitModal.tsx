@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { PHASE_ICON_COMPONENTS } from '../../components/icons/AppIcons';
 import {
   BORDER_RADIUS,
   KEYWORDS,
   PHASE_COLORS,
-  PHASE_ICONS,
   PHASES,
   SPACING,
   WEEKDAY_ABBREVIATIONS,
@@ -270,7 +270,19 @@ export const HabitModal: React.FC<HabitModalProps> = ({
                     ]}
                     onPress={() => togglePhase(phase)}
                   >
-                    <Text style={styles.phaseIcon}>{PHASE_ICONS[phase]}</Text>
+                    {(() => {
+                      const PhaseIco = PHASE_ICON_COMPONENTS[phase];
+                      return PhaseIco ? (
+                        <PhaseIco
+                          color={
+                            idealPhase === phase
+                              ? PHASE_COLORS[phase].primary
+                              : colors.textSecondary
+                          }
+                          size={20}
+                        />
+                      ) : null;
+                    })()}
                     <Text style={[styles.phaseText, { color: colors.text }]}>{phase}</Text>
                   </TouchableOpacity>
                 ))}
@@ -425,15 +437,13 @@ const styles = StyleSheet.create({
   phaseOption: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: SPACING.s,
     padding: SPACING.s,
     borderRadius: BORDER_RADIUS.medium,
     borderWidth: 2,
     minWidth: '45%',
   },
-  phaseIcon: {
-    fontSize: 20,
-    marginRight: SPACING.s,
-  },
+
   phaseText: {
     fontSize: 14,
     fontWeight: '600',

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 /**
  * Platform-aware vector storage adapter
  * SQLite for native, localStorage for web
@@ -10,6 +11,10 @@ import type {
   VectorEmbeddingRow,
   VectorQueryResult,
 } from '../types/vectorTypes';
+
+// Provide type declaration for require in this file environments where it's not global
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const require: any;
 
 // =============================================================================
 // Utility Functions
@@ -108,6 +113,9 @@ export interface VectorStorageAdapter {
 
   /** Initialize the storage */
   initialize(): Promise<void>;
+
+  /** Reset for testing */
+  reset(): Promise<void>;
 }
 
 // =============================================================================
@@ -121,13 +129,19 @@ class SqliteVectorStorage implements VectorStorageAdapter {
     if (this.initialized) return;
 
     // Import db lazily to avoid issues on web
-    const { db } = await import('./database');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { db } = require('./database') as typeof import('./database');
     await db.initialize();
     this.initialized = true;
   }
 
   isInitialized(): boolean {
     return this.initialized;
+  }
+
+  async reset(): Promise<void> {
+    this.initialized = false;
+    await this.initialize();
   }
 
   async add(
@@ -138,7 +152,8 @@ class SqliteVectorStorage implements VectorStorageAdapter {
   ): Promise<string> {
     if (!this.initialized) await this.initialize();
 
-    const { db: dbService } = await import('./database');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { db: dbService } = require('./database') as typeof import('./database');
     const id = uuidv4();
 
     // Check if embedding already exists for this entity
@@ -175,7 +190,8 @@ class SqliteVectorStorage implements VectorStorageAdapter {
   ): Promise<VectorQueryResult[]> {
     if (!this.initialized) await this.initialize();
 
-    const { db: dbService } = await import('./database');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { db: dbService } = require('./database') as typeof import('./database');
 
     // Fetch all vectors for user (brute force)
     const rows = await dbService.query<VectorEmbeddingRow>(
@@ -206,7 +222,8 @@ class SqliteVectorStorage implements VectorStorageAdapter {
   ): Promise<VectorEmbedding | null> {
     if (!this.initialized) await this.initialize();
 
-    const { db: dbService } = await import('./database');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { db: dbService } = require('./database') as typeof import('./database');
 
     const rows = await dbService.query<VectorEmbeddingRow>(
       'SELECT * FROM vector_embeddings WHERE entity_type = ? AND entity_id = ?',
@@ -231,7 +248,8 @@ class SqliteVectorStorage implements VectorStorageAdapter {
   async delete(entityType: LinkableEntityType | 'summary', entityId: string): Promise<void> {
     if (!this.initialized) await this.initialize();
 
-    const { db: dbService } = await import('./database');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { db: dbService } = require('./database') as typeof import('./database');
 
     await dbService.execute(
       'DELETE FROM vector_embeddings WHERE entity_type = ? AND entity_id = ?',
@@ -286,6 +304,12 @@ class WebVectorStorage implements VectorStorageAdapter {
     return this.initialized;
   }
 
+  async reset(): Promise<void> {
+    this.initialized = false;
+    this.vectors.clear();
+    await this.initialize();
+  }
+
   private persist(): void {
     const entries = Array.from(this.vectors.values());
     localStorage.setItem(WEB_STORAGE_KEY, JSON.stringify(entries));
@@ -301,7 +325,7 @@ class WebVectorStorage implements VectorStorageAdapter {
 
     const key = `${entityType}:${entityId}`;
     const existing = this.vectors.get(key);
-    const id = existing?.id ?? uuidv4();
+    const id = existing ? existing.id : uuidv4();
 
     const entry: WebVectorEntry = {
       id,
@@ -310,7 +334,7 @@ class WebVectorStorage implements VectorStorageAdapter {
       entityId,
       vectorBase64: float32ToBase64(vector),
       dimensions: vector.length,
-      createdAt: existing?.createdAt ?? new Date().toISOString(),
+      createdAt: existing ? existing.createdAt : new Date().toISOString(),
     };
 
     this.vectors.set(key, entry);
@@ -329,17 +353,16 @@ class WebVectorStorage implements VectorStorageAdapter {
     const results: VectorQueryResult[] = [];
 
     for (const entry of this.vectors.values()) {
-      if (entry.userId !== userId) continue;
-
-      const vector = base64ToFloat32(entry.vectorBase64);
-      const similarity = cosineSimilarity(queryVector, vector);
-
-      results.push({
-        id: entry.id,
-        entityType: entry.entityType,
-        entityId: entry.entityId,
-        similarity,
-      });
+      if (entry.userId === userId) {
+        const vector = base64ToFloat32(entry.vectorBase64);
+        const similarity = cosineSimilarity(queryVector, vector);
+        results.push({
+          id: entry.id,
+          entityType: entry.entityType as LinkableEntityType | 'summary',
+          entityId: entry.entityId,
+          similarity,
+        });
+      }
     }
 
     results.sort((a, b) => b.similarity - a.similarity);
@@ -378,23 +401,11 @@ class WebVectorStorage implements VectorStorageAdapter {
 }
 
 // =============================================================================
-// Factory: Platform-aware storage selection
+// Export Singleton Based on Platform
 // =============================================================================
 
-function createVectorStorage(): VectorStorageAdapter {
-  if (Platform.OS === 'web') {
-    return new WebVectorStorage();
-  }
-  return new SqliteVectorStorage();
-}
-
-// HMR-safe singleton
-const globalStore = globalThis as unknown as {
-  _shifu_vector_storage?: VectorStorageAdapter;
-};
-
-if (!globalStore._shifu_vector_storage) {
-  globalStore._shifu_vector_storage = createVectorStorage();
-}
-
-export const vectorStorage = globalStore._shifu_vector_storage;
+export const vectorStorage: VectorStorageAdapter = Platform.select<VectorStorageAdapter>({
+  ios: new SqliteVectorStorage(),
+  android: new SqliteVectorStorage(),
+  default: new WebVectorStorage(),
+});

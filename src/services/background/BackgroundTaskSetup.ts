@@ -34,26 +34,33 @@ const HEARTBEAT_INTERVAL_MINUTES = 60;
 // ── 1. GLOBAL TASK DEFINITION ───────────────────────────────────────────
 // This MUST be called in the global scope. The callback runs when the OS
 // wakes the app in the background.
-TaskManager.defineTask(HEARTBEAT_TASK_NAME, async () => {
-  try {
-    console.log(`💓 [Heartbeat] Background task triggered at ${new Date().toISOString()}`);
+try {
+  TaskManager.defineTask(HEARTBEAT_TASK_NAME, async () => {
+    try {
+      // eslint-disable-next-line no-console
+      console.log(`💓 [Heartbeat] Background task triggered at ${new Date().toISOString()}`);
 
-    const heartbeat = HeartbeatService.getInstance();
-    const result = await heartbeat.execute();
+      const heartbeat = HeartbeatService.getInstance();
+      const result = await heartbeat.execute();
 
-    if (result.success) {
-      console.log(`💓 [Heartbeat] Completed successfully in ${result.durationMs}ms`);
-      return BackgroundTask.BackgroundTaskResult.Success;
-    } else {
-      console.warn(`💔 [Heartbeat] Failed: ${result.error}`);
+      if (result.success) {
+        // eslint-disable-next-line no-console
+        console.log(`💓 [Heartbeat] Completed successfully in ${result.durationMs}ms`);
+        return BackgroundTask.BackgroundTaskResult.Success;
+      } else {
+        console.warn(`💔 [Heartbeat] Failed: ${result.error}`);
+        return BackgroundTask.BackgroundTaskResult.Failed;
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`💔 [Heartbeat] Uncaught error: ${message}`);
       return BackgroundTask.BackgroundTaskResult.Failed;
     }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(`💔 [Heartbeat] Uncaught error: ${message}`);
-    return BackgroundTask.BackgroundTaskResult.Failed;
-  }
-});
+  });
+} catch (error) {
+  // eslint-disable-next-line no-console
+  console.error('💔 [Heartbeat] Failed to define background task in global scope:', error);
+}
 
 // ── 2. REGISTRATION HELPERS ─────────────────────────────────────────────
 // These can be called from React components or during app initialization.
@@ -64,6 +71,7 @@ TaskManager.defineTask(HEARTBEAT_TASK_NAME, async () => {
  */
 export async function registerHeartbeatTask(): Promise<boolean> {
   if (Platform.OS === 'web') {
+    // eslint-disable-next-line no-console
     console.log('💓 [Heartbeat] Skipping registration on web');
     return false;
   }
@@ -79,6 +87,7 @@ export async function registerHeartbeatTask(): Promise<boolean> {
     // Check if already registered
     const isRegistered = await TaskManager.isTaskRegisteredAsync(HEARTBEAT_TASK_NAME);
     if (isRegistered) {
+      // eslint-disable-next-line no-console
       console.log('💓 [Heartbeat] Task already registered');
       return true;
     }
@@ -88,6 +97,7 @@ export async function registerHeartbeatTask(): Promise<boolean> {
       minimumInterval: HEARTBEAT_INTERVAL_MINUTES,
     });
 
+    // eslint-disable-next-line no-console
     console.log(`💓 [Heartbeat] Task registered (interval: ${HEARTBEAT_INTERVAL_MINUTES} min)`);
     return true;
   } catch (error) {
@@ -107,6 +117,7 @@ export async function unregisterHeartbeatTask(): Promise<void> {
     const isRegistered = await TaskManager.isTaskRegisteredAsync(HEARTBEAT_TASK_NAME);
     if (isRegistered) {
       await BackgroundTask.unregisterTaskAsync(HEARTBEAT_TASK_NAME);
+      // eslint-disable-next-line no-console
       console.log('💓 [Heartbeat] Task unregistered');
     }
   } catch (error) {
@@ -149,6 +160,7 @@ export async function triggerHeartbeatForTesting(): Promise<void> {
 
   try {
     await BackgroundTask.triggerTaskWorkerForTestingAsync();
+    // eslint-disable-next-line no-console
     console.log('💓 [Heartbeat] Test trigger sent');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
