@@ -2,8 +2,6 @@ import { version } from '../../package.json';
 
 /**
  * Centralized configuration and environment variable management
- * Loads secrets safely at build time and runtime
- * Never logs sensitive values
  */
 
 type Environment = 'development' | 'staging' | 'production';
@@ -58,18 +56,6 @@ function buildConfig(): AppConfig {
 
 // Create singleton config instance
 export const config: AppConfig = buildConfig();
-
-/**
- * Validate required configuration
- * Call once at app startup (in App.tsx or similar)
- */
-export function validateConfig(): void {
-  const errors: string[] = [];
-
-  if (errors.length > 0) {
-    throw new Error(`Configuration validation failed:\n${errors.join('\n')}`);
-  }
-}
 
 /**
  * Return safe config for logging/debugging

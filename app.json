@@ -2,7 +2,7 @@
   "expo": {
     "name": "Shifu",
     "slug": "shifu",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#121212"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "scheme": "shifu",
     "ios": {
       "supportsTablet": true,
@@ -30,10 +28,7 @@
       },
       "package": "com.shifu.app",
       "versionCode": 1,
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
-      ]
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -47,10 +42,7 @@
       "expo-background-task",
       "expo-task-manager"
     ],
-    "transpilePackages": [
-      "@huggingface/transformers",
-      "@xenova/transformers"
-    ],
+    "transpilePackages": ["@huggingface/transformers", "@xenova/transformers"],
     "extra": {
       "eas": {
         "projectId": "65d41095-1adb-4070-b7ce-d9c2ea27b350"

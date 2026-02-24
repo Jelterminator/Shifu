@@ -308,7 +308,7 @@ export function JournalScreen(_props: JournalScreenProps): React.JSX.Element {
         {renderTodaysEntry()}
 
         <TouchableOpacity
-          style={styles.previousEntriesButton}
+          style={[styles.previousEntriesButton, { backgroundColor: colors.surface }]}
           onPress={() => setShowPreviousEntries(!showPreviousEntries)}
         >
           <Text style={[styles.previousEntriesText, { color: phaseColor }]}>
@@ -417,7 +417,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   previousEntriesButton: {
-    paddingVertical: SPACING.m,
+    padding: SPACING.m,
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.medium,
+    marginTop: SPACING.m,
+    marginBottom: SPACING.m,
   },
   previousEntriesText: {
     fontSize: 14,

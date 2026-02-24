@@ -1,15 +1,5 @@
 // Polyfill crypto.getRandomValues for uuid on native platforms
-import * as Crypto from 'expo-crypto';
-
-if (!global.crypto) {
-  Object.defineProperty(global, 'crypto', {
-    value: {
-      getRandomValues: (array: Uint8Array) => Crypto.getRandomValues(array),
-    },
-    writable: true,
-    configurable: true,
-  });
-}
+import 'react-native-get-random-values';
 
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';

@@ -3,7 +3,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { DIMENSIONS } from '../constants/theme';
+import { DIMENSIONS, SPACING } from '../constants/theme';
 import { useThemeStore } from '../stores/themeStore';
 import type { RootStackParamList } from '../types/navigation';
 import { SettingsIcon } from './icons/AppIcons';
@@ -25,6 +25,8 @@ export interface BaseScreenProps {
   navigation?: unknown;
   /** Optional Footer component */
   footer?: React.ReactNode;
+  /** Whether to add top padding to the content area (default: true) */
+  withTopPadding?: boolean;
 }
 
 /**
@@ -42,6 +44,7 @@ export function BaseScreen({
   showSettings = true,
   onSettingsPress,
   footer,
+  withTopPadding = true,
 }: BaseScreenProps): React.JSX.Element {
   const colors = useThemeStore(state => state.colors);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -85,7 +88,7 @@ export function BaseScreen({
           </TouchableOpacity>
         )}
       </View>
-      <View style={styles.content}>{children}</View>
+      <View style={[styles.content, withTopPadding && styles.topPadding]}>{children}</View>
       {footer}
       <PhaseClock />
     </SafeAreaView>
@@ -116,6 +119,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  topPadding: {
+    paddingTop: SPACING.m,
   },
 });
 

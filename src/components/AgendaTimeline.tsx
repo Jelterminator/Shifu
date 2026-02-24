@@ -14,6 +14,7 @@ import {
 import { BORDER_RADIUS } from '../constants/theme';
 import { type WuXingPhase } from '../services/data/PhaseManager';
 import { useThemeStore } from '../stores/themeStore';
+import { LIST_ICONS, PHASE_ICON_COMPONENTS } from './icons/AppIcons';
 
 const { height: WINDOW_HEIGHT } = Dimensions.get('window');
 const HOUR_HEIGHT = 120;
@@ -29,6 +30,8 @@ export interface TimelineEvent {
   completed?: boolean;
   color?: string;
   startTime?: Date;
+  icon?: string;
+  phase?: string;
 }
 
 interface VisualSegment {
@@ -41,6 +44,8 @@ interface VisualSegment {
   completed: boolean;
   color: string;
   startTime: number; // ms timestamp
+  icon?: string;
+  phase?: string;
 }
 
 interface AgendaTimelineProps {
@@ -192,6 +197,8 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
         completed: !!plan.completed,
         color: plan.color || '#FFF',
         startTime: plan.startTime.getTime(),
+        icon: plan.icon,
+        phase: plan.phase,
       });
     });
 
@@ -513,6 +520,22 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
           disabled={!!isDragging}
         >
           <View style={styles.titleRow}>
+            {seg.type === 'habit' && seg.phase && (
+              <View style={styles.iconContainer}>
+                {(() => {
+                  const PhaseIcon = PHASE_ICON_COMPONENTS[seg.phase];
+                  return PhaseIcon ? <PhaseIcon size={18} color={seg.color} /> : null;
+                })()}
+              </View>
+            )}
+            {seg.type === 'task' && seg.icon && (
+              <View style={styles.iconContainer}>
+                {(() => {
+                  const IconComp = LIST_ICONS[seg.icon];
+                  return IconComp ? <IconComp size={18} color={isDark ? '#FFF' : '#000'} /> : null;
+                })()}
+              </View>
+            )}
             <Text
               style={[
                 styles.eventTitle,
@@ -742,7 +765,10 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+  },
+  iconContainer: {
+    marginRight: 8,
   },
   checkbox: {
     width: 24,

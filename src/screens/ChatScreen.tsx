@@ -1,14 +1,14 @@
 /* eslint-disable */
 import React, { useRef, useState } from 'react';
 import {
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
 import { BotIcon, SendIcon } from '../components/icons/AppIcons';

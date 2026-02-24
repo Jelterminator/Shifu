@@ -10,6 +10,13 @@ jest.mock('../../src/db/database', () => ({
   },
 }));
 
+jest.mock('../../src/db/vectors', () => ({
+  vectorService: {
+    addEmbedding: jest.fn().mockResolvedValue('embed-id'),
+    delete: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 jest.mock('../../src/utils/id', () => ({
   generateId: jest.fn(),
 }));

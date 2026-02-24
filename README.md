@@ -47,9 +47,6 @@ cd shifu
 # Install dependencies
 npm install
 
-# Validate environment configuration
-# Note: Ensure .env.local is set up. This script checks for required variables.
-node scripts/check-env.js
 ```
 
 ### Development
@@ -104,8 +101,6 @@ shifu/
 │   │   ├── store.ts            # Custom lightweight store implementation
 │   │   └── sunTimeUtils.ts     # Solar calculation helpers
 │   └── ...
-├── scripts/
-│   └── check-env.js            # Environment validation
 ```
 
 ---

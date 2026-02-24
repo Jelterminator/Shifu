@@ -14,12 +14,16 @@ import { CalendarView } from '../components/CalendarView';
 import { AppointmentModal } from '../components/modals/AppointmentModal';
 import { PHASE_COLORS, SHADOWS } from '../constants/theme';
 import { appointmentRepository } from '../db/repositories/AppointmentRepository';
+import { habitRepository } from '../db/repositories/HabitRepository';
 import { planRepository } from '../db/repositories/PlanRepository';
+import { taskRepository } from '../db/repositories/TaskRepository';
 import { schedulerAI } from '../services/ai/SchedulerAI';
 import { anchorsService } from '../services/data/Anchors';
 import { phaseManager, type WuXingPhase } from '../services/data/PhaseManager';
+import { type ListConfiguration, useListStore } from '../stores/listStore';
 import { useThemeStore } from '../stores/themeStore';
 import { useUserStore } from '../stores/userStore';
+import type { Habit, Task } from '../types/database';
 import type { MainTabScreenProps } from '../types/navigation';
 
 export type AgendaScreenProps = MainTabScreenProps<'Agenda'>;
@@ -28,6 +32,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
   const colors = useThemeStore(state => state.colors);
   const phaseColor = useThemeStore(state => state.phaseColor);
   const { user } = useUserStore();
+  const { lists } = useListStore();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,14 +61,16 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
         try {
           const rawAnchors = anchorsService.getAnchorsForDate(selectedDate);
           fixed = fixed.concat(
-            rawAnchors.map(a => ({
-              id: a.id,
-              title: a.title,
-              startTime: a.startTime,
-              durationMinutes: a.durationMinutes,
-              type: 'anchor',
-              color: PHASE_COLORS.METAL.primary,
-            }))
+            rawAnchors.map(
+              (a): TimelineEvent => ({
+                id: a.id,
+                title: a.title,
+                startTime: a.startTime,
+                durationMinutes: a.durationMinutes,
+                type: 'anchor',
+                color: PHASE_COLORS.METAL.primary,
+              })
+            )
           );
         } catch {
           // silent fail for anchors
@@ -75,7 +82,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
         try {
           const appointments = await appointmentRepository.getForDate(user.id, selectedDate);
           fixed = fixed.concat(
-            appointments.map(a => {
+            appointments.map((a): TimelineEvent => {
               const duration = (a.endTime.getTime() - a.startTime.getTime()) / (1000 * 60);
               return {
                 id: a.id,
@@ -101,17 +108,56 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
           endOfDay.setHours(23, 59, 59, 999);
 
           const plans = await planRepository.getForDateRange(user.id, startOfDay, endOfDay);
-          flexible = plans
-            .filter(
-              p =>
-                !(
-                  (p.sourceType === 'habit' && p.name === 'Habit Completion') ||
-                  (p.sourceType === 'task' && p.name === 'Task Completion')
-                )
-            )
+          const filteredPlans = plans.filter(
+            p =>
+              !(
+                (p.sourceType === 'habit' && p.name === 'Habit Completion') ||
+                (p.sourceType === 'task' && p.name === 'Task Completion')
+              )
+          );
+
+          // Build cache for habits and tasks
+          const habitIds = [
+            ...new Set(filteredPlans.filter(p => p.sourceType === 'habit').map(p => p.sourceId)),
+          ].filter(Boolean) as string[];
+          const taskIds = [
+            ...new Set(filteredPlans.filter(p => p.sourceType === 'task').map(p => p.sourceId)),
+          ].filter(Boolean) as string[];
+
+          const habitMap: Record<string, Habit> = {};
+          const taskMap: Record<string, Task> = {};
+
+          await Promise.all([
+            ...habitIds.map(async id => {
+              const h = await habitRepository.getById(id);
+              if (h) habitMap[id] = h;
+            }),
+            ...taskIds.map(async id => {
+              const t = await taskRepository.getById(id);
+              if (t) taskMap[id] = t;
+            }),
+          ]);
+
+          flexible = filteredPlans
             .sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
-            .map(p => {
+            .map((p): TimelineEvent => {
               const duration = (p.endTime.getTime() - p.startTime.getTime()) / 60000;
+              let icon: string | undefined;
+              let phase: string | undefined;
+
+              if (p.sourceType === 'habit' && p.sourceId) {
+                const habit = habitMap[p.sourceId];
+                phase = habit?.idealPhase;
+              } else if (p.sourceType === 'task' && p.sourceId) {
+                const task = taskMap[p.sourceId];
+                if (task) {
+                  const list = lists.find((l: ListConfiguration) =>
+                    task.selectedKeywords.some((k: string) => l.keywords.includes(k))
+                  );
+                  icon = list?.icon || 'default';
+                }
+              }
+
               return {
                 id: p.id,
                 title: p.name,
@@ -121,6 +167,8 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
                 color:
                   p.sourceType === 'habit' ? PHASE_COLORS.WOOD.primary : PHASE_COLORS.EARTH.primary,
                 startTime: p.startTime,
+                icon,
+                phase,
               };
             });
         } catch {
@@ -136,7 +184,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, user]);
+  }, [selectedDate, user, lists]);
 
   const handleGenerateSchedule = async (): Promise<void> => {
     try {
@@ -189,7 +237,7 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
 
   const handleToggleComplete = async (id: string): Promise<void> => {
     // 1. Optimistic Update
-    const updatedPlans = flexiblePlans.map(p => {
+    const updatedPlans = flexiblePlans.map((p): TimelineEvent => {
       if (p.id === id) {
         return { ...p, completed: !p.completed };
       }
@@ -218,7 +266,12 @@ export function AgendaScreen({ navigation }: AgendaScreenProps): React.JSX.Eleme
   };
 
   return (
-    <BaseScreen title="Agenda" showSettings={true} onSettingsPress={handleSettingsPress}>
+    <BaseScreen
+      title="Agenda"
+      showSettings={true}
+      onSettingsPress={handleSettingsPress}
+      withTopPadding={false}
+    >
       <View style={styles.header}>
         <CalendarView selectedDate={selectedDate} onSelectDate={setSelectedDate} />
       </View>

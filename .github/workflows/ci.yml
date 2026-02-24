@@ -1,18 +1,21 @@
 ﻿name: CI/CD Pipeline
 
+permissions:
+  contents: read
+
 on:
   push:
-    branches: [ master, develop ]
+    branches: [master, develop]
   pull_request:
-    branches: [ master ]
+    branches: [master]
   workflow_dispatch:
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: '20'
 
 jobs:
-  lint-and-type-check:
-    name: Lint & Type Check
+  validate:
+    name: Validate Codebase
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,7 +25,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
@@ -36,85 +39,25 @@ jobs:
       - name: Prettier format check
         run: npm run format:check
 
-  unit-tests:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Check for console.log statements
+        run: |
+          if grep -r "console\." --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" src/ | grep -v "console.warn\|console.error"; then
+            echo "❌ Found console.log statements in source code"
+            exit 1
+          else
+            echo "✅ No console.log statements found"
+          fi
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+      - name: Check for TypeScript any types
+        run: |
+          if grep -r ": any" --include="*.ts" --include="*.tsx" src/ | grep -v "// eslint-disable-next-line"; then
+            echo "❌ Found TypeScript 'any' types in source code"
+            exit 1
+          else
+            echo "✅ No TypeScript 'any' types found"
+          fi
 
       - name: Run Jest tests
         run: npm run test:ci
         env:
           CI: true
-
-  build-test:
-    name: Build Configuration Test
-    runs-on: ubuntu-latest
-    # Only run on main branches to save CI minutes
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
-
-      # Create .env.local with secrets injected from GitHub
-      - name: Create .env.local (with secrets)
-        run: |
-          cat > .env.local << EOF
-          APP_ENV=staging
-          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-
-          APP_VERSION=${{ github.ref_name }}-${{ github.run_number }}
-          BUILD_NUMBER=${{ github.run_number }}
-          EOF
-        # Note: GOOGLE_CLIENT_SECRET intentionally not included in client builds
-
-      # Validate environment before proceeding
-      - name: Validate environment configuration
-        run: node scripts/check-env.js
-
-      - name: Type check configuration imports
-        run: npm run type-check
-
-      # Clean up secrets after use
-      - name: Clean up secrets
-        if: always()
-        run: rm -f .env.local
-
-      - name: ✅ Build validation passed
-        run: echo "Environment and configuration are valid"
-
-  final-validation:
-    name: Final Validation
-    needs: [lint-and-type-check, unit-tests]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Check job status
-        run: |
-          if [[ "${{ needs.lint-and-type-check.result }}" == "success" && \
-                "${{ needs.unit-tests.result }}" == "success" ]]; then
-            echo "✅ All CI checks passed!"
-            exit 0
-          else
-            echo "❌ Some checks failed"
-            exit 1
-          fi

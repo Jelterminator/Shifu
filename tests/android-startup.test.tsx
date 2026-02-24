@@ -83,7 +83,7 @@ jest.mock('../src/services/notifications/NotificationService', () => ({
 
 jest.mock('../src/stores/userStore', () => {
   const mockState = { user: null, setUser: jest.fn() };
-  const mockStore = (selector: any) => {
+  const mockStore = (selector: any): any => {
     return typeof selector === 'function' ? selector(mockState) : mockState;
   };
   mockStore.getState = () => mockState;
@@ -94,7 +94,7 @@ import { render, waitFor } from '@testing-library/react-native';
 import { Platform, Text } from 'react-native';
 import { AppInitializer } from '../src/components/AppInitializer';
 
-const ChildContent = () => <Text testID="app-content">App Loaded</Text>;
+const ChildContent = (): React.JSX.Element => <Text testID="app-content">App Loaded</Text>;
 
 describe('[Android] AppInitializer startup', () => {
   beforeEach(() => {

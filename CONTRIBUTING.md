@@ -1,7 +1,6 @@
 # Contributing to Shifu
 
-Thank you for your interest in contributing to Shifu! We welcome contributions from the community
-properly.
+Thank you for your interest in contributing to Shifu! We welcome contributions from the community.
 
 ## Getting Started
 
@@ -15,20 +14,17 @@ properly.
     ```bash
     npm install
     ```
-4.  **Set up environment**: Copy `.env.example` to `.env` and fill in necessary values (though for
-    core logic, defaults often suffice).
-    ```bash
-    cp .env.example .env
-    ```
+4.  **Environment**: Shifu is designed to be zero-config for core development. Most features work
+    out of the box without environment variables.
 
 ## Development Workflow
 
-- **Branching**: specific feature branches off `develop` (e.g., `feature/amazing-feature` or
+- **Branching**: Create specific feature branches off `master` (e.g., `feature/amazing-feature` or
   `fix/critical-bug`).
 - **Commits**: Use clear, descriptive commit messages.
-- **Linting**: Ensure your code passes linting checks before pushing.
+- **Validation**: Ensure your code passes all checks before pushing.
   ```bash
-  npm run lint:check
+  npm run validate
   ```
 - **Testing**: Add or update tests for your changes. Run the test suite to ensure no regressions.
   ```bash
@@ -41,12 +37,12 @@ properly.
 - `src/screens`: Application screens.
 - `src/services`: Core business logic and AI services.
 - `src/db`: Database schema and repositories.
-- `src/stores`: Zustand state management.
+- `src/stores`: Custom lightweight state management.
 
 ## Pull Requests
 
 1.  Push your branch to your fork.
-2.  Open a Pull Request against the `develop` branch.
+2.  Open a Pull Request against the `master` branch.
 3.  Describe your changes clearly in the PR description.
 4.  Ensure all CI checks pass.
 

@@ -5,4 +5,5 @@ module.exports = {
   __esModule: true,
   default: null,
   __INTERNAL_VIEW_CONFIG: {},
+  Commands: {},
 };

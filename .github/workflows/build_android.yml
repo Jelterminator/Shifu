@@ -1,5 +1,8 @@
 name: Build Android APK (EAS Hosted)
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [master, develop]
@@ -20,17 +23,17 @@ on:
           - production
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: '20'
 
 jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
-    
+
     # We set environment variables globally for this job now
     env:
       # This token is crucial for all EAS CLI commands
-      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }} 
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -40,7 +43,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
@@ -50,15 +53,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
-
-      - name: Create .env.local
-        run: |
-          cat > .env.local << EOF
-          APP_ENV=production
-          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-          APP_VERSION=${{ github.ref_name }}
-          BUILD_NUMBER=${{ github.run_number }}
-          EOF
 
       - name: Determine build profile
         id: profile
@@ -76,9 +70,11 @@ jobs:
       # --- HOSTED EAS BUILD STEPS ---
 
       - name: Start hosted EAS build and wait for completion
-        # This command runs on the GitHub runner, initiates the build on Expo's cloud, 
+        # This command runs on the GitHub runner, initiates the build on Expo's cloud,
         # and crucially, waits for it to finish and downloads the artifact locally.
         run: |
+          # Inject APP_ENV based on profile to compensate for lack of .env
+          export APP_ENV=${{ steps.profile.outputs.profile }}
           eas build --platform android \
             --profile ${{ steps.profile.outputs.profile }} \
             --non-interactive 
