@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import {
+    ActivityIndicator,
+    Alert,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db/database';
 import { registerHeartbeatTask } from '../services/background';
@@ -171,12 +180,39 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
   }
 
   if (initError) {
-    // In dev, show the error. In prod, maybe show a generic error or toast.
-    console.warn('⚠️ App running with initialization errors:', initError);
     return (
-      <View style={styles.container}>
-        <Text style={{ color: 'red', margin: 20 }}>Initialization Error: {initError}</Text>
-        {children}
+      <View style={[styles.container, { padding: 40 }]}>
+        <Text style={[styles.splashText, { color: '#E63946', fontSize: 18, letterSpacing: 4 }]}>
+          INITIALIZATION ERROR
+        </Text>
+        <ScrollView style={styles.errorScroll}>
+          <Text style={styles.errorTextDetail}>{initError}</Text>
+        </ScrollView>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => {
+            setInitError(null);
+            setIsReady(false);
+          }}
+        >
+          <Text style={styles.retryButtonText}>Retry Initialization</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: '#333', marginTop: 10 }]}
+          onPress={() => {
+            void (async () => {
+              try {
+                storage.clear();
+                // Forcing a reload after clearing storage is often better
+                Alert.alert('Purged', 'Local storage has been cleared. Please restart the app.');
+              } catch (e) {
+                Alert.alert('Error', 'Failed to clear storage');
+              }
+            })();
+          }}
+        >
+          <Text style={styles.retryButtonText}>Clear Storage & Reset</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -200,5 +236,31 @@ const styles = StyleSheet.create({
     letterSpacing: 12,
     marginTop: 30,
     marginLeft: 12, // Offset for letter-spacing
+  },
+  errorScroll: {
+    maxHeight: 200,
+    marginVertical: 20,
+    width: '100%',
+    backgroundColor: '#1a1a1a',
+    borderRadius: 8,
+    padding: 10,
+  },
+  errorTextDetail: {
+    color: '#E63946',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 12,
+  },
+  retryButton: {
+    backgroundColor: '#4A7C59',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    width: '100%',
+    alignItems: 'center',
+  },
+  retryButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

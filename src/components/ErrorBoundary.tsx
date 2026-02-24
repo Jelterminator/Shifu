@@ -47,6 +47,20 @@ export class ErrorBoundary extends Component<Props, State> {
             <TouchableOpacity style={styles.button} onPress={this.resetError}>
               <Text style={styles.buttonText}>Try Again</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#333', marginTop: 10 }]}
+              onPress={() => {
+                void (async () => {
+                  const { storage } = await import('../utils/storage');
+                  storage.clear();
+                  // We can't easily restart the app from JS, but clearing storage is the first step
+                  alert('Storage cleared. Please force-close and restart the app.');
+                })();
+              }}
+            >
+              <Text style={styles.buttonText}>Reset App Data</Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
       );

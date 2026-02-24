@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shifu.app",
-      "buildNumber": "1",
+      "buildNumber": "3",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Shifu needs your location to determine your local phase of the day (Morning, Afternoon, Evening) based on sun position."
       }
@@ -27,8 +27,16 @@
         "backgroundColor": "#121212"
       },
       "package": "com.shifu.app",
-      "versionCode": 1,
-      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
+      "versionCode": 3,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "WAKE_LOCK",
+        "RECEIVE_BOOT_COMPLETED",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_DATA_SYNC"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
