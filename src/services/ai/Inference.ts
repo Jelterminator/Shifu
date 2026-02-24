@@ -16,7 +16,10 @@ interface Tokenizer {
     messages: Message[],
     options: { tokenize: boolean; add_generation_prompt: boolean }
   ) => string;
-  (text: string, options: { return_tensor: string }): Promise<{
+  (
+    text: string,
+    options: { return_tensor: string }
+  ): Promise<{
     input_ids: ort.Tensor;
     attention_mask: ort.Tensor;
   }>;

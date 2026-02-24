@@ -405,11 +405,22 @@ describe('[Android] NotificationService', () => {
     expect(notificationService).toBeDefined();
   });
 
-  it('setNotificationHandler is called on construction', () => {
+  it('does NOT call setNotificationHandler on construction', () => {
     const notifications = jest.requireMock('expo-notifications');
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     require('../src/services/notifications/NotificationService');
+    expect(notifications.setNotificationHandler).not.toHaveBeenCalled();
+  });
+
+  it('calls setNotificationHandler and setNotificationCategoryAsync after initialize()', async () => {
+    const notifications = jest.requireMock('expo-notifications');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { notificationService } = require('../src/services/notifications/NotificationService');
+
+    await notificationService.initialize();
+
     expect(notifications.setNotificationHandler).toHaveBeenCalled();
+    expect(notifications.setNotificationCategoryAsync).toHaveBeenCalled();
   });
 
   it('requestPermissions() returns true when permissions are granted', async () => {
@@ -433,16 +444,6 @@ describe('[Android] NotificationService', () => {
     const { notificationService } = require('../src/services/notifications/NotificationService');
     const result = await notificationService.requestPermissions();
     expect(result).toBe(false);
-  });
-
-  it('setNotificationCategoryAsync is called for Android notification categories', async () => {
-    const notifications = jest.requireMock('expo-notifications');
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    require('../src/services/notifications/NotificationService');
-
-    // Wait for the async registerCategories() call in the constructor
-    await new Promise(resolve => setTimeout(resolve, 0));
-    expect(notifications.setNotificationCategoryAsync).toHaveBeenCalled();
   });
 });
 

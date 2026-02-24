@@ -103,8 +103,8 @@ function convertPath(pathTag, element) {
   const sWidth = strokeWidthMatch
     ? strokeWidthMatch[1]
     : style.match(/stroke-width:([^;]+)/)
-    ? style.match(/stroke-width:([^;]+)/)[1]
-    : null;
+      ? style.match(/stroke-width:([^;]+)/)[1]
+      : null;
   if (sWidth) {
     attributes.push(`strokeWidth="${sWidth}"`);
   }

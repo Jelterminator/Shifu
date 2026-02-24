@@ -133,8 +133,9 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
             // silent
           }
 
-          // Request Notification Permissions
+          // Initialize Notification Service
           try {
+            await notificationService.initialize();
             await notificationService.requestPermissions();
           } catch {
             // silent

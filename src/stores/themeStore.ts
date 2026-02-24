@@ -1,5 +1,4 @@
-import { PHASE_COLORS } from '../constants/theme';
-import { phaseManager, type WuXingPhase } from '../services/data/PhaseManager';
+import { type WuXingPhase } from '../services/data/PhaseManager';
 import { storage } from '../utils/storage';
 import { createStore } from '../utils/store';
 
@@ -58,17 +57,11 @@ const calculateIsDark = (mode: ThemeMode, phase: WuXingPhase | null): boolean =>
 export const useThemeStore = createStore<ThemeState>((set, get) => {
   // Initialize state derived from phase and storage
   const mode = (storage.get('theme_mode') as ThemeMode) || 'phase-aware';
-  let currentPhase: WuXingPhase | null = null;
-  let phaseColor = DEFAULT_COLOR;
-
-  try {
-    currentPhase = phaseManager.getCurrentPhase();
-    if (currentPhase) {
-      phaseColor = PHASE_COLORS[currentPhase.name].primary;
-    }
-  } catch {
-    // Fallback to defaults
-  }
+  // ⚠️ CRITICAL: Do NOT call phaseManager.getCurrentPhase() here.
+  // It triggers sun-time calculations that can crash on Android if native bridge is not ready.
+  // AppInitializer will call setCurrentPhase() once everything is initialized.
+  const currentPhase: WuXingPhase | null = null;
+  const phaseColor = DEFAULT_COLOR;
 
   const isDark = calculateIsDark(mode, currentPhase);
   const colors = getColors(isDark, phaseColor);

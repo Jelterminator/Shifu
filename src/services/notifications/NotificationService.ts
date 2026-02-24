@@ -8,10 +8,10 @@ const ACTION_OK = 'OK';
 
 export class NotificationService {
   constructor() {
-    this.configure();
+    // ⚠️ Defer configuration to explicit initialize() call to avoid boot-time crashes
   }
 
-  private configure(): void {
+  async initialize(): Promise<void> {
     Notifications.setNotificationHandler({
       handleNotification: async () =>
         Promise.resolve({
@@ -24,7 +24,7 @@ export class NotificationService {
     });
 
     if (Platform.OS !== 'web') {
-      void this.registerCategories();
+      await this.registerCategories();
     }
   }
 
