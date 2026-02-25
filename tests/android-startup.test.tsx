@@ -122,16 +122,16 @@ describe('[Android] AppInitializer startup', () => {
   it('shows initialization error screen when DB throws', async () => {
     mockDbInitialize.mockRejectedValueOnce(new Error('SQLite failed on Android'));
 
-    const { getByText, queryByTestId } = render(
+    const { findByText, queryByTestId } = render(
       <AppInitializer>
         <ChildContent />
       </AppInitializer>
     );
 
     // Should NOT show child content
-    await waitFor(() => expect(getByText('INITIALIZATION ERROR')).toBeTruthy());
+    expect(await findByText('INITIALIZATION ERROR')).toBeTruthy();
     expect(queryByTestId('app-content')).toBeFalsy();
-    expect(getByText('SQLite failed on Android')).toBeTruthy();
+    expect(await findByText('SQLite failed on Android')).toBeTruthy();
   });
 
   it('calls db.initialize() on boot', async () => {

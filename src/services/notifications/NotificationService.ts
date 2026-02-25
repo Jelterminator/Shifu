@@ -1,4 +1,4 @@
-import * as Notifications from 'expo-notifications';
+﻿import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 const CATEGORY_PLAN_REMINDER = 'PLAN_REMINDER';
 const CATEGORY_ANCHOR_REMINDER = 'ANCHOR_REMINDER';
@@ -8,7 +8,7 @@ const ACTION_OK = 'OK';
 
 export class NotificationService {
   constructor() {
-    // ⚠️ Defer configuration to explicit initialize() call to avoid boot-time crashes
+    // [STABILITY] Defer configuration to explicit initialize() call to avoid boot-time crashes
   }
 
   async initialize(): Promise<void> {

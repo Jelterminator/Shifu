@@ -5,8 +5,9 @@ interface WebExtractor {
   (text: string, options: { pooling: string; normalize: boolean }): Promise<unknown>;
 }
 
-// Configure environment
-configureTransformers();
+// -----------------------------------------------------------------------------
+// Embedder (Web Implementation)
+// -----------------------------------------------------------------------------
 
 /** Default embedding dimension (MiniLM-L6-v2 uses 384) */
 export const EMBEDDING_DIMENSIONS = 384;
@@ -30,6 +31,10 @@ class WebEmbedder implements Embedder {
 
   async init(): Promise<void> {
     if (this.extractor) return;
+
+    // Configure environment lazily
+    configureTransformers();
+
     // Use 'feature-extraction' pipeline
     // This automatically handles tokenization and inference.
     this.extractor = (await (pipeline as unknown as (...args: unknown[]) => Promise<unknown>)(

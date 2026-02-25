@@ -1,4 +1,4 @@
-import { AutoTokenizer } from '@xenova/transformers';
+﻿import { AutoTokenizer } from '@xenova/transformers';
 import * as ort from 'onnxruntime-react-native';
 
 import { AI_MODELS } from '../../constants/AIConfig';
@@ -11,15 +11,19 @@ import type { Message } from './PromptBuilder';
 
 const MAX_NEW_TOKENS = 256;
 
-interface Tokenizer {
+type TokenizeFn = (
+  text: string,
+  options: { return_tensor: string }
+) => Promise<{
+  input_ids: ort.Tensor;
+  attention_mask: ort.Tensor;
+}>;
+
+interface Tokenizer extends TokenizeFn {
   apply_chat_template: (
     messages: Message[],
     options: { tokenize: boolean; add_generation_prompt: boolean }
   ) => string;
-  (text: string, options: { return_tensor: string }): Promise<{
-    input_ids: ort.Tensor;
-    attention_mask: ort.Tensor;
-  }>;
   eos_token_id: number;
   decode: (tokens: number[]) => string;
 }

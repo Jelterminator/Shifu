@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Android Platform Simulation Tests
  *
  * These tests simulate an Android environment by overriding Platform.OS = 'android'
@@ -10,7 +10,7 @@
  * crashes its constructor on Android.
  */
 
-// ── Platform override ────────────────────────────────────────────────────────
+// â”€â”€ Platform override â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // MUST be before any other imports that use Platform.OS
 jest.mock('react-native', () => {
   const ReactNative = jest.requireActual('react-native');
@@ -19,7 +19,7 @@ jest.mock('react-native', () => {
   return ReactNative;
 });
 
-// ── DB mock ──────────────────────────────────────────────────────────────────
+// â”€â”€ DB mock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // NOTE: jest.mock() is hoisted above const declarations, so we cannot reference
 // closure variables inside the factory. Instead, we use a global store.
 const mockDbInitialize = jest.fn().mockResolvedValue(undefined);
@@ -48,7 +48,7 @@ jest.mock('../src/db/database', () => ({
   DatabaseService: jest.fn(),
 }));
 
-// ── Storage mock (MMKV unavailable on Android emulator / Expo Go) ────────────
+// â”€â”€ Storage mock (MMKV unavailable on Android emulator / Expo Go) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const mockStorageCache = new Map<string, string>();
 
 jest.mock('../src/utils/storage', () => ({
@@ -71,7 +71,7 @@ jest.mock('../src/utils/storage', () => ({
   },
 }));
 
-// ── External service mocks ────────────────────────────────────────────────────
+// â”€â”€ External service mocks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 jest.mock('../src/services/ai/Inference', () => ({
   generateResponse: jest.fn().mockResolvedValue('Mocked summary'),
   unloadModel: jest.fn().mockResolvedValue(undefined),
@@ -84,7 +84,7 @@ jest.mock('../src/services/ai/ArchiverService', () => ({
   },
 }));
 
-// ── Imports (after mocks) ─────────────────────────────────────────────────────
+// â”€â”€ Imports (after mocks) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import { Platform } from 'react-native';
 import { vectorStorage } from '../src/db/vectorStorage';
 import {
@@ -96,9 +96,9 @@ import {
 import { HeartbeatService } from '../src/services/background/HeartbeatService';
 import { storage } from '../src/utils/storage';
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 1. Platform Detection
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 describe('[Android] Platform detection', () => {
   it('reports Platform.OS as android', () => {
     expect(Platform.OS).toBe('android');
@@ -110,9 +110,9 @@ describe('[Android] Platform detection', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 2. Storage: MMKV fallback — should not crash even when NativeModule is absent
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// 2. Storage: MMKV fallback â€” should not crash even when NativeModule is absent
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 describe('[Android] Storage adapter', () => {
   beforeEach(() => {
     mockStorageCache.clear();
@@ -155,9 +155,9 @@ describe('[Android] Storage adapter', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 3. Database: initialize() and basic operations on Android
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 describe('[Android] DatabaseService initialization', () => {
   beforeEach(() => {
     mockDbInitialize.mockReset().mockResolvedValue(undefined);
@@ -202,9 +202,9 @@ describe('[Android] DatabaseService initialization', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 4. Background Task Setup: registration on Android
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 describe('[Android] BackgroundTaskSetup', () => {
   it('HEARTBEAT_TASK_NAME is defined', () => {
     expect(HEARTBEAT_TASK_NAME).toBe('shifu-heartbeat');
@@ -237,9 +237,9 @@ describe('[Android] BackgroundTaskSetup', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 5. HeartbeatService: core execution flow on Android
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 describe('[Android] HeartbeatService execution', () => {
   let service: HeartbeatService;
 
@@ -299,7 +299,7 @@ describe('[Android] HeartbeatService execution', () => {
     });
 
     const result = await service.execute();
-    // heavy or skipped — just should not crash
+    // heavy or skipped â€” just should not crash
     expect(result.success).toBe(true);
   });
 
@@ -320,9 +320,9 @@ describe('[Android] HeartbeatService execution', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 6. VectorStorage: SQLite adapter is selected on Android
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 describe('[Android] VectorStorage adapter selection', () => {
   it('is not the WebVectorStorage (no localStorage dependency)', () => {
     // On Android, vectorStorage should be the SqliteVectorStorage.
@@ -390,16 +390,16 @@ describe('[Android] VectorStorage adapter selection', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 7. NotificationService: Android-specific category registration
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 describe('[Android] NotificationService', () => {
   beforeEach(() => {
     jest.resetModules();
   });
 
   it('does not crash when instantiated on Android', () => {
-    // expo-notifications is mocked — this should not throw
+    // expo-notifications is mocked â€” this should not throw
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { notificationService } = require('../src/services/notifications/NotificationService');
     expect(notificationService).toBeDefined();
@@ -447,9 +447,9 @@ describe('[Android] NotificationService', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 8. AppInitializer: smoke-test the boot initialization flow on Android
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 describe('[Android] AppInitializer boot flow', () => {
   it('can import AppInitializer without crash', () => {
     // If any Android-specific import crashes at module load time, this test catches it
@@ -460,7 +460,7 @@ describe('[Android] AppInitializer boot flow', () => {
   it('can import RootNavigator without crash (NavigationContainer side effects)', () => {
     // Only test the import itself since rendering requires AppContainer which needs react-native internals
     expect(() => {
-      // Dynamic require-style check — if the module fails to load, it will throw
+      // Dynamic require-style check â€” if the module fails to load, it will throw
       try {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         require('../src/navigation/RootNavigator');

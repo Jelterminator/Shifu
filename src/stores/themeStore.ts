@@ -1,4 +1,4 @@
-import { type WuXingPhase } from '../services/data/PhaseManager';
+﻿import { type WuXingPhase } from '../services/data/PhaseManager';
 import { storage } from '../utils/storage';
 import { createStore } from '../utils/store';
 
@@ -57,7 +57,7 @@ const calculateIsDark = (mode: ThemeMode, phase: WuXingPhase | null): boolean =>
 export const useThemeStore = createStore<ThemeState>((set, get) => {
   // Initialize state derived from phase and storage
   const mode = (storage.get('theme_mode') as ThemeMode) || 'phase-aware';
-  // ⚠️ CRITICAL: Do NOT call phaseManager.getCurrentPhase() here.
+  // [STABILITY] CRITICAL: Do NOT call phaseManager.getCurrentPhase() here.
   // It triggers sun-time calculations that can crash on Android if native bridge is not ready.
   // AppInitializer will call setCurrentPhase() once everything is initialized.
   const currentPhase: WuXingPhase | null = null;

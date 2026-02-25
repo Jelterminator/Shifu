@@ -50,7 +50,7 @@
       "expo-background-task",
       "expo-task-manager"
     ],
-    "transpilePackages": ["@huggingface/transformers", "@xenova/transformers"],
+    "transpilePackages": ["@xenova/transformers"],
     "extra": {
       "eas": {
         "projectId": "65d41095-1adb-4070-b7ce-d9c2ea27b350"

@@ -1,0 +1,20 @@
+﻿
+> shifu@0.1.8 format:check
+> prettier --check "**/*.{js,jsx,ts,tsx,json,md,yml,yaml}"
+
+Checking formatting...
+node.exe : [warn] 
+src\services\ai\Inference.ts
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified:  
+   ([warn] src\services\ai\Inference.ts:Str  
+  ing) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandE 
+   rror
+ 
+[warn] Code style issues found in the above 
+file. Forgot to run Prettier?

@@ -7,9 +7,6 @@ import { configureTransformers } from './transformersConfig';
 // Inference Engine (Web Implementation)
 // -----------------------------------------------------------------------------
 
-// Initialize transfomers
-configureTransformers();
-
 interface WebGenerator {
   (input: Message[] | string, options: Record<string, unknown>): Promise<unknown>;
   tokenizer: unknown;
@@ -25,6 +22,9 @@ const MODEL_PRIORITY = [AI_MODELS.THE_BRAIN_HIGH, AI_MODELS.THE_BRAIN_MID, AI_MO
  */
 async function loadModel(): Promise<void> {
   if (generator) return;
+
+  // Initialize transfomers lazily
+  configureTransformers();
 
   for (const modelConfig of MODEL_PRIORITY) {
     try {

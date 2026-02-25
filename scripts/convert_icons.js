@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 
 const svgDir = path.join(__dirname, '../assets/images');
@@ -100,11 +100,16 @@ function convertPath(pathTag, element) {
     attributes.push(`stroke=${resolvedStroke}`);
   }
 
-  const sWidth = strokeWidthMatch
-    ? strokeWidthMatch[1]
-    : style.match(/stroke-width:([^;]+)/)
-    ? style.match(/stroke-width:([^;]+)/)[1]
-    : null;
+  let sWidth = null;
+  if (strokeWidthMatch) {
+    sWidth = strokeWidthMatch[1];
+  } else {
+    const styleSWidthMatch = style.match(/stroke-width:([^;]+)/);
+    if (styleSWidthMatch) {
+      sWidth = styleSWidthMatch[1];
+    }
+  }
+
   if (sWidth) {
     attributes.push(`strokeWidth="${sWidth}"`);
   }

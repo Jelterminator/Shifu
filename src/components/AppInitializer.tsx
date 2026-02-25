@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db/database';
@@ -25,8 +25,10 @@ interface Props {
 }
 
 export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElement => {
-  const [isReady, setIsReady] = useState(false);
-  const [initError, setInitError] = useState<string | null>(null);
+  const [initStatus, setInitStatus] = useState<{ isReady: boolean; error: string | null }>({
+    isReady: false,
+    error: null,
+  });
   const user = useUserStore(state => state.user);
 
   useEffect(() => {
@@ -132,7 +134,7 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
             const currentPhase = phaseManager.getCurrentPhase();
             useThemeStore.getState().setCurrentPhase(currentPhase);
           } catch {
-            // silent — theme will stay at defaults
+            // silent â€” theme will stay at defaults
           }
 
           // Initialize Anchors Service (Works on Web now via localStorage fallback)
@@ -154,22 +156,21 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
           try {
             await registerHeartbeatTask();
           } catch {
-            // silent — background tasks may not be available on all devices
+            // silent â€” background tasks may not be available on all devices
           }
         }
 
-        setIsReady(true);
+        setInitStatus({ isReady: true, error: null });
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        setInitError(errorMessage);
-        setIsReady(true);
+        setInitStatus({ isReady: true, error: errorMessage });
       }
     };
 
     void initialize();
   }, [user]);
 
-  if (!isReady) {
+  if (!initStatus.isReady) {
     return (
       <View style={styles.container}>
         <WuXingEmblem size={160} />
@@ -179,20 +180,19 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
     );
   }
 
-  if (initError) {
+  if (initStatus.error) {
     return (
       <View style={[styles.container, { padding: 40 }]}>
         <Text style={[styles.splashText, { color: '#E63946', fontSize: 18, letterSpacing: 4 }]}>
           INITIALIZATION ERROR
         </Text>
         <ScrollView style={styles.errorScroll}>
-          <Text style={styles.errorTextDetail}>{initError}</Text>
+          <Text style={styles.errorTextDetail}>{initStatus.error}</Text>
         </ScrollView>
         <TouchableOpacity
           style={styles.retryButton}
           onPress={() => {
-            setInitError(null);
-            setIsReady(false);
+            setInitStatus({ isReady: false, error: null });
           }}
         >
           <Text style={styles.retryButtonText}>Retry Initialization</Text>
@@ -200,15 +200,13 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
         <TouchableOpacity
           style={[styles.retryButton, { backgroundColor: '#333', marginTop: 10 }]}
           onPress={() => {
-            void (async () => {
-              try {
-                storage.clear();
-                // Forcing a reload after clearing storage is often better
-                Alert.alert('Purged', 'Local storage has been cleared. Please restart the app.');
-              } catch (e) {
-                Alert.alert('Error', 'Failed to clear storage');
-              }
-            })();
+            try {
+              storage.clear();
+              // Forcing a reload after clearing storage is often better
+              Alert.alert('Purged', 'Local storage has been cleared. Please restart the app.');
+            } catch (e) {
+              Alert.alert('Error', 'Failed to clear storage');
+            }
           }}
         >
           <Text style={styles.retryButtonText}>Clear Storage & Reset</Text>
