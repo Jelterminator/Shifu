@@ -6,7 +6,8 @@
 .env.staging.local
 
 # Android build
-android/
+android/app/build
+app/
 
 # Jest test artifacts
 .jest/
