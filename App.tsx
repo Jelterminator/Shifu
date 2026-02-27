@@ -1,4 +1,3 @@
-
 // Polyfill crypto.getRandomValues for uuid on native platforms
 import 'react-native-get-random-values/index';
 

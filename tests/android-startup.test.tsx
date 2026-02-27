@@ -27,8 +27,8 @@ jest.mock('react-native', () => {
   const React = require('react');
   const ActualRN = jest.requireActual('react-native');
 
-  const mockComponent = (name: string) => {
-    const Component = (props: any) => React.createElement(name, props);
+  const mockComponent = (name: string): React.FC<any> => {
+    const Component = (props: any): React.JSX.Element => React.createElement(name, props);
     Component.displayName = name;
     return Component;
   };
@@ -58,8 +58,8 @@ jest.mock('react-native', () => {
 
 jest.mock('react-native-svg', () => {
   const React = require('react');
-  const mockComponent = (name: string) => {
-    const Component = (props: any) => React.createElement(name, props);
+  const mockComponent = (name: string): React.FC<any> => {
+    const Component = (props: any): React.JSX.Element => React.createElement(name, props);
     Component.displayName = name;
     return Component;
   };

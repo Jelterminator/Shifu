@@ -34,32 +34,45 @@ const HEARTBEAT_INTERVAL_MINUTES = 60;
 // ── 1. GLOBAL TASK DEFINITION ───────────────────────────────────────────
 // This MUST be called in the global scope. The callback runs when the OS
 // wakes the app in the background.
-try {
-  TaskManager.defineTask(HEARTBEAT_TASK_NAME, async () => {
-    try {
-      // eslint-disable-next-line no-console
-      console.log(`💓 [Heartbeat] Background task triggered at ${new Date().toISOString()}`);
+const defineBackgroundTasks = (): void => {
+  try {
+    TaskManager.defineTask(
+      HEARTBEAT_TASK_NAME,
+      async (): Promise<BackgroundTask.BackgroundTaskResult> => {
+        try {
+          // eslint-disable-next-line no-console
+          console.log(`💓 [Heartbeat] Background task triggered at ${new Date().toISOString()}`);
 
-      const heartbeat = HeartbeatService.getInstance();
-      const result = await heartbeat.execute();
+          const heartbeat = HeartbeatService.getInstance();
+          const result = await heartbeat.execute();
 
-      if (result.success) {
-        // eslint-disable-next-line no-console
-        console.log(`💓 [Heartbeat] Completed successfully in ${result.durationMs}ms`);
-        return BackgroundTask.BackgroundTaskResult.Success;
-      } else {
-        console.warn(`💔 [Heartbeat] Failed: ${result.error}`);
-        return BackgroundTask.BackgroundTaskResult.Failed;
+          if (result.success) {
+            // eslint-disable-next-line no-console
+            console.log(`💓 [Heartbeat] Completed successfully in ${result.durationMs}ms`);
+            return BackgroundTask.BackgroundTaskResult.Success;
+          } else {
+            console.warn(`💔 [Heartbeat] Failed: ${result.error}`);
+            return BackgroundTask.BackgroundTaskResult.Failed;
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(`💔 [Heartbeat] Uncaught error: ${message}`);
+          return BackgroundTask.BackgroundTaskResult.Failed;
+        }
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error(`💔 [Heartbeat] Uncaught error: ${message}`);
-      return BackgroundTask.BackgroundTaskResult.Failed;
-    }
-  });
-} catch (error) {
-  // eslint-disable-next-line no-console
-  console.error('💔 [Heartbeat] Failed to define background task in global scope:', error);
+    );
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('💔 [Heartbeat] Failed to define background task in global scope:', error);
+  }
+};
+
+// SAFEGUARD: Do not block the UI thread or crash the bridge on Android boot.
+// TaskManager.defineTask can be heavy on startup for Android when interacting with the native bridge.
+if (Platform.OS === 'android') {
+  setTimeout(defineBackgroundTasks, 1000); // 1 second delay
+} else {
+  defineBackgroundTasks();
 }
 
 // ── 2. REGISTRATION HELPERS ─────────────────────────────────────────────

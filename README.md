@@ -77,11 +77,19 @@ This project uses libraries with custom native code bindings, including:
 
 Because of these dependencies, **Shifu cannot be run inside the standard Expo Go app**. 
 
-To run the project on a device or emulator, you must:
-1. Use a **Custom Development Client** (created via `npx expo run:android` or `npx expo run:ios`).
-2. Build the app locally using the native scripts: `npm run android` or `npm run ios`.
+To run the project on a device or emulator, you must build a **Custom Development Client**:
 
-Running via `npm run start` and scanning with Expo Go will result in an immediate crash during native module initialization.
+```bash
+# For Android
+npx expo run:android
+
+# For iOS
+npx expo run:ios
+```
+
+⚠️ **Do not use Expo Go**: Running via `npx expo start` and scanning with the Expo Go app will result in a "Grey Screen of Death" and a crash (`Cannot read property 'install' of null`) because the native ONNX binaries are missing.
+
+⚠️ **Do not manually link ONNX**: Expo autolinks `onnxruntime-react-native` automatically. Do not add `withOnnxruntime.js` to `app.json` or manually call `add(ai.onnxruntime.reactnative.OnnxruntimePackage())` in `MainApplication.kt`, as this will cause a duplicate native module override crash.
 
 ---
 
