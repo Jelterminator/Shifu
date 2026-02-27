@@ -10,17 +10,69 @@
 jest.mock(
   '@testing-library/react-native/src/helpers/host-component-names',
   () => ({
-    getHostComponentNames: jest.fn(() => ({ Text: 'Text', TextInput: 'TextInput', View: 'View' })),
+    getHostComponentNames: jest.fn(() => ({
+      Text: 'Text',
+      TextInput: 'TextInput',
+      View: 'View',
+      ScrollView: 'ScrollView',
+      ActivityIndicator: 'ActivityIndicator',
+      TouchableOpacity: 'TouchableOpacity',
+    })),
   }),
   { virtual: true }
 );
 
-// ── Platform override (MUST be first) ───────────────────────────────────────
+// ── Platform override and host component mocks ──────────────────────────────
 jest.mock('react-native', () => {
-  const ReactNative = jest.requireActual('react-native');
-  ReactNative.Platform.OS = 'android';
-  ReactNative.Platform.select = (obj: any) => obj.android ?? obj.default;
-  return ReactNative;
+  const React = require('react');
+  const ActualRN = jest.requireActual('react-native');
+
+  const mockComponent = (name: string) => {
+    const Component = (props: any) => React.createElement(name, props);
+    Component.displayName = name;
+    return Component;
+  };
+
+  return {
+    Platform: {
+      OS: 'android',
+      select: (obj: any) => {
+        if ('android' in obj) return obj.android;
+        if ('native' in obj) return obj.native;
+        return obj.default;
+      },
+    },
+    StyleSheet: ActualRN.StyleSheet,
+    Alert: ActualRN.Alert,
+    View: mockComponent('View'),
+    Text: mockComponent('Text'),
+    Image: mockComponent('Image'),
+    TextInput: mockComponent('TextInput'),
+    ActivityIndicator: mockComponent('ActivityIndicator'),
+    ScrollView: mockComponent('ScrollView'),
+    TouchableOpacity: mockComponent('TouchableOpacity'),
+    Modal: mockComponent('Modal'),
+    Switch: mockComponent('Switch'),
+  };
+});
+
+jest.mock('react-native-svg', () => {
+  const React = require('react');
+  const mockComponent = (name: string) => {
+    const Component = (props: any) => React.createElement(name, props);
+    Component.displayName = name;
+    return Component;
+  };
+  return {
+    Svg: mockComponent('Svg'),
+    Path: mockComponent('Path'),
+    Circle: mockComponent('Circle'),
+    G: mockComponent('G'),
+    Rect: mockComponent('Rect'),
+    Defs: mockComponent('Defs'),
+    LinearGradient: mockComponent('LinearGradient'),
+    Stop: mockComponent('Stop'),
+  };
 });
 
 // ── DB mock ──────────────────────────────────────────────────────────────────
@@ -120,7 +172,7 @@ describe('[Android] AppInitializer startup', () => {
   });
 
   it('shows initialization error screen when DB throws', async () => {
-    mockDbInitialize.mockRejectedValueOnce(new Error('SQLite failed on Android'));
+    mockDbInitialize.mockRejectedValue(new Error('SQLite failed on Android'));
 
     const { findByText, queryByTestId } = render(
       <AppInitializer>

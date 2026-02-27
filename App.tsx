@@ -1,5 +1,6 @@
+
 // Polyfill crypto.getRandomValues for uuid on native platforms
-import 'react-native-get-random-values';
+import 'react-native-get-random-values/index';
 
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';

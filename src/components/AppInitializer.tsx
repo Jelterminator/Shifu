@@ -154,7 +154,14 @@ export const AppInitializer: React.FC<Props> = ({ children }): React.ReactElemen
 
           // Register background heartbeat task (Android WorkManager / iOS BGTaskScheduler)
           try {
-            await registerHeartbeatTask();
+            // SAFEGUARD: Do not block the UI thread or crash the bridge on Android boot
+            if (Platform.OS === 'android') {
+              setTimeout(() => {
+                registerHeartbeatTask().catch(e => console.warn(e));
+              }, 1000); // 1 second delay
+            } else {
+              await registerHeartbeatTask();
+            }
           } catch {
             // silent â€” background tasks may not be available on all devices
           }
