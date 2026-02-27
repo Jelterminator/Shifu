@@ -5,6 +5,9 @@
 .env.production.local
 .env.staging.local
 
+# Android build
+android/
+
 # Jest test artifacts
 .jest/
 coverage/
