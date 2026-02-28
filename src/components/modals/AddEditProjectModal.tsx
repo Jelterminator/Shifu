@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { BORDER_RADIUS, KEYWORDS, SHADOWS, SPACING } from '../../constants';
 // Note: imports adjusted to match existing file structure if needed, or assuming constants/index exports them.
@@ -196,7 +196,7 @@ export function AddEditProjectModal({
               {project ? 'Edit Project' : 'New Project'}
             </Text>
             <TouchableOpacity onPress={onClose}>
-              <Text style={[styles.closeButton, { color: colors.textSecondary }]}>✕</Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 16 }}>✕ Close</Text>
             </TouchableOpacity>
           </View>
 
@@ -208,8 +208,8 @@ export function AddEditProjectModal({
                 styles.input,
                 {
                   color: colors.text,
-                  borderColor: colors.border,
                   backgroundColor: colors.background,
+                  borderColor: colors.textSecondary,
                 },
               ]}
               value={title}
@@ -226,8 +226,8 @@ export function AddEditProjectModal({
                 styles.input,
                 {
                   color: colors.text,
-                  borderColor: colors.border,
                   backgroundColor: colors.background,
+                  borderColor: colors.textSecondary,
                 },
               ]}
               value={deadlineText}
@@ -244,8 +244,8 @@ export function AddEditProjectModal({
                 styles.textArea,
                 {
                   color: colors.text,
-                  borderColor: colors.border,
                   backgroundColor: colors.background,
+                  borderColor: colors.textSecondary,
                 },
               ]}
               value={notes}
@@ -353,7 +353,9 @@ export function AddEditProjectModal({
                 ]}
                 onPress={handleDelete}
               >
-                <Text style={{ color: '#FF3B30', fontWeight: '600' }}>Delete Project</Text>
+                <Text style={{ color: '#FF3B30', fontWeight: '600', fontSize: 16 }}>
+                  Delete Project
+                </Text>
               </TouchableOpacity>
             )}
 
@@ -420,16 +422,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: SPACING.l,
+    paddingHorizontal: SPACING.s,
   },
   title: {
     fontSize: 20,
-    fontWeight: '600',
-  },
-  closeButton: {
-    fontSize: 24,
-    padding: SPACING.xs,
+    fontWeight: '700',
   },
   form: {
+    flexShrink: 1,
     marginBottom: SPACING.l,
   },
   label: {
@@ -461,11 +461,11 @@ const styles = StyleSheet.create({
   keywordsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: SPACING.s,
+    justifyContent: 'space-between',
   },
   keywordChip: {
     width: '31%',
-    flexGrow: 1,
+    marginBottom: SPACING.s,
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { BORDER_RADIUS, KEYWORDS, SHADOWS, SPACING } from '../../constants';
 import { taskRepository } from '../../db/repositories/TaskRepository';
@@ -162,7 +162,7 @@ export function AddEditTaskModal({
               {task ? 'Edit Task' : 'New Task'}
             </Text>
             <TouchableOpacity onPress={onClose}>
-              <Text style={[styles.closeButton, { color: colors.textSecondary }]}>✕</Text>
+              <Text style={{ color: colors.textSecondary, fontSize: 16 }}>✕ Close</Text>
             </TouchableOpacity>
           </View>
 
@@ -174,8 +174,8 @@ export function AddEditTaskModal({
                 styles.input,
                 {
                   color: colors.text,
-                  borderColor: colors.border,
                   backgroundColor: colors.background,
+                  borderColor: colors.textSecondary,
                 },
               ]}
               value={title}
@@ -248,8 +248,8 @@ export function AddEditTaskModal({
                     styles.input,
                     {
                       color: colors.text,
-                      borderColor: colors.border,
                       backgroundColor: colors.background,
+                      borderColor: colors.textSecondary,
                     },
                   ]}
                   value={effortMinutes}
@@ -281,16 +281,16 @@ export function AddEditTaskModal({
 
             {/* Notes */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>Notes</Text>
-            <TextInput
-              style={[
-                styles.input,
-                styles.textArea,
-                {
-                  color: colors.text,
-                  borderColor: colors.border,
-                  backgroundColor: colors.background,
-                },
-              ]}
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.textArea,
+                  {
+                    color: colors.text,
+                    backgroundColor: colors.background,
+                    borderColor: colors.textSecondary,
+                  },
+                ]}
               value={notes}
               onChangeText={setNotes}
               multiline
@@ -377,14 +377,19 @@ export function AddEditTaskModal({
             </TouchableOpacity>
           )}
 
-          {task && (
-            <TouchableOpacity
-              style={[styles.saveButton, { backgroundColor: 'transparent', marginTop: SPACING.s }]}
-              onPress={handleDelete}
-            >
-              <Text style={{ color: '#FF3B30', fontWeight: '600' }}>Delete Task</Text>
-            </TouchableOpacity>
-          )}
+            {task && (
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  { backgroundColor: 'transparent', marginTop: SPACING.s },
+                ]}
+                onPress={handleDelete}
+              >
+                <Text style={{ color: '#FF3B30', fontWeight: '600', fontSize: 16 }}>
+                  Delete Task
+                </Text>
+              </TouchableOpacity>
+            )}
         </View>
       </View>
 
@@ -419,16 +424,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: SPACING.l,
+    paddingHorizontal: SPACING.s,
   },
   title: {
     fontSize: 20,
-    fontWeight: '600',
-  },
-  closeButton: {
-    fontSize: 24,
-    padding: SPACING.xs,
+    fontWeight: '700',
   },
   form: {
+    flexShrink: 1,
     marginBottom: SPACING.l,
   },
   label: {
@@ -449,11 +452,11 @@ const styles = StyleSheet.create({
   keywordsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: SPACING.s,
+    justifyContent: 'space-between',
   },
   keywordChip: {
     width: '31%',
-    flexGrow: 1,
+    marginBottom: SPACING.s,
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,

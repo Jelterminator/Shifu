@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 
 /**
  * Theme constants for the Shifu app
@@ -174,5 +174,5 @@ export const PHASES = ['WOOD', 'FIRE', 'EARTH', 'METAL', 'WATER'] as const;
  * Component dimensions
  */
 export const DIMENSIONS = {
-  BAR_HEIGHT: 60,
+  BAR_HEIGHT: Dimensions.get('window').height * 0.1,
 } as const;

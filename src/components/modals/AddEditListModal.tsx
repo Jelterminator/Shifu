@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { BORDER_RADIUS, DAYS, KEYWORDS, PHASES, SPACING } from '../../constants';
 import { useListStore } from '../../stores/listStore';
@@ -116,15 +116,22 @@ export function AddEditListModal({
             {initialListId ? 'Edit List' : 'New List'}
           </Text>
           <TouchableOpacity onPress={onClose}>
-            <Text style={{ color: colors.textSecondary }}>Cancel</Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 16 }}>✕ Close</Text>
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Name</Text>
+        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={styles.content}>
+          <View style={styles.section}>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Name</Text>
             <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+              style={[
+                styles.input,
+                {
+                  color: colors.text,
+                  backgroundColor: colors.background,
+                  borderColor: colors.textSecondary,
+                },
+              ]}
               value={name}
               onChangeText={setName}
               placeholder="e.g. Work Projects"
@@ -132,8 +139,8 @@ export function AddEditListModal({
             />
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Icon</Text>
+          <View style={styles.section}>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Icon</Text>
             <View style={styles.iconPickerRow}>
               {LIST_ICON_KEYS.map(({ key, label }) => {
                 const IconComp = LIST_ICONS[key];
@@ -230,8 +237,8 @@ export function AddEditListModal({
             </View>
           </View>
 
-          <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Keywords</Text>
+          <View style={styles.section}>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Keywords</Text>
             <View style={styles.keywordsContainer}>
               {KEYWORDS.map(keyword => {
                 const isSelected = keywords.includes(keyword);
@@ -316,7 +323,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   content: {
     padding: SPACING.m,
@@ -389,11 +396,11 @@ const styles = StyleSheet.create({
   keywordsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: SPACING.s,
+    justifyContent: 'space-between',
   },
   keywordChip: {
     width: '31%',
-    flexGrow: 1,
+    marginBottom: SPACING.s,
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,

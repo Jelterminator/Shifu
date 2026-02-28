@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Location from 'expo-location';
 import React, { useState } from 'react';
-import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useThemeStore } from '../../stores/themeStore';
@@ -71,9 +71,6 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation, route }) => {
       }
     }
 
-    // Default to defaults if still missing (last resort, though we ideally want user input)
-    // We won't block if they are missing, but LoadingSetupScreen will use defaults.
-
     setUser({
       ...user,
       latitude,
@@ -103,101 +100,103 @@ export const LocationSetupScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: 16, backgroundColor: colors.background }}>
-      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: colors.text }}>
-        📍 Your Location
-      </Text>
-
-      <Text style={{ marginBottom: 24, fontSize: 16, color: colors.textSecondary }}>
-        We need your location to calculate solar phases and prayer times.
-      </Text>
-
-      <TouchableOpacity
-        onPress={() => void handleDetectLocation()}
-        disabled={loading}
-        style={{
-          backgroundColor: colors.primary,
-          padding: 16,
-          borderRadius: 8,
-          marginBottom: 24,
-        }}
-      >
-        <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 16, fontWeight: '600' }}>
-          {loading ? 'Detecting...' : 'Detect Automatically'}
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16, color: colors.text }}>
+          📍 Your Location
         </Text>
-      </TouchableOpacity>
 
-      <Text style={{ marginBottom: 8, fontWeight: '600', color: colors.text }}>
-        Or enter manually:
-      </Text>
-
-      <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
-        <View style={{ flex: 1 }}>
-          <Text style={{ marginBottom: 4, fontSize: 12, color: colors.textSecondary }}>
-            Latitude
-          </Text>
-          <TextInput
-            placeholder="e.g. 52.3"
-            placeholderTextColor={colors.textSecondary}
-            value={manualLat}
-            onChangeText={setManualLat}
-            keyboardType="numeric"
-            style={inputStyle}
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ marginBottom: 4, fontSize: 12, color: colors.textSecondary }}>
-            Longitude
-          </Text>
-          <TextInput
-            placeholder="e.g. 4.9"
-            placeholderTextColor={colors.textSecondary}
-            value={manualLong}
-            onChangeText={setManualLong}
-            keyboardType="numeric"
-            style={inputStyle}
-          />
-        </View>
-      </View>
-
-      <Text style={{ marginBottom: 8, fontWeight: '600', color: colors.text }}>
-        City (Optional)
-      </Text>
-      <TextInput
-        placeholder="City Name"
-        placeholderTextColor={colors.textSecondary}
-        value={city}
-        onChangeText={setCity}
-        style={{
-          ...inputStyle,
-          marginBottom: 16,
-        }}
-      />
-
-      <Text style={{ marginBottom: 8, fontWeight: '600', color: colors.text }}>Timezone:</Text>
-      <TextInput
-        value={timezone}
-        onChangeText={setTimezone}
-        placeholder="e.g. Europe/Amsterdam"
-        placeholderTextColor={colors.textSecondary}
-        style={{
-          ...inputStyle,
-          marginBottom: 32,
-        }}
-      />
-
-      <TouchableOpacity
-        onPress={handleContinue}
-        style={{
-          backgroundColor: colors.primary,
-          padding: 16,
-          borderRadius: 8,
-        }}
-      >
-        <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '600', fontSize: 16 }}>
-          {isEditing ? 'Save Changes' : 'Continue →'}
+        <Text style={{ marginBottom: 24, fontSize: 16, color: colors.textSecondary }}>
+          We need your location to calculate solar phases and prayer times.
         </Text>
-      </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => void handleDetectLocation()}
+          disabled={loading}
+          style={{
+            backgroundColor: colors.primary,
+            padding: 16,
+            borderRadius: 8,
+            marginBottom: 24,
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 16, fontWeight: '600' }}>
+            {loading ? 'Detecting...' : 'Detect Automatically'}
+          </Text>
+        </TouchableOpacity>
+
+        <Text style={{ marginBottom: 8, fontWeight: '600', color: colors.text }}>
+          Or enter manually:
+        </Text>
+
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ marginBottom: 4, fontSize: 12, color: colors.textSecondary }}>
+              Latitude
+            </Text>
+            <TextInput
+              placeholder="e.g. 52.3"
+              placeholderTextColor={colors.textSecondary}
+              value={manualLat}
+              onChangeText={setManualLat}
+              keyboardType="numeric"
+              style={inputStyle}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ marginBottom: 4, fontSize: 12, color: colors.textSecondary }}>
+              Longitude
+            </Text>
+            <TextInput
+              placeholder="e.g. 4.9"
+              placeholderTextColor={colors.textSecondary}
+              value={manualLong}
+              onChangeText={setManualLong}
+              keyboardType="numeric"
+              style={inputStyle}
+            />
+          </View>
+        </View>
+
+        <Text style={{ marginBottom: 8, fontWeight: '600', color: colors.text }}>
+          City (Optional)
+        </Text>
+        <TextInput
+          placeholder="City Name"
+          placeholderTextColor={colors.textSecondary}
+          value={city}
+          onChangeText={setCity}
+          style={{
+            ...inputStyle,
+            marginBottom: 16,
+          }}
+        />
+
+        <Text style={{ marginBottom: 8, fontWeight: '600', color: colors.text }}>Timezone:</Text>
+        <TextInput
+          value={timezone}
+          onChangeText={setTimezone}
+          placeholder="e.g. Europe/Amsterdam"
+          placeholderTextColor={colors.textSecondary}
+          style={{
+            ...inputStyle,
+            marginBottom: 32,
+          }}
+        />
+
+        <TouchableOpacity
+          onPress={handleContinue}
+          style={{
+            backgroundColor: colors.primary,
+            padding: 16,
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ color: '#FFFFFF', textAlign: 'center', fontWeight: '600', fontSize: 16 }}>
+            {isEditing ? 'Save Changes' : 'Continue →'}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 };

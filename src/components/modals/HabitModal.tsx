@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { PHASE_ICON_COMPONENTS } from '../../components/icons/AppIcons';
 import {
-  BORDER_RADIUS,
-  KEYWORDS,
-  PHASE_COLORS,
-  PHASES,
-  SPACING,
-  WEEKDAY_ABBREVIATIONS,
+    BORDER_RADIUS,
+    KEYWORDS,
+    PHASE_COLORS,
+    PHASES,
+    SPACING,
+    WEEKDAY_ABBREVIATIONS,
 } from '../../constants';
 import { useThemeStore } from '../../stores/themeStore';
 import type { Habit } from '../../types/database';
@@ -451,11 +451,11 @@ const styles = StyleSheet.create({
   keywordsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: SPACING.s,
+    justifyContent: 'space-between',
   },
   keywordChip: {
     width: '31%',
-    flexGrow: 1,
+    marginBottom: SPACING.s,
     paddingVertical: SPACING.s,
     paddingHorizontal: 2,
     borderRadius: BORDER_RADIUS.small,
