@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { BORDER_RADIUS, KEYWORDS, SHADOWS, SPACING } from '../../constants';
 import { taskRepository } from '../../db/repositories/TaskRepository';
@@ -281,16 +281,16 @@ export function AddEditTaskModal({
 
             {/* Notes */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>Notes</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  styles.textArea,
-                  {
-                    color: colors.text,
-                    backgroundColor: colors.background,
-                    borderColor: colors.textSecondary,
-                  },
-                ]}
+            <TextInput
+              style={[
+                styles.input,
+                styles.textArea,
+                {
+                  color: colors.text,
+                  backgroundColor: colors.background,
+                  borderColor: colors.textSecondary,
+                },
+              ]}
               value={notes}
               onChangeText={setNotes}
               multiline
@@ -377,19 +377,14 @@ export function AddEditTaskModal({
             </TouchableOpacity>
           )}
 
-            {task && (
-              <TouchableOpacity
-                style={[
-                  styles.saveButton,
-                  { backgroundColor: 'transparent', marginTop: SPACING.s },
-                ]}
-                onPress={handleDelete}
-              >
-                <Text style={{ color: '#FF3B30', fontWeight: '600', fontSize: 16 }}>
-                  Delete Task
-                </Text>
-              </TouchableOpacity>
-            )}
+          {task && (
+            <TouchableOpacity
+              style={[styles.saveButton, { backgroundColor: 'transparent', marginTop: SPACING.s }]}
+              onPress={handleDelete}
+            >
+              <Text style={{ color: '#FF3B30', fontWeight: '600', fontSize: 16 }}>Delete Task</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

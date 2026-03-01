@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { BORDER_RADIUS, DAYS, KEYWORDS, PHASES, SPACING } from '../../constants';
 import { useListStore } from '../../stores/listStore';

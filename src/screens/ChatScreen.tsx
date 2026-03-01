@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { BaseScreen } from '../components/BaseScreen';
 import { BotIcon, SendIcon } from '../components/icons/AppIcons';
-import { BORDER_RADIUS, SHADOWS, SPACING } from '../constants/theme';
+import { BORDER_RADIUS, DIMENSIONS, SHADOWS, SPACING } from '../constants/theme';
 import { AgentLoop } from '../services/ai/AgentLoop';
 import { useThemeStore } from '../stores/themeStore';
 import type { MainTabScreenProps } from '../types/navigation';
@@ -184,8 +184,8 @@ export function ChatScreen(_props: ChatScreenProps): React.JSX.Element {
     <BaseScreen title="AI Coach" showSettings={true}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={100}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        keyboardVerticalOffset={DIMENSIONS.BAR_HEIGHT}
       >
         {/* Messages */}
         <FlatList
