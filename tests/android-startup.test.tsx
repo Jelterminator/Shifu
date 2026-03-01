@@ -53,6 +53,11 @@ jest.mock('react-native', () => {
     TouchableOpacity: mockComponent('TouchableOpacity'),
     Modal: mockComponent('Modal'),
     Switch: mockComponent('Switch'),
+    Dimensions: {
+      get: jest.fn().mockReturnValue({ width: 375, height: 812 }),
+      addEventListener: jest.fn().mockReturnValue({ remove: jest.fn() }),
+      removeEventListener: jest.fn(),
+    },
   };
 });
 
